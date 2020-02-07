@@ -1,5 +1,5 @@
-#include "src/server/server.hpp"
-#include "src/client/client.hpp"
+#include "../src/server/server.hpp"
+#include "../src/client/client.hpp"
 #include <iostream>
 
 void start_server(unsigned short port) {
@@ -10,7 +10,7 @@ void start_server(unsigned short port) {
     bool running = true;
     while(running) {
         // Get events
-        std::deque<std::shared_ptr<GameEvent>> game_events = server.receive(0);
+        std::deque<std::shared_ptr<GameEvent>> game_events = server.receive(500);
         
         // Parse events
         for(auto it = game_events.begin(); it != game_events.end(); it++) {

@@ -1,0 +1,10 @@
+## Add your own stuff that needs to be ignored by git here
+# KDevelop IDE junk
+.kdev4/
+multiplayer_roguelike.kdev4
+
+# CMake junk
+CMakeCache.txt
+CMakeFiles/
+Makefile
+build/
