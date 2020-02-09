@@ -110,7 +110,7 @@ Client::Client(std::string host, unsigned short port, int timeout_ms) {
 
 Client::~Client() {
     #ifdef ROGUELIKE_SOCKET_UNIX
-    
+
     // Close client socket
     if(client_socket != -1)
         close(client_socket);
@@ -118,7 +118,7 @@ Client::~Client() {
     #endif
 }
 
-std::deque<std::shared_ptr<ClientMessage>> Client::receive(int timeout_ms) {
+void Client::receive_messages(int timeout_ms) {
     std::deque<std::shared_ptr<ClientMessage>> messages;
     
     #ifdef ROGUELIKE_SOCKET_UNIX
@@ -136,7 +136,7 @@ std::deque<std::shared_ptr<ClientMessage>> Client::receive(int timeout_ms) {
     
     // Parse events
     if(event_count == 0)
-        return messages;
+        return;
     
     pollfd& poll_events = poll_socks[0];
     if(poll_events.revents & POLLNVAL) {
@@ -162,20 +162,12 @@ std::deque<std::shared_ptr<ClientMessage>> Client::receive(int timeout_ms) {
         else if(bytes_read == -1)
             throw SocketException(std::strerror(errno));
         
+        // Lock read buffer
+        const std::lock_guard<std::mutex> lock(r_lock);
+        
         // Append read data to buffer
         std::vector<uint8_t> chunk(read_buf.begin(), std::next(read_buf.begin(), bytes_read));
         r_buffer.insert(chunk); // TODO allow array with given size as input for buffer
-        
-        // Check if a message can be built from the current read buffer.
-        // Try to build as many messages as possible
-        while(true) {
-            std::unique_ptr<ClientMessage> message = ClientMessage::from_buffer(r_buffer);
-            
-            if(!message)
-                break;
-            // std::move used to transfer ownership to vector
-            messages.push_back(std::move(message));
-        }
     }
     else if(poll_events.revents & (POLLHUP | POLLERR)) {
         // If the hangup flag is set in the received events the server
@@ -188,17 +180,15 @@ std::deque<std::shared_ptr<ClientMessage>> Client::receive(int timeout_ms) {
     }
     
     #endif
+}
+
+void Client::send_messages(int timeout_ms) {
+    // Lock write buffer
+    const std::lock_guard<std::mutex> lock(w_lock);
     
-    return messages;
-}
-
-void Client::add_message(const ClientMessage& message) {
-    w_buffer.insert(message.to_bytes());
-}
-
-bool Client::send_messages(int timeout_ms) {
+    // Abort if no data to read
     if(w_buffer.size() == 0)
-        return true;
+        return;
     
     // Merge buffer
     std::vector<uint8_t> bytes;
@@ -241,5 +231,34 @@ bool Client::send_messages(int timeout_ms) {
     
     #endif
     
-    return sent == bytes.size();
+    return;
 }
+
+void Client::add_message(const ClientMessage& message) {
+    // Lock write buffer
+    const std::lock_guard<std::mutex> lock(w_lock);
+    
+    // Insert to buffer
+    w_buffer.insert(message.to_bytes());
+}
+
+std::deque<std::unique_ptr<ClientMessage>> Client::get_messages() {
+    std::deque<std::unique_ptr<ClientMessage>> messages;
+    
+    // Lock read buffer
+    const std::lock_guard<std::mutex> lock(r_lock);
+    
+    // Check if a message can be built from the current read buffer.
+    // Try to build as many messages as possible
+    while(true) {
+        auto message = ClientMessage::from_buffer(r_buffer);
+        
+        if(!message)
+            break;
+        // std::move used to transfer ownership to vector
+        messages.push_back(std::move(message));
+    }
+    
+    return messages;
+}
+

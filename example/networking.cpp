@@ -2,6 +2,8 @@
 #include "../src/client/client.hpp"
 #include <iostream>
 #include <limits>
+#include <thread>
+#include <atomic>
 
 void start_server(unsigned short port) {
     std::cout << "Starting server with port " << port << "..." << std::endl;
@@ -60,44 +62,59 @@ void start_server(unsigned short port) {
     }
 }
 
+void client_thread_loop(std::shared_ptr<Client> client, std::shared_ptr<std::atomic<bool>> running) {
+    try {
+        while(*running) {
+            // Receive data
+            client->receive_messages(250);
+
+            // Parse messages
+            auto messages = client->get_messages();
+            for(auto it = messages.begin(); it != messages.end(); it++) {
+                std::string prefix;
+                if((*it)->sender_name.empty())
+                    prefix = "~anon~";
+                else
+                    prefix = "<" + (*it)->sender_name + ">";
+
+                switch((*it)->type) {
+                    case GameMessageType::Join:
+                        std::cout << prefix << " joined" << std::endl;
+                        break;
+                    case GameMessageType::Quit:
+                        std::cout << prefix << " quit" << std::endl;
+                        break;
+                    case GameMessageType::Chat:
+                        {
+                            auto char_event = dynamic_cast<ClientMessageChat*>(it->get());
+                            std::cout << prefix << ": " << char_event->message << std::endl;
+                        }
+                        break;
+                    default:
+                        std::cout << "Ignored unexpected message of type " << (*it)->type << std::endl;
+                }
+            }
+        
+            // Send data
+            client->send_messages(250);
+        }
+    }
+    catch(SocketException e) {
+        std::cout << "Network exception in network thread: " << e.what() << std::endl;
+    }
+
+    *running = false;
+}
+
 void start_client(std::string host, unsigned short port) {
     std::cout << "Connecting to " << host << ':' << port << "..." << std::endl;
-    auto client = Client(host, port, 5000);
+    auto client = std::shared_ptr<Client>(new Client(host, port, 5000));
+    auto running = std::shared_ptr<std::atomic<bool>>(new std::atomic<bool>(true));
+    std::thread network_thread(client_thread_loop, client, running);
     std::cout << "Connected. Type '!join' to join, '!quit' to quit or say '@kill_server' to kill the server" << std::endl;
     
-    bool running = true;
     std::string name;
-    while(running) {
-        // Get messages
-        std::deque<std::shared_ptr<ClientMessage>> messages = client.receive(500);
-        
-        // Parse messages
-        for(auto it = messages.begin(); it != messages.end(); it++) {
-            
-            std::string prefix;
-            if((*it)->sender_name.empty())
-                prefix = "~anon~";
-            else
-                prefix = "<" + (*it)->sender_name + ">";
-            
-            switch((*it)->type) {
-                case GameMessageType::Join:
-                    std::cout << prefix << " joined" << std::endl;
-                    break;
-                case GameMessageType::Quit:
-                    std::cout << prefix << " quit" << std::endl;
-                    break;
-                case GameMessageType::Chat:
-                    {
-                        auto char_event = std::dynamic_pointer_cast<ClientMessageChat>(*it);
-                        std::cout << prefix << ": " << char_event->message << std::endl;
-                    }
-                    break;
-                default:
-                    std::cout << "Ignored unexpected message of type " << (*it)->type << std::endl;
-            }
-        }
-        
+    while(*running) {
         // Send a chat message
         std::string message;
         std::cout << name << "> " << std::flush;
@@ -110,16 +127,15 @@ void start_client(std::string host, unsigned short port) {
             
             std::cout << "What do you want to be called?\n> " << std::flush;
             std::getline(std::cin, name);
-            client.add_message(ClientMessageDoJoin(name));
+            client->add_message(ClientMessageDoJoin(name));
         }
         else if(message == "!quit")
-            running = false;
+            *running = false;
         else
-            client.add_message(ClientMessageDoChat(message));
-        
-        // Send all messages with a timeout of 2 seconds
-        client.send_messages(2000); // TODO warning? retry?
+            client->add_message(ClientMessageDoChat(message));
     }
+
+    network_thread.join();
 }
 
 int main(int argc, char **argv) {
@@ -139,10 +155,9 @@ int main(int argc, char **argv) {
     }
     catch(SocketException e) {
         std::cout << "Network exception: " << e.what() << std::endl;
-        return 1;
     }
     
-    std::cout << "Stopped with no exceptions. Goodbye..." << std::endl;
+    std::cout << "Goodbye..." << std::endl;
     return 0;
 }
 
