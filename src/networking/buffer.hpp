@@ -13,10 +13,10 @@ class Buffer {
     size_t cur_size = 0;
     
     /// Gets data from the buffer, with an offset
-    std::vector<uint8_t> get_bytes(size_t offset, size_t max_bytes);
+    std::vector<uint8_t> get_bytes(size_t byte_count, size_t offset);
     
     /// Gets data from the buffer, removing read data
-    std::vector<uint8_t> pop_bytes(size_t max_bytes);
+    std::vector<uint8_t> pop_bytes(size_t byte_count);
     
 public:
     /// Current size of buffer
@@ -25,8 +25,8 @@ public:
     /// Clear buffer
     void clear();
     
-    /// Erase at most n bytes
-    void erase(size_t n);
+    /// Erase byte_count bytes
+    void erase(size_t byte_count);
     
     // Inserts bytes to the buffer
     void insert(const std::vector<uint8_t>& bytes);
@@ -46,12 +46,11 @@ public:
     // Inserts a little-endian uint64_t to the buffer
     void insert(uint64_t uint64);
     
-    // Gets all bytes (or up to max_bytes) from the buffer, with an offset
-    void get(std::vector<uint8_t>& bytes, size_t offset = 0, size_t max_bytes = 0);
+    // Gets byte_count bytes from the buffer, with an offset
+    void get(std::vector<uint8_t>& bytes, size_t byte_count, size_t offset = 0);
     
-    // Gets a string with all bytes (or up to max_bytes) from the buffer, with
-    // an offset
-    void get(std::string& string, size_t offset = 0, size_t max_bytes = 0);
+    // Gets a string with byte_count bytes from the buffer, with an offset
+    void get(std::string& string, size_t byte_count, size_t offset = 0);
     
     // Gets a byte from the buffer, with an offset
     bool get(uint8_t& byte, size_t offset = 0);
@@ -65,13 +64,12 @@ public:
     // Gets a little-endian uint64_t from the buffer, with an offset
     bool get(uint64_t& uint64, size_t offset = 0);
     
-    // Gets all bytes (or up to max_bytes) from the buffer, removing the read
-    // data
-    void pop(std::vector<uint8_t>& bytes, size_t max_bytes = 0);
+    // Gets byte_count bytes from the buffer, removing the read data
+    void pop(std::vector<uint8_t>& bytes, size_t byte_count);
     
-    // Gets a string with all bytes (or up to max_bytes) from the buffer,
-    // removing the read data
-    void pop(std::string& string, size_t max_bytes = 0);
+    // Gets a string with byte_count bytes from the buffer, removing the read
+    // data
+    void pop(std::string& string, size_t byte_count);
     
     // Gets a byte from the buffer, removing the read data
     bool pop(uint8_t& byte);

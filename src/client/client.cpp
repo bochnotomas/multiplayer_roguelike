@@ -90,7 +90,7 @@ Client::Client(std::string host, unsigned short port, int timeout_ms) {
             throw SocketException(std::strerror(errno));
     }
     
-    // Parse events, accepting first available connection
+    // Parse messages, accepting first available connection
     client_socket = -1;
     for(auto it = poll_socks.begin(); it != poll_socks.end(); it++) {
         // Pick first available connection, close all other sockets
@@ -118,8 +118,8 @@ Client::~Client() {
     #endif
 }
 
-std::deque<std::shared_ptr<GameEvent>> Client::receive(int timeout_ms) {
-    std::deque<std::shared_ptr<GameEvent>> game_events;
+std::deque<std::shared_ptr<ClientMessage>> Client::receive(int timeout_ms) {
+    std::deque<std::shared_ptr<ClientMessage>> messages;
     
     #ifdef ROGUELIKE_SOCKET_UNIX
     
@@ -136,7 +136,7 @@ std::deque<std::shared_ptr<GameEvent>> Client::receive(int timeout_ms) {
     
     // Parse events
     if(event_count == 0)
-        return game_events;
+        return messages;
     
     pollfd& poll_events = poll_socks[0];
     if(poll_events.revents & POLLNVAL) {
@@ -166,12 +166,15 @@ std::deque<std::shared_ptr<GameEvent>> Client::receive(int timeout_ms) {
         std::vector<uint8_t> chunk(read_buf.begin(), std::next(read_buf.begin(), bytes_read));
         r_buffer.insert(chunk); // TODO allow array with given size as input for buffer
         
-        // Check if a message can be built from the current read buffer
-        // TODO try parsing multiple game events
-        std::unique_ptr<GameEvent> game_event = GameEvent::from_buffer(r_buffer);
-        if(game_event) {
+        // Check if a message can be built from the current read buffer.
+        // Try to build as many messages as possible
+        while(true) {
+            std::unique_ptr<ClientMessage> message = ClientMessage::from_buffer(r_buffer);
+            
+            if(!message)
+                break;
             // std::move used to transfer ownership to vector
-            game_events.push_back(std::move(game_event));
+            messages.push_back(std::move(message));
         }
     }
     else if(poll_events.revents & (POLLHUP | POLLERR)) {
@@ -186,20 +189,20 @@ std::deque<std::shared_ptr<GameEvent>> Client::receive(int timeout_ms) {
     
     #endif
     
-    return game_events;
+    return messages;
 }
 
-void Client::add_event(const GameEvent& game_event) {
-    w_buffer.insert(game_event.to_bytes());
+void Client::add_message(const ClientMessage& message) {
+    w_buffer.insert(message.to_bytes());
 }
 
-bool Client::send_events(int timeout_ms) {
+bool Client::send_messages(int timeout_ms) {
     if(w_buffer.size() == 0)
         return true;
     
     // Merge buffer
     std::vector<uint8_t> bytes;
-    w_buffer.get(bytes);
+    w_buffer.get(bytes, w_buffer.size());
     size_t sent = 0;
     
     // Setup timer

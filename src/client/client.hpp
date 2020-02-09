@@ -2,7 +2,7 @@
 #define ROGUELIKE_CLIENT_HPP_INCLUDED
 #include "../networking/socket_exception.hpp"
 #include "../networking/socket_platform.hpp"
-#include "../networking/game_event.hpp"
+#include "../networking/client_message.hpp"
 
 class Client {
     Buffer r_buffer, w_buffer;
@@ -19,18 +19,18 @@ public:
     /// Cleanup. Close client socket
     ~Client();
     
-    /// Receive events, with a timeout
-    std::deque<std::shared_ptr<GameEvent>> receive(int timeout_ms);
+    /// Receive messages, with a timeout
+    std::deque<std::shared_ptr<ClientMessage>> receive(int timeout_ms);
     
-    /// Add an action event to be sent. Call send_events to send all buffered
-    /// events
-    void add_event(const GameEvent& game_event);
+    /// Add a message to be sent. Call send_messages to send all buffered
+    /// messages
+    void add_message(const ClientMessage& message);
     
-    /// Attempt to send buffered action events. Returns true if all data has
+    /// Attempt to send buffered messages. Returns true if all data has
     /// been sent. Stops sending even if not all data was sent if after
     /// timeout_ms milliseconds, unless timeout is negative where it tries
     /// forever
-    bool send_events(int timeout_ms);
+    bool send_messages(int timeout_ms);
 };
 
 #endif

@@ -1,4 +1,5 @@
 #include "buffer.hpp"
+#include <stdexcept>
 #include <iterator>
 
 size_t Buffer::size() {
@@ -10,86 +11,84 @@ void Buffer::clear() {
     cur_size = 0;
 }
 
-void Buffer::erase(size_t n) {
-    size_t bytes_left = n;
+void Buffer::erase(size_t byte_count) {
+    if(byte_count > cur_size)
+        throw std::out_of_range("Buffer::erase(" + std::to_string(byte_count) + ") called but cur_size is " + std::to_string(cur_size));
+    
+    cur_size -= byte_count;
     
     for(auto it = chunks.begin(); it != chunks.end();) {
-        if(it->size() > bytes_left) {
-            it->erase(it->begin(), std::next(it->begin(), bytes_left));
+        if(it->size() > byte_count) {
+            it->erase(it->begin(), std::next(it->begin(), byte_count));
             break;
         }
         
-        bytes_left -= it->size();
+        byte_count -= it->size();
         it = chunks.erase(it);
         
-        if(bytes_left == 0)
+        if(byte_count == 0)
             break;
     }
-    
-    cur_size -= n - bytes_left;
 }
 
-std::vector<uint8_t> Buffer::get_bytes(size_t offset, size_t max_bytes) {
+std::vector<uint8_t> Buffer::get_bytes(size_t byte_count, size_t offset) {
+    if((byte_count + offset) > cur_size)
+        throw std::out_of_range("Buffer::get_bytes(" + std::to_string(byte_count) + ", " + std::to_string(offset) + ") called but cur_size is " + std::to_string(cur_size));
+    
     std::vector<uint8_t> merged;
-    size_t skips_left = offset;
-    size_t bytes_left = max_bytes;
-    
-    if(bytes_left == 0 || bytes_left > size())
-        bytes_left = size();
-    
-    merged.reserve(bytes_left);
+    merged.reserve(byte_count);
     
     for(auto it = chunks.begin(); it != chunks.end(); it++) {
-        if(skips_left > it->size()) {
-            skips_left -= it->size();
+        if(offset >= it->size()) {
+            offset -= it->size();
             continue;
         }
         
-        size_t bytes_to_read = it->size() - skips_left;
-        if(bytes_to_read > bytes_left)
-            bytes_to_read = bytes_left;
+        size_t bytes_to_read = it->size() - offset;
+        if(bytes_to_read > byte_count)
+            bytes_to_read = byte_count;
         
-        auto offset_begin = std::next(it->begin(), skips_left);
+        auto offset_begin = std::next(it->begin(), offset);
         auto offset_end = std::next(offset_begin, bytes_to_read);
         merged.insert(merged.end(), offset_begin, offset_end);
         
-        bytes_left -= bytes_to_read;
+        byte_count -= bytes_to_read;
         
-        if(bytes_left == 0)
+        if(byte_count == 0)
             break;
         
-        skips_left = 0;
+        offset = 0;
     }
     
     return merged;
 }
 
-std::vector<uint8_t> Buffer::pop_bytes(size_t max_bytes) {
+std::vector<uint8_t> Buffer::pop_bytes(size_t byte_count) {
+    if(byte_count > cur_size)
+        throw std::out_of_range("Buffer::pop_bytes(" + std::to_string(byte_count) + ") called but cur_size is " + std::to_string(cur_size));
+    
+    cur_size -= byte_count;
+    
     std::vector<uint8_t> merged;
-    size_t bytes_left = max_bytes;
-    
-    if(bytes_left == 0 || bytes_left > size())
-        bytes_left = size();
-    
-    merged.reserve(bytes_left);
+    merged.reserve(byte_count);
     
     for(auto it = chunks.begin(); it != chunks.end();) {
-        if(it->size() > bytes_left) {
-            auto chunk_end = std::next(it->begin(), bytes_left);
+        if(it->size() > byte_count) {
+            auto chunk_end = std::next(it->begin(), byte_count);
             merged.insert(merged.end(), it->begin(), chunk_end);
             it->erase(it->begin(), chunk_end);
+            byte_count = 0; // TODO remove when bug is fixed
             break;
         }
         
-        bytes_left -= it->size();
+        byte_count -= it->size();
         merged.insert(merged.end(), it->begin(), it->end());
         it = chunks.erase(it);
         
-        if(bytes_left == 0)
+        if(byte_count == 0)
             break;
     }
     
-    cur_size -= merged.size();
     return merged;
 }
 
@@ -147,12 +146,12 @@ void Buffer::insert(uint64_t uint64) {
     cur_size += 8;
 }
 
-void Buffer::get(std::vector<uint8_t>& bytes, size_t offset, size_t max_bytes) {
-    bytes = get_bytes(offset, max_bytes);
+void Buffer::get(std::vector<uint8_t>& bytes, size_t byte_count, size_t offset) {
+    bytes = get_bytes(byte_count, offset);
 }
 
-void Buffer::get(std::string& string, size_t offset, size_t max_bytes) {
-    std::vector<uint8_t> bytes = get_bytes(offset, max_bytes);
+void Buffer::get(std::string& string, size_t byte_count, size_t offset) {
+    std::vector<uint8_t> bytes = get_bytes(byte_count, offset);
     string = std::string(bytes.begin(), bytes.end());
 }
 
@@ -160,7 +159,7 @@ bool Buffer::get(uint8_t& byte, size_t offset) {
     if(cur_size == 0)
         return false;
     
-    byte = get_bytes(offset, 1)[0];
+    byte = get_bytes(1, offset)[0];
     
     return true;
 }
@@ -169,7 +168,7 @@ bool Buffer::get(uint16_t& uint16, size_t offset) {
     if(cur_size < 2)
         return false;
     
-    std::vector<uint8_t> bytes = get_bytes(offset, 2);
+    std::vector<uint8_t> bytes = get_bytes(2, offset);
     uint16 = static_cast<uint16_t>(bytes[0]) |
              static_cast<uint16_t>(bytes[1]) << 8;
     
@@ -180,7 +179,7 @@ bool Buffer::get(uint32_t& uint32, size_t offset) {
     if(cur_size < 4)
         return false;
     
-    std::vector<uint8_t> bytes = get_bytes(offset, 4);
+    std::vector<uint8_t> bytes = get_bytes(4, offset);
     uint32 = static_cast<uint32_t>(bytes[0]) |
              static_cast<uint32_t>(bytes[1]) << 8 |
              static_cast<uint32_t>(bytes[2]) << 16 |
@@ -193,7 +192,7 @@ bool Buffer::get(uint64_t& uint64, size_t offset) {
     if(cur_size < 8)
         return false;
     
-    std::vector<uint8_t> bytes = get_bytes(offset, 8);
+    std::vector<uint8_t> bytes = get_bytes(8, offset);
     uint64 = static_cast<uint64_t>(bytes[0]) |
              static_cast<uint64_t>(bytes[1]) << 8 |
              static_cast<uint64_t>(bytes[2]) << 16 |
@@ -206,12 +205,12 @@ bool Buffer::get(uint64_t& uint64, size_t offset) {
     return true;
 }
 
-void Buffer::pop(std::vector<uint8_t>& bytes, size_t max_bytes) {
-    bytes = pop_bytes(max_bytes);
+void Buffer::pop(std::vector<uint8_t>& bytes, size_t byte_count) {
+    bytes = pop_bytes(byte_count);
 }
 
-void Buffer::pop(std::string& string, size_t max_bytes) {
-    std::vector<uint8_t> bytes = pop_bytes(max_bytes);
+void Buffer::pop(std::string& string, size_t byte_count) {
+    std::vector<uint8_t> bytes = pop_bytes(byte_count);
     string = std::string(bytes.begin(), bytes.end());
 }
 

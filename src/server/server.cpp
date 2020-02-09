@@ -1,4 +1,5 @@
 #include "server.hpp"
+#include <unordered_map>
 #include <chrono>
 
 #ifdef ROGUELIKE_SOCKET_UNIX
@@ -57,68 +58,74 @@ Server::~Server() {
     if(listen_socket != -1)
         close(listen_socket);
     
-    // Close all server connections
-    for(auto it = sockets.begin(); it != sockets.end(); it++)
-        close(it->first);
-    
     #endif
 }
 
-std::deque<std::shared_ptr<GameEvent>> Server::receive(int timeout_ms) {
-    std::deque<std::shared_ptr<GameEvent>> game_events;
+std::deque<std::shared_ptr<ServerMessage>> Server::receive(int timeout_ms) {
+    std::deque<std::shared_ptr<ServerMessage>> messages;
     
     #ifdef ROGUELIKE_SOCKET_UNIX
     
     // Accept connections from listening socket
     sockaddr addr;
     socklen_t addrlen = sizeof((sockaddr*)&addr);;
-    int new_sock = accept(listen_socket, &addr, &addrlen);
+    int new_socket = accept(listen_socket, &addr, &addrlen);
     
-    if(new_sock != -1) {
+    if(new_socket != -1) {
         // Explicitly make socket blocking
-        int old_flags = fcntl(new_sock, F_GETFL);
+        int old_flags = fcntl(new_socket, F_GETFL);
         if(old_flags == -1) {
-            close(new_sock);
+            close(new_socket);
             throw SocketException(std::strerror(errno));
         }
         
-        fcntl(new_sock, F_SETFL, old_flags & ~O_NONBLOCK);
+        fcntl(new_socket, F_SETFL, old_flags & ~O_NONBLOCK);
         
-        sockets[new_sock] = ServerConnection();
-        
-        char buf[256]; // TODO remove me --begin--
-        inet_ntop(AF_INET, &(((struct sockaddr_in *)&addr)->sin_addr), buf, 255);
+        players.emplace_back(new Player(new_socket));
     }
     else if(errno != EAGAIN || errno != EWOULDBLOCK) {
         // If there are no pending connections, errno is set to EAGAIN or EWOULDBLOCK
         throw SocketException(std::strerror(errno));
     }
     
-    // Wait for an event in one of the sockets
+    // Add players to the list of sockets to poll and map sockets to players
     std::vector<pollfd> poll_socks;
-    poll_socks.reserve(sockets.size());
+    std::unordered_map<int, std::shared_ptr<Player>> player_sockets;
+    poll_socks.reserve(players.size());
     
-    // Add server connections
-    for(auto it = sockets.begin(); it != sockets.end(); it++) {
+    for(auto it = players.begin(); it != players.end(); it++) {
+        int socket = (*it)->socket;
+        if(socket == -1)
+            continue;
+        
         poll_socks.push_back({
-            .fd = it->first,
+            .fd = socket,
             .events = POLLIN
         });
+        
+        player_sockets[socket] = *it;
     }
     
+    // Poll for events
     int event_count = poll(poll_socks.data(), poll_socks.size(), timeout_ms);
     
     if(event_count == -1)
         throw SocketException(std::strerror(errno));
     
-    // Parse events for server connections
+    // Parse events for players
     if(event_count == 0)
-        return game_events;
+        return messages;
     
     for(auto it = poll_socks.begin(); it != poll_socks.end(); it++) {
+        std::shared_ptr<Player> this_player = player_sockets[it->fd];
+        
         if(it->revents & POLLNVAL) {
-            // The invalid flag is set when the socket is already closed
-            sockets.erase(it->fd);
+            // The invalid flag is set when the socket is already closed. Don't
+            // close the socket, but set it to an invalid socket instead
+            this_player->socket = -1;
+            if(!this_player->name.empty())
+                messages.push_back(std::shared_ptr<ServerMessage>(new ServerMessageDoQuit(this_player)));
+            disconnect_player(this_player);
         }
         else if(it->revents & POLLIN) {
             // If the read flag is set in the received events there is
@@ -131,11 +138,9 @@ std::deque<std::shared_ptr<GameEvent>> Server::receive(int timeout_ms) {
             // In blocking mode, a 0-byte read means the client closed
             // their socket, so, close this socket
             if(bytes_read == 0) {
-                sockets.erase(it->fd);
-                
-                if(close(it->fd) != 0)
-                    throw SocketException(std::strerror(errno));
-                
+                if(!this_player->name.empty())
+                    messages.push_back(std::shared_ptr<ServerMessage>(new ServerMessageDoQuit(this_player)));
+                disconnect_player(this_player);
                 continue;
             }
             else if(bytes_read == -1)
@@ -143,42 +148,19 @@ std::deque<std::shared_ptr<GameEvent>> Server::receive(int timeout_ms) {
             
             // Append read data to buffer
             std::vector<uint8_t> chunk(read_buf.begin(), std::next(read_buf.begin(), bytes_read));
-            Buffer& r_buffer = sockets[it->fd].r_buffer; // TODO allow array with given size as input for buffer
+            Buffer& r_buffer = this_player->r_buffer; // TODO allow array with given size as input for buffer
             r_buffer.insert(chunk);
             
-            // Check if a message can be built from the current read buffer
-            // TODO try parsing multiple game events
-            std::unique_ptr<GameEvent> game_event = GameEvent::from_buffer(r_buffer);
-            if(game_event) {
-                // If this is a Join event, update the ServerConnection player
-                // name, else, update the event's player
-                if(game_event->type == GameEventType::Join) {
-                    // Ignore event if already joined
-                    if(!sockets[it->fd].player.empty())
-                        continue;
-                    
-                    // Disallow empty names
-                    if(game_event->player.empty())
-                        continue;
-                    
-                    // Check if name already taken
-                    auto con_it = sockets.begin();
-                    for(; con_it != sockets.end(); con_it++) {
-                        if(con_it->second.player == game_event->player)
-                            break;
-                    }
-                    
-                    if(con_it != sockets.end())
-                        continue;
-                    
-                    // Update name
-                    sockets[it->fd].player = game_event->player;
-                }
-                else
-                    game_event->player = sockets[it->fd].player;
+            // Check if a message can be built from the current read buffer.
+            // Try to build as many messages as possible
+            while(true) {
+                std::unique_ptr<ServerMessage> message = ServerMessage::from_buffer(r_buffer, this_player);
+                
+                if(!message)
+                    break;
                 
                 // std::move used to transfer ownership to vector
-                game_events.push_back(std::move(game_event));
+                messages.push_back(std::move(message));
             }
         }
         else if(it->revents & (POLLHUP | POLLERR)) {
@@ -187,66 +169,53 @@ std::deque<std::shared_ptr<GameEvent>> Server::receive(int timeout_ms) {
             // then the client disconnected with a TCP RST packet
             
             // Quit if the player joined
-            std::string player = sockets[it->fd].player;
-            if(!player.empty())
-                game_events.push_back(std::shared_ptr<GameEvent>(new GameEventQuit(player)));
+            if(!this_player->name.empty())
+                messages.push_back(std::shared_ptr<ServerMessage>(new ServerMessageDoQuit(this_player)));
             
-            sockets.erase(it->fd);
-            
-            if(close(it->fd) != 0)
-                throw SocketException(std::strerror(errno));
+            disconnect_player(this_player);
         }
     }
     
     #endif
     
-    return game_events;
+    return messages;
 }
 
-void Server::add_event(const GameEvent& game_event, std::string player) {
+void Server::add_message(const ClientMessage& message, std::shared_ptr<Player> player) {
+    player->w_buffer.insert(message.to_bytes());
+}
+
+void Server::add_message_all_except(const ClientMessage& message, std::shared_ptr<Player> player) {
     #ifdef ROGUELIKE_SOCKET_UNIX
     
-    for(auto it = sockets.begin(); it != sockets.end(); it++) {
-        if(it->second.player == player)
-            it->second.w_buffer.insert(game_event.to_bytes());
+    for(auto it = players.begin(); it != players.end(); it++) {
+        if((*it)->socket != player->socket)
+            (*it)->w_buffer.insert(message.to_bytes());
     }
     
     #endif
 }
 
-void Server::add_event_all_except(const GameEvent& game_event, std::string player) {
-    #ifdef ROGUELIKE_SOCKET_UNIX
-    
-    for(auto it = sockets.begin(); it != sockets.end(); it++) {
-        if(it->second.player != player)
-            it->second.w_buffer.insert(game_event.to_bytes());
-    }
-    
-    #endif
+void Server::add_message_all(const ClientMessage& message) {
+    for(auto it = players.begin(); it != players.end(); it++)
+        (*it)->w_buffer.insert(message.to_bytes());
 }
 
-void Server::add_event_all(const GameEvent& game_event) {
-    #ifdef ROGUELIKE_SOCKET_UNIX
-    
-    for(auto it = sockets.begin(); it != sockets.end(); it++)
-        it->second.w_buffer.insert(game_event.to_bytes());
-    
-    #endif
-}
-
-bool Server::send_events(int timeout_ms) {
+bool Server::send_messages(int timeout_ms) {
     #ifdef ROGUELIKE_SOCKET_UNIX
     
     // Merge buffers
-    std::unordered_map<int, std::pair<size_t, std::vector<uint8_t>>> all_bytes;
-    for(auto it = sockets.begin(); it != sockets.end(); it++) {
-        if(it->second.w_buffer.size() == 0)
+    std::unordered_map<int, size_t> all_sent;
+    std::unordered_map<int, std::vector<uint8_t>> all_bytes;
+    for(auto it = players.begin(); it != players.end(); it++) {
+        if((*it)->w_buffer.size() == 0)
             continue;
         
         // Add to bytes to send
         std::vector<uint8_t> this_buffer;
-        it->second.w_buffer.get(this_buffer);
-        all_bytes[it->first] = std::pair<size_t, std::vector<uint8_t>>(0, this_buffer);
+        (*it)->w_buffer.get(this_buffer, (*it)->w_buffer.size());
+        all_sent[(*it)->socket] = 0;
+        all_bytes[(*it)->socket] = this_buffer;
     }
     
     // Abort if all buffers were empty
@@ -259,6 +228,7 @@ bool Server::send_events(int timeout_ms) {
         start = std::chrono::high_resolution_clock::now();
     
     // Poll for the ability to write and then send, for ALL buffered sockets
+    bool failed = false;
     while(!all_bytes.empty()) {
         // Prepare to poll
         std::vector<pollfd> poll_socks;
@@ -273,30 +243,35 @@ bool Server::send_events(int timeout_ms) {
         // Poll for possible writes
         int event_count = poll(poll_socks.data(), poll_socks.size(), timeout_ms);
         
-        if(event_count == -1)
-            throw SocketException(std::strerror(errno));
+        if(event_count == -1) {
+            failed = true;
+            break;
+        }
         
         // Start sending
         for(auto it = poll_socks.begin(); it != poll_socks.end(); it++) {
             // Send data
-            size_t& sent = all_bytes[it->fd].first;
-            std::vector<uint8_t>& bytes = all_bytes[it->fd].second;
+            size_t& sent = all_sent[it->fd];
+            std::vector<uint8_t>& bytes = all_bytes[it->fd];
             ssize_t result = send(it->fd, bytes.data() + sent, bytes.size() - sent, MSG_DONTWAIT);
             
             // Ignore EWOULDBLOCK and EAGAIN
             if(result < 0) {
-                if(errno != EWOULDBLOCK && errno != EAGAIN)
-                    throw SocketException(std::strerror(errno));
+                if(errno != EWOULDBLOCK && errno != EAGAIN) {
+                    failed = true;
+                    break;
+                }
             }
             
-            // Clear sent part of buffer
-            sockets[it->fd].w_buffer.erase(result);
             sent += result;
             
             // Remove from bytes list if all sent
             if(bytes.size() == sent)
                 all_bytes.erase(it->fd);
         }
+        
+        if(failed)
+            break;
         
         // Stop sending if timeout exceeded
         if(timeout_ms == -1) {
@@ -309,7 +284,31 @@ bool Server::send_events(int timeout_ms) {
             break;
     }
     
+    // Clear sent part of buffer
+    for(auto it = players.begin(); it != players.end(); it++) {
+        if((*it)->w_buffer.size() == 0 && (*it)->socket != -1)
+            continue;
+        
+        size_t sent = all_sent[(*it)->socket];
+        if(sent > 0)
+            (*it)->w_buffer.erase(sent);
+    }
+    
+    // Throw if there was an error. This isn't done earlier because the data in
+    // the write buffers that was sent needs to be cleared
+    if(failed)
+        throw SocketException(std::strerror(errno));
+    
     #endif
     
     return all_bytes.empty();
+}
+
+void Server::disconnect_player(std::shared_ptr<Player> player) {
+    for(auto it = players.begin(); it != players.end(); it++) {
+        if(*it == player) {
+            players.erase(it);
+            return;
+        }
+    }
 }

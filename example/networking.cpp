@@ -1,6 +1,7 @@
 #include "../src/server/server.hpp"
 #include "../src/client/client.hpp"
 #include <iostream>
+#include <limits>
 
 void start_server(unsigned short port) {
     std::cout << "Starting server with port " << port << "..." << std::endl;
@@ -9,56 +10,53 @@ void start_server(unsigned short port) {
     
     bool running = true;
     while(running) {
-        // Get events
-        std::deque<std::shared_ptr<GameEvent>> game_events = server.receive(500);
+        // Get messages
+        std::deque<std::shared_ptr<ServerMessage>> messages = server.receive(250);
         
-        // Parse events
-        for(auto it = game_events.begin(); it != game_events.end(); it++) {
+        // Parse messages
+        for(auto it = messages.begin(); it != messages.end(); it++) {
             
             std::string prefix;
-            if((*it)->player.empty())
+            if((*it)->sender->name.empty())
                 prefix = "~anon~";
             else
-                prefix = "<" + (*it)->player + ">";
+                prefix = "<" + (*it)->sender->name+ ">";
             
             switch((*it)->type) {
-                case GameEventType::Join:
-                    std::cout << prefix << " joined" << std::endl;
-                    server.add_event_all_except(
-                        GameEventJoin((*it)->player),
-                        (*it)->player
-                    );
-                    
-                    break;
-                case GameEventType::DoQuit:
-                    std::cout << prefix << " quit" << std::endl;
-                    server.add_event_all_except(
-                        GameEventQuit((*it)->player),
-                        (*it)->player
-                    );
-                    
-                    break;
-                case GameEventType::DoChat:
+                case GameMessageType::DoJoin:
                     {
-                        auto char_event = std::dynamic_pointer_cast<GameEventDoChat>(*it);
+                        auto join_event = std::dynamic_pointer_cast<ServerMessageDoJoin>(*it);
+                        if(join_event->sender->name.empty()) {
+                            std::cout << prefix << " joined as '" << join_event->name << '\'' << std::endl;
+                            join_event->sender->name = join_event->name;
+                        }
+                        else
+                            std::cout << prefix << " tried to join as '" << join_event->name << "', but this was refused as they already joined" << std::endl;
+                    }
+                    break;
+                case GameMessageType::DoQuit:
+                    std::cout << prefix << " quit" << std::endl;
+                    break;
+                case GameMessageType::DoChat:
+                    {
+                        auto char_event = std::dynamic_pointer_cast<ServerMessageDoChat>(*it);
                         std::cout << prefix << ": " << char_event->message << std::endl;
                         if(char_event->message == "@kill_server")
                             running = false;
-                        else {
-                            server.add_event_all_except(
-                                GameEventChat(char_event->player, char_event->message),
-                                char_event->player
-                            );
-                        }
                     }
                     break;
                 default:
-                    std::cout << "Ignored non-action event" << std::endl;
+                    std::cout << "Ignored unexpected message of type " << (*it)->type << std::endl;
+                    continue;
             }
+            
+            std::unique_ptr<ClientMessage> client_message = (*it)->to_client();
+            if(client_message)
+                server.add_message_all_except(*client_message, (*it)->sender);
         }
         
-        // Send buffered events
-        server.send_events(500);
+        // Send buffered messages
+        server.send_messages(250);
     }
 }
 
@@ -70,37 +68,37 @@ void start_client(std::string host, unsigned short port) {
     bool running = true;
     std::string name;
     while(running) {
-        // Get events
-        std::deque<std::shared_ptr<GameEvent>> game_events = client.receive(500);
+        // Get messages
+        std::deque<std::shared_ptr<ClientMessage>> messages = client.receive(500);
         
-        // Parse events
-        for(auto it = game_events.begin(); it != game_events.end(); it++) {
+        // Parse messages
+        for(auto it = messages.begin(); it != messages.end(); it++) {
             
             std::string prefix;
-            if((*it)->player.empty())
+            if((*it)->sender_name.empty())
                 prefix = "~anon~";
             else
-                prefix = "<" + (*it)->player + ">";
+                prefix = "<" + (*it)->sender_name + ">";
             
             switch((*it)->type) {
-                case GameEventType::Join:
+                case GameMessageType::Join:
                     std::cout << prefix << " joined" << std::endl;
                     break;
-                case GameEventType::Quit:
+                case GameMessageType::Quit:
                     std::cout << prefix << " quit" << std::endl;
                     break;
-                case GameEventType::Chat:
+                case GameMessageType::Chat:
                     {
-                        auto char_event = std::dynamic_pointer_cast<GameEventChat>(*it);
+                        auto char_event = std::dynamic_pointer_cast<ClientMessageChat>(*it);
                         std::cout << prefix << ": " << char_event->message << std::endl;
                     }
                     break;
                 default:
-                    std::cout << "Ignored action event" << std::endl;
+                    std::cout << "Ignored unexpected message of type " << (*it)->type << std::endl;
             }
         }
         
-        // Send a message
+        // Send a chat message
         std::string message;
         std::cout << name << "> " << std::flush;
         std::getline(std::cin, message);
@@ -112,15 +110,15 @@ void start_client(std::string host, unsigned short port) {
             
             std::cout << "What do you want to be called?\n> " << std::flush;
             std::getline(std::cin, name);
-            client.add_event(GameEventJoin(name));
+            client.add_message(ClientMessageDoJoin(name));
         }
         else if(message == "!quit")
             running = false;
         else
-            client.add_event(GameEventDoChat(message));
+            client.add_message(ClientMessageDoChat(message));
         
-        // Send all events with a timeout of 2 seconds
-        client.send_events(2000); // TODO warning? retry?
+        // Send all messages with a timeout of 2 seconds
+        client.send_messages(2000); // TODO warning? retry?
     }
 }
 
