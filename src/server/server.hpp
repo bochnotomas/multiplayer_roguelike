@@ -1,26 +1,21 @@
 #ifndef ROGUELIKE_SERVER_HPP_INCLUDED
 #define ROGUELIKE_SERVER_HPP_INCLUDED
-#include "../networking/socket_exception.hpp"
-#include "../networking/socket_platform.hpp"
 #include "../networking/server_message.hpp"
+#include "../networking/socket.hpp"
 
 class Server {
-    #ifdef ROGUELIKE_SOCKET_UNIX
     /// Listening socket for accepting connections
-    int listen_socket = -1;
+    Socket listen_socket;
+public:
     /// Connected players
     std::vector<std::shared_ptr<Player>> players;
-    #endif
     
-public:
     // TODO proper xml docstrings
     /// Create server with port number
-    Server(unsigned short port);
+    Server(uint16_t port);
     
-    /// Cleanup. Closes listening socket
-    ~Server();
-    
-    /// Receive messages, with a timeout. Automatically accepts connections
+    /// Receive messages, with a timeout. Automatically accepts connections. If
+    /// there are no players connected, then this will immediately return
     std::deque<std::shared_ptr<ServerMessage>> receive(int timeout_ms);
     
     /// Add a message to be sent to a player. Call send_messages to send all

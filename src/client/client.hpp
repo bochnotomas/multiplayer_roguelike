@@ -1,24 +1,19 @@
 #ifndef ROGUELIKE_CLIENT_HPP_INCLUDED
 #define ROGUELIKE_CLIENT_HPP_INCLUDED
-#include "../networking/socket_exception.hpp"
-#include "../networking/socket_platform.hpp"
 #include "../networking/client_message.hpp"
+#include "../networking/socket.hpp"
 #include <mutex>
 
 class Client {
-    std::mutex r_lock, w_lock;
+    // Buffers and locks
+    std::mutex r_lock, w_lock, s_lock;
     Buffer r_buffer, w_buffer;
     
-    #ifdef ROGUELIKE_SOCKET_UNIX
     /// Client socket connected to server
-    int client_socket = -1;
-    #endif
+    std::shared_ptr<Socket> client_socket;
 public:
     /// Connect client to server via host and port, with a timeout
-    Client(std::string host, unsigned short port, int timeout_ms);
-    
-    /// Cleanup. Close client socket
-    ~Client();
+    Client(std::string host, uint16_t port, int timeout_ms);
     
     /// Receive messages, with a timeout
     void receive_messages(int timeout_ms);

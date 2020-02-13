@@ -1,18 +1,5 @@
 #include "player.hpp"
 
-#ifdef ROGUELIKE_SOCKET_UNIX
-    #include <unistd.h> // close
-#endif
-
-Player::Player(int socket) :
-    socket(socket)
+Player::Player(Socket* socket) :
+    Socket(std::move(*socket)) // Call move constructor. Source invalidated
 {}
-
-Player::~Player() {
-    #ifdef ROGUELIKE_SOCKET_UNIX
-    
-    if(socket != -1)
-        close(socket);
-    
-    #endif
-}
