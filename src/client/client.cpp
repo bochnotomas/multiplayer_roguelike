@@ -1,194 +1,93 @@
+#include "../networking/socket_select.hpp"
 #include "client.hpp"
 #include <chrono>
 
-#ifdef ROGUELIKE_SOCKET_UNIX
-    // For getting error messages from system calls (errno)
-    #include <cerrno> // errno
-    #include <cstring> // strerror
-    
-    // Sockets
-    #include <sys/types.h> // AF_INET (Required for BSD systems only)
-    #include <sys/socket.h> // socket, bind
-    #include <unistd.h> // close
-    #include <netdb.h> // getaddrinfo
-    #include <poll.h> // poll, pollfd
-#endif
-
-Client::Client(std::string host, unsigned short port, int timeout_ms) {
-    #ifdef ROGUELIKE_SOCKET_UNIX
-    
-    // Create socket
-    client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if(client_socket == -1)
-        throw SocketException(std::strerror(errno));
-    
+Client::Client(std::string host, uint16_t port, int timeout_ms) :
+    // Open connection socket
+    client_socket(new Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))
+{
     // Resolve host
-    addrinfo* resolved_addresses;
-    addrinfo hints = {
-        .ai_flags = 0,
-        .ai_family = AF_INET,
-        .ai_socktype = SOCK_STREAM,
-        .ai_protocol = 0,
-        .ai_addrlen = 0,
-        .ai_addr = nullptr,
-        .ai_canonname = nullptr,
-        .ai_next = nullptr
-    };
+    auto addresses = Socket::resolve(host);
     
-    int gai_errno = getaddrinfo(host.c_str(), nullptr, &hints, &resolved_addresses);
-    if(gai_errno != 0) {
-        if(gai_errno == EAI_SYSTEM)
-            throw SocketException(std::strerror(errno));
-        else
-            throw SocketException(gai_strerror(gai_errno));
-    }
-    
-    // Create list of sockets to poll for accepted connections
-    std::vector<pollfd> poll_socks;
-    for(auto res = resolved_addresses; res != nullptr; res = res->ai_next) {
-        // Create socket
-        int candidate_sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-        if(candidate_sock == -1)
-            continue;
-        
-        // Connect
-        const size_t sock_addr_size = sizeof(sockaddr_in);
-        sockaddr_in sock_addr = {
-            .sin_family = AF_INET,
-            .sin_port = htons(port),
-            .sin_addr = ((sockaddr_in*)res->ai_addr)->sin_addr
-        };
-        
-        if(connect(candidate_sock, (sockaddr*)&sock_addr, sock_addr_size) != 0) {
-            close(candidate_sock);
-            continue;
+    // Connect to first available socket
+    SocketSelector selector;
+    for(auto it = addresses.begin(); it != addresses.end(); it++) {
+        try {
+            // Create socket
+            std::shared_ptr<Socket> candidate_socket(new Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+            
+            // Connect
+            candidate_socket->connect(AF_INET, *it, port);
+            
+            // Add to selector. Wait for writing to become available
+            selector.add_wait(SelectedEventType::Write, candidate_socket);
         }
-        
-        // Add to list of sockets
-        poll_socks.push_back({
-            .fd = candidate_sock,
-            .events = POLLOUT
-        });
+        catch(SocketException){}; // Ignore exceptions, just don't connect
     }
-    
-    // Free resolved address info
-    freeaddrinfo(resolved_addresses);
-    
-    if(poll_socks.empty())
-        throw SocketException("Failed to create socket for any resolved address");
     
     // Wait for any connection to be accepted
-    int event_count = poll(poll_socks.data(), poll_socks.size(), timeout_ms);
+    auto events = selector.wait(timeout_ms);
     
-    if(event_count < 1) {
-        for(auto it = poll_socks.begin(); it != poll_socks.end(); it++)
-            close(it->fd);
-        
-        if(event_count == 0)
-            throw SocketException("Failed to connect to server: timed out");
-        else
-            throw SocketException(std::strerror(errno));
+    // Parse events, accepting first available connection. All other sockets
+    // are automatically closed
+    std::shared_ptr<Socket> chosen_candidate = nullptr;
+    for(auto it = events.begin(); it != events.end(); it++) {
+        // Pick first available connection
+        if(it->is_of_type(SelectedEventType::Write) && it->socket->is_valid()) {
+            chosen_candidate = std::move(it->socket);
+            break;
+        }
     }
     
-    // Parse messages, accepting first available connection
-    client_socket = -1;
-    for(auto it = poll_socks.begin(); it != poll_socks.end(); it++) {
-        // Pick first available connection, close all other sockets
-        if(client_socket == -1 && (it->revents & POLLOUT))
-            client_socket = it->fd;
-        else
-            close(it->fd);
-    }
+    if(chosen_candidate == nullptr)
+        throw SocketException("Failed to connect to server: timed out");
     
-    // This won't normally happen, but sometimes connections disconnect after
-    // events are polled
-    if(client_socket == -1)
-        throw SocketException("Failed to connect to server: timed out after events");
+    // Close connection socket automatically and replace with new connection
+    client_socket = std::move(chosen_candidate);
     
-    #endif
-}
-
-Client::~Client() {
-    #ifdef ROGUELIKE_SOCKET_UNIX
-
-    // Close client socket
-    if(client_socket != -1)
-        close(client_socket);
-    
-    #endif
+    // Make socket non-blocking as we will be reading and writing from now on
+    client_socket->set_blocking(false);
 }
 
 void Client::receive_messages(int timeout_ms) {
+    // Lock socket
+    const std::lock_guard<std::mutex> s_lock_guard(s_lock);
+        
     std::deque<std::shared_ptr<ClientMessage>> messages;
     
-    #ifdef ROGUELIKE_SOCKET_UNIX
-    
-    // Wait for an event in the client socket
-    std::vector<pollfd> poll_socks = {{
-        .fd = client_socket,
-        .events = POLLIN
-    }};
-    
-    int event_count = poll(poll_socks.data(), poll_socks.size(), timeout_ms);
-    
-    if(event_count == -1)
-        throw SocketException(std::strerror(errno));
+    // Wait for a read event in the client socket
+    SocketSelector selector;
+    selector.add_wait(SelectedEventType::Read, client_socket);
+    auto events = selector.wait(timeout_ms);
     
     // Parse events
-    if(event_count == 0)
+    if(events.empty())
         return;
     
-    pollfd& poll_events = poll_socks[0];
-    if(poll_events.revents & POLLNVAL) {
-        // The invalid flag is set when the socket is already closed
-        throw SocketException("Connection lost: server disconnected (POLLNVAL)");
+    // There will only be one event. Read data
+    std::vector<uint8_t> read_buf;
+    if(!client_socket->read(read_buf)) {
+        // Close socket if read says it should close
+        client_socket->close();
+        return;
     }
-    else if(poll_events.revents & POLLIN) {
-        // If the read flag is set in the received events there is
-        // available data to read.
-        
-        // Add data to player's read buffer
-        std::array<uint8_t, 1024> read_buf;
-        ssize_t bytes_read = read(poll_events.fd, read_buf.begin(), read_buf.size());
-        
-        // In blocking mode, a 0-byte read means the server closed
-        // their socket, so, close this socket
-        if(bytes_read == 0) {
-            if(close(client_socket) != 0)
-                throw SocketException(std::strerror(errno));
-            
-            throw SocketException("Connection lost: server disconnected (0-read)");
-        }
-        else if(bytes_read == -1)
-            throw SocketException(std::strerror(errno));
-        
+    else if(!read_buf.empty()) {
         // Lock read buffer
-        const std::lock_guard<std::mutex> lock(r_lock);
+        const std::lock_guard<std::mutex> r_lock_guard(r_lock);
         
-        // Append read data to buffer
-        std::vector<uint8_t> chunk(read_buf.begin(), std::next(read_buf.begin(), bytes_read));
-        r_buffer.insert(chunk); // TODO allow array with given size as input for buffer
+        // Insert data to read buffer
+        r_buffer.insert(read_buf);
     }
-    else if(poll_events.revents & (POLLHUP | POLLERR)) {
-        // If the hangup flag is set in the received events the server
-        // disconnected with a TCP FIN packet. If the error flag is set
-        // then the server disconnected with a TCP RST packet
-        if(close(client_socket) != 0)
-            throw SocketException(std::strerror(errno));
-        
-        throw SocketException("Connection lost: server disconnected (POLLHUP | POLLERR)");
-    }
-    
-    #endif
 }
 
 void Client::send_messages(int timeout_ms) {
-    // Lock write buffer
-    const std::lock_guard<std::mutex> lock(w_lock);
-    
     // Abort if no data to read
     if(w_buffer.size() == 0)
         return;
+    
+    // Lock socket and write buffer
+    const std::lock_guard<std::mutex> s_lock_guard(s_lock);
+    const std::lock_guard<std::mutex> w_lock_guard(w_lock);
     
     // Merge buffer
     std::vector<uint8_t> bytes;
@@ -200,43 +99,33 @@ void Client::send_messages(int timeout_ms) {
     if(timeout_ms > 0)
         start = std::chrono::high_resolution_clock::now();
     
-    #ifdef ROGUELIKE_SOCKET_UNIX
-    
     // Start sending
-    int flags = timeout_ms == -1 ? 0 : MSG_DONTWAIT;
     while(sent != bytes.size()) {
         // Send data
-        ssize_t result = send(client_socket, bytes.data() + sent, bytes.size() - sent, flags);
-        
-        // Ignore EWOULDBLOCK and EAGAIN
-        if(result < 0) {
-            if(errno != EWOULDBLOCK && errno != EAGAIN)
-                throw SocketException(std::strerror(errno));
-        }
+        //size_t result = client_socket->write(bytes.begin() + sent, bytes.size() - sent);
+        size_t result = client_socket->write(bytes.begin() + sent, bytes.size() - sent);
         
         // Clear sent part of buffer
         w_buffer.erase(result);
         sent += result;
         
         // Stop sending if timeout exceeded
-        if(timeout_ms == -1) {
+        if(timeout_ms == 0)
+            break;
+        else if(timeout_ms != -1) {
             auto end = std::chrono::high_resolution_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
             if(elapsed > timeout_ms)
                 break;
         }
-        else if(timeout_ms == 0)
-            break;
     }
-    
-    #endif
     
     return;
 }
 
 void Client::add_message(const ClientMessage& message) {
     // Lock write buffer
-    const std::lock_guard<std::mutex> lock(w_lock);
+    const std::lock_guard<std::mutex> w_lock_guard(w_lock);
     
     // Insert to buffer
     w_buffer.insert(message.to_bytes());
@@ -246,7 +135,7 @@ std::deque<std::unique_ptr<ClientMessage>> Client::get_messages() {
     std::deque<std::unique_ptr<ClientMessage>> messages;
     
     // Lock read buffer
-    const std::lock_guard<std::mutex> lock(r_lock);
+    const std::lock_guard<std::mutex> r_lock_guard(r_lock);
     
     // Check if a message can be built from the current read buffer.
     // Try to build as many messages as possible
@@ -255,6 +144,7 @@ std::deque<std::unique_ptr<ClientMessage>> Client::get_messages() {
         
         if(!message)
             break;
+
         // std::move used to transfer ownership to vector
         messages.push_back(std::move(message));
     }

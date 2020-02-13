@@ -1,7 +1,4 @@
 # Progress (add your stuff here if you want to)
-### Networking
-- Need to port to Winsock2 for Windows support
-
 # Building
 #### Linux:
 ```

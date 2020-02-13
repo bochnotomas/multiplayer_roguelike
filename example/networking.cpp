@@ -15,9 +15,12 @@ void start_server(unsigned short port) {
         // Get messages
         std::deque<std::shared_ptr<ServerMessage>> messages = server.receive(250);
         
+        // Sleep if there are no players connected
+        if(server.players.empty())
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        
         // Parse messages
         for(auto it = messages.begin(); it != messages.end(); it++) {
-            
             std::string prefix;
             if((*it)->sender->name.empty())
                 prefix = "~anon~";
@@ -49,7 +52,6 @@ void start_server(unsigned short port) {
                     break;
                 default:
                     std::cout << "Ignored unexpected message of type " << (*it)->type << std::endl;
-                    continue;
             }
             
             std::unique_ptr<ClientMessage> client_message = (*it)->to_client();
@@ -123,6 +125,7 @@ void start_client(std::string host, unsigned short port) {
         if(message == "!join") {
             if(!name.empty()) {
                 std::cout << "Already joined as '" << name << '\'' << std::endl;
+                continue;
             }
             
             std::cout << "What do you want to be called?\n> " << std::flush;
