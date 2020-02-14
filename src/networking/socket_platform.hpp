@@ -14,6 +14,7 @@
     #define SOCKET_EAGAIN EAGAIN
     #define SOCKET_EWOULDBLOCK EAGAIN
     #define SOCKET_LAST_ERROR errno
+    #define IN_ADDR in_addr
 #elif defined(_WIN32) || defined(WIN32)
     // For compatibility with Berkeley sockets
     #define SOCKET_ADDRESS_FAMILY short
@@ -23,8 +24,5 @@
 #else
     #error Unsupported platform. Unix-like and Windows only
 #endif
-
-// For compatibility with Berkeley sockets
-#define SOCKET_ADDRESS in_addr
 
 #endif

@@ -10,6 +10,7 @@
     #include <arpa/inet.h> // sockaddr_in, sockaddr, htons, INADDR_ANY, IPPROTO_TCP
     #include <sys/types.h> // AF_INET (Required for BSD systems only)
 #else
+    #pragma comment(lib,"Ws2_32.lib")
     #include <winsock2.h>
 #endif
 
@@ -31,7 +32,7 @@ public:
     /// Resolves a host to a list of addresses. If internet access is down,
     /// this _WILL_ block forever
     // TODO make this non-blocking using a dedicated thread
-    static std::vector<SOCKET_ADDRESS> resolve(std::string host);
+    static std::vector<IN_ADDR> resolve(std::string host);
     
     /// Create socket with address family, socket type and protocol
     Socket(SOCKET_ADDRESS_FAMILY address_family, int type, int protocol);
@@ -69,7 +70,7 @@ public:
     size_t write(const std::vector<uint8_t>::iterator begin, size_t data_size);
     
     /// Bind socket to address family, address and port
-    void bind(SOCKET_ADDRESS_FAMILY address_family, SOCKET_ADDRESS address, uint16_t port);
+    void bind(SOCKET_ADDRESS_FAMILY address_family, IN_ADDR address, uint16_t port);
     
     /// Bind socket to address family and port for all addresses
     void bind(SOCKET_ADDRESS_FAMILY address_family, uint16_t port);
@@ -88,7 +89,7 @@ public:
     /// connection was successful, false otherwise, on non-blocking calls. On
     /// blocking calls, false never gets returned, as the only way this can
     /// fail is by throwing a SocketException
-    bool connect(SOCKET_ADDRESS_FAMILY address_family, SOCKET_ADDRESS address, uint16_t port);
+    bool connect(SOCKET_ADDRESS_FAMILY address_family, IN_ADDR address, uint16_t port);
     
     /// Set socket to blocking or non-blocking mode. Sockets are blocking by
     /// default

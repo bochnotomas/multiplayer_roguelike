@@ -8,9 +8,9 @@
     #include <fcntl.h> // fcntl, F_SETFL, O_NONBLOCK
 #endif
 
-std::vector<SOCKET_ADDRESS> Socket::resolve(std::string host) {
+std::vector<IN_ADDR> Socket::resolve(std::string host) {
     // Resolve host
-    std::vector<SOCKET_ADDRESS> addresses_vec;
+    std::vector<IN_ADDR> addresses_vec;
     addrinfo* resolved_addresses;
     
     int gai_errno = getaddrinfo(host.c_str(), nullptr, nullptr, &resolved_addresses);
@@ -155,7 +155,7 @@ size_t Socket::write(const std::vector<uint8_t>::iterator begin, size_t data_siz
     return write(&(*begin), data_size);
 }
 
-void Socket::bind(SOCKET_ADDRESS_FAMILY address_family, SOCKET_ADDRESS address, uint16_t port) {
+void Socket::bind(SOCKET_ADDRESS_FAMILY address_family, IN_ADDR address, uint16_t port) {
     if(!is_valid())
         throw SocketException("Socket::bind: Socket has already been invalidated");
     
@@ -200,7 +200,7 @@ std::unique_ptr<Socket> Socket::accept() {
     return std::unique_ptr<Socket>(new Socket(accepted_raw_sock));
 }
 
-bool Socket::connect(SOCKET_ADDRESS_FAMILY address_family, SOCKET_ADDRESS address, uint16_t port) {
+bool Socket::connect(SOCKET_ADDRESS_FAMILY address_family, IN_ADDR address, uint16_t port) {
     if(!is_valid())
         throw SocketException("Socket::connect: Socket has already been invalidated");
     
