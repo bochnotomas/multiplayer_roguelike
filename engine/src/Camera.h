@@ -24,4 +24,7 @@ private:
 	char m_blank_char; // character to put if there is nothing to render on position
 	Map m_map; // map which camera is observing
 	std::mutex pos_mutex; // prevent changing position during rendering a frame
+	std::vector<Object*> objects_in_range;
+
+	void get_objects_in_range(std::pair<long, long> range_y, std::pair<long, long> range_x);
 };

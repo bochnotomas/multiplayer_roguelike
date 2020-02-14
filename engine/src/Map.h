@@ -27,13 +27,14 @@ public:
 	void generate_square_map(unsigned int width, unsigned int height) {
 		m_size = { width, height };
 		m_plane = MapPlane(height, std::vector<MapPoint>(width, { ' ', true, Color::WHITE }));
-		m_plane[0] = std::vector<MapPoint>(width, { '#', false, Color::LIGHT_PURPLE });
-		m_plane[height-1] = std::vector<MapPoint>(width, { '#', false, Color::LIGHT_PURPLE });
+		m_plane[0] = std::vector<MapPoint>(width, { '#', false, Color::RED });
+		m_plane[height-1] = std::vector<MapPoint>(width, { '#', false, Color::CYAN });
 
 		for (size_t i = 1; i < height; i++) {
-			m_plane[i][0] = { '#', false, Color::LIGHT_PURPLE };
-			m_plane[i][width-1] = { '#', false, Color::LIGHT_PURPLE };
+			m_plane[i][0] = { '#', false, Color::MAGENTA };
+			m_plane[i][width-1] = { '#', false, Color::GREEN };
 		}
+		int x=0;
 	}
 #endif
 // TODO: Generate map function Euan

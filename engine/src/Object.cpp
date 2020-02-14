@@ -1,7 +1,7 @@
 #include "Object.h"
 
 
-char Object::get_char() const
+char Object::get_char()
 {
 	return m_character;
 }

@@ -25,23 +25,15 @@ constexpr unsigned short FRAME_RATE = 60;
 };
 
  enum class Color {
-	 NO_COLOR = 0,
 	 BLACK = 30,
-	 BLUE,
-	 GREEN,
-	 AQUA,
 	 RED,
-	 PURPLE,
+	 GREEN,
 	 YELLOW,
+	 BLUE,
+	 MAGENTA,
+	 CYAN,
 	 WHITE,
-	 GRAY,
-	 LIGHT_BLUE,
-	 LIGHT_GREEN,
-	 LIGHT_AQUA,
-	 LIGHT_RED,
-	 LIGHT_PURPLE,
-	 LIGHT_YELLOW,
-	 BRIGHT_WHITE,
+	 NO_COLOR
  };
 
 enum ObjectType {

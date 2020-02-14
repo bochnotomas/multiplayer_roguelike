@@ -10,7 +10,7 @@ public:
 	Object(const char character, Direction direction, bool visibility, std::pair<long, long> start_position, Color color) :
 		m_character(character), m_dir(direction), m_visibility(visibility), m_position(std::move(start_position)), m_color(color) {}
 	Object(const char character, Direction direction, bool visibility, std::pair<long, long> start_position) : 
-		Object(character, direction, visibility, start_position, Color::LIGHT_AQUA) {}
+		Object(character, direction, visibility, start_position, Color::WHITE) {}
 	Object(const char character, Direction direction, bool visibility) : 
 		Object(character, direction, visibility, { 0,0 }) {}
 	Object(const char character, Direction direction) : 
@@ -20,7 +20,7 @@ public:
 	Object() : 
 		Object('x') {}
 
-	char get_char() const;
+	char get_char();
 
 	Color get_color() const;
 

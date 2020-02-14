@@ -25,7 +25,7 @@ public:
 		while (b_render) {
 			// go to (0,0) position
 			std::cout << "\033[0;0f" << 
-					  m_cam->get_to_render();// << "W - move up, S - move down, A - move left, D move right, E - exit";
+					  m_cam->get_to_render() << "W - move up, S - move down, A - move left, D move right, E - exit";
 		}
 		// re-enable cursor
 		std::cout << "\033[0;0f\e[?25h";
@@ -68,6 +68,10 @@ public:
 	}
 	//End of Adapted
 	
+	~Renderer(){
+		m_cam = nullptr;
+		delete m_cam;
+	}
 private:
 	Camera* m_cam;
 };
