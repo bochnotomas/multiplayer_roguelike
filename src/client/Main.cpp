@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 	map.generate_square_map(100, 30);
 
 	// sample object
-	Object player = Object('x', Direction::NORTH, true, { 10,15 });
+	Object player = Object('x', Direction::NORTH, true, { 10,15 }, Color::MAGENTA);
 
 	// add player into main map
 	map.objects.push_back(&player);
@@ -53,16 +53,16 @@ int main(int argc, char* argv[]) {
 			game_end = true;
 			break;
 		case 'w':
-			main_cam->move(Direction::NORTH);
+			player.move(Direction::NORTH);
 		break;
 		case 's':
-			main_cam->move(Direction::SOUTH);
+			player.move(Direction::SOUTH);
 		break;
 		case 'a':
-			main_cam->move(Direction::WEST);
+			player.move(Direction::WEST);
 		break;
 		case 'd':
-			main_cam->move(Direction::EAST);
+			player.move(Direction::EAST);
 		break;
 		default:
 			break;
