@@ -8,3 +8,4 @@ CMakeCache.txt
 CMakeFiles/
 Makefile
 build/
+build_win32/

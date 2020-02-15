@@ -142,6 +142,8 @@ void start_client(std::string host, unsigned short port) {
 }
 
 int main(int argc, char **argv) {
+    Socket::winsock2_init();
+    
     std::cout << "Enter port number: ";
     unsigned short port;
     std::cin >> port;
@@ -161,6 +163,7 @@ int main(int argc, char **argv) {
     }
     
     std::cout << "Goodbye..." << std::endl;
+    Socket::winsock2_cleanup();
     return 0;
 }
 

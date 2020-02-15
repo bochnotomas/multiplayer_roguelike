@@ -10,8 +10,8 @@
     #include <arpa/inet.h> // sockaddr_in, sockaddr, htons, INADDR_ANY, IPPROTO_TCP
     #include <sys/types.h> // AF_INET (Required for BSD systems only)
 #else
-    #pragma comment(lib,"Ws2_32.lib")
     #include <winsock2.h>
+    #include <ws2tcpip.h>
 #endif
 
 /// A cross platform socket object
@@ -29,6 +29,12 @@ class Socket {
     /// SocketSelector is a friend of Socket
     friend class SocketSelector;
 public:
+    /// Initialise winsock2 if on Windows
+    static void winsock2_init();
+    
+    /// Cleanup winsock2 if on Windows
+    static void winsock2_cleanup();
+    
     /// Resolves a host to a list of addresses. If internet access is down,
     /// this _WILL_ block forever
     // TODO make this non-blocking using a dedicated thread

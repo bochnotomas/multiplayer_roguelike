@@ -8,10 +8,26 @@
     #include <fcntl.h> // fcntl, F_SETFL, O_NONBLOCK
 #endif
 
+void Socket::winsock2_init() {
+    #ifndef ROGUELIKE_UNIX
+    WSADATA wsaData;
+    int startup_res = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if(startup_res != 0)
+        throw SocketException::from_errno("Socket::winsock2_init: WSAStartup failed with code " + std::to_string(startup_res));
+    #endif
+}
+    
+void Socket::winsock2_cleanup() {
+    #ifndef ROGUELIKE_UNIX
+    if(WSACleanup() == SOCKET_ERROR)
+        throw SocketException::from_errno("Socket::winsock2_cleanup: ");
+    #endif
+}
+
 std::vector<IN_ADDR> Socket::resolve(std::string host) {
     // Resolve host
     std::vector<IN_ADDR> addresses_vec;
-    addrinfo* resolved_addresses;
+    PADDRINFOA resolved_addresses;
     
     int gai_errno = getaddrinfo(host.c_str(), nullptr, nullptr, &resolved_addresses);
     if(gai_errno != 0)
@@ -92,7 +108,13 @@ bool Socket::read(std::vector<uint8_t>& output) {
     
     // Read up to 1 KiB of data
     static const size_t buffer_size = 1024;
+    
+    #ifdef ROGUELIKE_UNIX
     uint8_t read_buf[buffer_size];
+    #else
+    char read_buf[buffer_size];
+    #endif
+    
     ssize_t bytes_read = ::recv(raw_sock, read_buf, buffer_size, 0);
     
     if(bytes_read == SOCKET_ERROR) {
@@ -128,7 +150,7 @@ size_t Socket::write(const uint8_t* data, size_t data_size) {
     // and this is a generic socket wrapper, not just for TCP
     ssize_t bytes_written = ::write(raw_sock, data, data_size);
     #else
-    int bytes_written = ::send(raw_sock, data, data_size, 0);
+    int bytes_written = ::send(raw_sock, (const char*)data, data_size, 0);
     #endif
     
     if(bytes_written == SOCKET_ERROR) {
@@ -172,7 +194,10 @@ void Socket::bind(SOCKET_ADDRESS_FAMILY address_family, IN_ADDR address, uint16_
 }
 
 void Socket::bind(SOCKET_ADDRESS_FAMILY address_family, uint16_t port) {
-    bind(address_family, {.s_addr = INADDR_ANY}, port);
+    IN_ADDR any_address = {};
+    any_address.s_addr = INADDR_ANY;
+    
+    bind(address_family, any_address, port);
 }
 
 void Socket::listen(int backlog) {
