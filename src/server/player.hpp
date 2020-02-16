@@ -3,6 +3,8 @@
 #include "../networking/socket.hpp"
 #include "../networking/buffer.hpp"
 
+
+
 /// A player that is connected to a server. A player _IS_ a socket, since it
 /// cannot exist without a connection
 struct Player : Socket {
@@ -22,5 +24,20 @@ struct Player : Socket {
     /// Destructor
     ~Player() = default;
 };
+
+int playerPositionX, playerPositionY;
+int obstaclePositionX, obstaclePositionY;
+int potionPositionX, potionPositionY;
+int playerSpeed;
+enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
+eDirection dir;
+
+void setup();
+
+void potionCheck(int axisValue1, int axisValue2);
+
+void playerMovementLogic();
+
+void inputHandling();
 
 #endif
