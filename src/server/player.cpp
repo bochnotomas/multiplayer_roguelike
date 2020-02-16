@@ -2,20 +2,18 @@
 
 Player::Player(Socket* socket) :
     Socket(std::move(*socket)) // Call move constructor. Source invalidated
-{}
-
-void setup() {
-    dir = STOP;
-    speed = 1; 
+	dir = STOP;
+	speed = 1;
 	playerPositionX = 10;
 	playerPositionY = 15;
 	obstaclePositionY = 15;
 	obstaclePositionX = 15;
 	potionPositionX = 12;
 	potionPositionY = 2;
-}
+{}
 
-void potionCheck(int axisValue1, int axisValue2) {
+
+void Player::potionCheck(int axisValue1, int axisValue2) {
 	if (map[axisValue1][axisValue2] == 'P') {
 		speed++;
 		potionPositionX = rand() % 40 + 1;
@@ -23,7 +21,7 @@ void potionCheck(int axisValue1, int axisValue2) {
 	}
 }
 
-void playerMovementLogic() {
+void Player::playerMovementLogic() {
 	bool ifBreak = false;
 	switch (dir) {
 	case LEFT:
@@ -107,31 +105,31 @@ void playerMovementLogic() {
 
 }
 
-void inputHandling() {
-	void inputHandling()
+
+void Player::inputHandling()
+{
+	//while (!_kbhit())
+	//	this_thread::sleep_for(chrono::milliseconds(200));
+
+	switch (_getch())
 	{
-		//while (!_kbhit())
-		//	this_thread::sleep_for(chrono::milliseconds(200));
-
-		switch (_getch())
-		{
-		case 'a':
-			dir = LEFT;
-			break;
-		case 's':
-			dir = DOWN;
-			break;
-		case 'd':
-			dir = RIGHT;
-			break;
-		case 'w':
-			dir = UP;
-			break;
-		case '-':
-			speed--;
-			break;
-		}
-
+	case 'a':
+		dir = LEFT;
+		break;
+	case 's':
+		dir = DOWN;
+		break;
+	case 'd':
+		dir = RIGHT;
+		break;
+	case 'w':
+		dir = UP;
+		break;
+	case '-':
+		speed--;
+		break;
 	}
+
 }
+
 

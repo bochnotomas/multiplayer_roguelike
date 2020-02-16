@@ -23,21 +23,21 @@ struct Player : Socket {
     
     /// Destructor
     ~Player() = default;
+
+    int playerPositionX, playerPositionY;
+    int obstaclePositionX, obstaclePositionY;
+    int potionPositionX, potionPositionY;
+    int playerSpeed;
+    enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
+    eDirection dir;
+
+    void potionCheck(int axisValue1, int axisValue2);
+
+    void playerMovementLogic();
+
+    void inputHandling();
 };
 
-int playerPositionX, playerPositionY;
-int obstaclePositionX, obstaclePositionY;
-int potionPositionX, potionPositionY;
-int playerSpeed;
-enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
-eDirection dir;
 
-void setup();
-
-void potionCheck(int axisValue1, int axisValue2);
-
-void playerMovementLogic();
-
-void inputHandling();
 
 #endif
