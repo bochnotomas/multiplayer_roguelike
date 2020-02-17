@@ -1,6 +1,10 @@
 #include <thread>
 #include <utility>
 #include <vector>
+#if defined(_WIN32) || defined(WIN32)
+#include <stdio.h>
+#include <conio.h>
+#endif
 
 #include "Commons.h"
 #include "Renderer.h"
@@ -46,7 +50,11 @@ int main(int argc, char* argv[]) {
 		begin = end;
 		// input handling
 
+#if defined(unix) || defined(__unix) || defined(__unix__)
 		input = Renderer::getch();
+#elif defined(_WIN32) || defined(WIN32)
+		input = getch();
+#endif
 		switch (input)
 		{
 		case 'e':

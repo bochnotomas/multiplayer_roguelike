@@ -4,8 +4,10 @@
 #include "Commons.h"
 #include <thread>
 #include "Camera.h"
+#if defined(unix) || defined(__unix) || defined(__unix__)
 #include <unistd.h>
 #include <termios.h>
+#endif
 
 // allows to fast writing data into console
 class Renderer
@@ -44,6 +46,7 @@ public:
 		delete title;
 	}
 
+#if defined(unix) || defined(__unix) || defined(__unix__)
 	//Adapted from https://stackoverflow.com/questions/7469139/what-is-the-equivalent-to-getch-getche-in-linux
 	static char getch(void) {
 		char buf = 0;
@@ -67,7 +70,8 @@ public:
 		return buf;
 	}
 	//End of Adapted
-	
+#endif
+
 	~Renderer(){
 		m_cam = nullptr;
 		delete m_cam;
