@@ -16,7 +16,6 @@ Player::Player(Socket* socket) :
 	obstaclePositionX = 15;
 	potionPositionX = 12;
 	potionPositionY = 2;
-
 }
 
 
