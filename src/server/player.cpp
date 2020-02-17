@@ -1,7 +1,9 @@
 #include "player.hpp"
+using namespace std;
 
 Player::Player(Socket* socket) :
     Socket(std::move(*socket)) // Call move constructor. Source invalidated
+{
 	dir = STOP;
 	speed = 1;
 	playerPositionX = 10;
@@ -10,10 +12,10 @@ Player::Player(Socket* socket) :
 	obstaclePositionX = 15;
 	potionPositionX = 12;
 	potionPositionY = 2;
-{}
+}
 
 
-void Player::potionCheck(int axisValue1, int axisValue2) {
+void Player::potionCheck(int axisValue1, int axisValue2, vector <vector<char>>& map) {
 	if (map[axisValue1][axisValue2] == 'P') {
 		speed++;
 		potionPositionX = rand() % 40 + 1;
@@ -21,7 +23,7 @@ void Player::potionCheck(int axisValue1, int axisValue2) {
 	}
 }
 
-void Player::playerMovementLogic() {
+void Player::playerMovementLogic(vector <vector<char>>& map) {
 	bool ifBreak = false;
 	switch (dir) {
 	case LEFT:
@@ -106,12 +108,10 @@ void Player::playerMovementLogic() {
 }
 
 
-void Player::inputHandling()
+void Player::inputHandling(char new_dir)
 {
-	//while (!_kbhit())
-	//	this_thread::sleep_for(chrono::milliseconds(200));
 
-	switch (_getch())
+	switch (new_dir)
 	{
 	case 'a':
 		dir = LEFT;
