@@ -2,6 +2,7 @@
 #define ROGUELIKE_PLAYER_HPP_INCLUDED
 #include "../networking/socket.hpp"
 #include "../networking/buffer.hpp"
+#include "GameObject.hpp"
 #include <vector>
 
 using namespace std;
@@ -11,7 +12,7 @@ enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
 
 /// A player that is connected to a server. A player _IS_ a socket, since it
 /// cannot exist without a connection
-struct Player : Socket {
+struct Player : Socket, GameObject {
     /// Read/write buffers for network messages
     Buffer r_buffer, w_buffer;
     
@@ -31,9 +32,11 @@ struct Player : Socket {
     int playerPositionX, playerPositionY;
     int obstaclePositionX, obstaclePositionY;
     int potionPositionX, potionPositionY;
-    int playerSpeed;
-
-    
+    int health;
+    int attack;
+    int defense;
+    int strength;
+    int movementSpeed;
     eDirection dir;
 
     void potionCheck(int axisValue1, int axisValue2, vector <vector<char>>& map );

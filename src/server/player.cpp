@@ -5,13 +5,18 @@ Player::Player(Socket* socket) :
     Socket(std::move(*socket)) // Call move constructor. Source invalidated
 {
 	dir = STOP;
-	speed = 1;
+	movementSpeed = 1;
+	health = 100;
+	attack = 1;
+	defense = 1;
+	strength = 1;
 	playerPositionX = 10;
 	playerPositionY = 15;
 	obstaclePositionY = 15;
 	obstaclePositionX = 15;
 	potionPositionX = 12;
 	potionPositionY = 2;
+
 }
 
 
@@ -33,7 +38,7 @@ void Player::playerMovementLogic(vector <vector<char>>& map) {
 				ifBreak = true;
 				break;
 			}
-			potionCheck(playerPositionY, i);
+			potionCheck(playerPositionY, i, map);
 
 		}
 		if (ifBreak == false) {
@@ -49,7 +54,7 @@ void Player::playerMovementLogic(vector <vector<char>>& map) {
 				ifBreak = true;
 				break;
 			}
-			potionCheck(playerPositionY, i);
+			potionCheck(playerPositionY, i, map);
 
 		}
 		if (ifBreak == false) {
@@ -64,7 +69,7 @@ void Player::playerMovementLogic(vector <vector<char>>& map) {
 				ifBreak = true;
 				break;
 			}
-			potionCheck(i, playerPositionX);
+			potionCheck(i, playerPositionX, map);
 		}
 		if (ifBreak == false) {
 
@@ -79,7 +84,7 @@ void Player::playerMovementLogic(vector <vector<char>>& map) {
 				ifBreak = true;
 				break;
 			}
-			potionCheck(i, playerPositionX);
+			potionCheck(i, playerPositionX, map);
 		}
 		if (ifBreak == false) {
 			playerPositionY = playerPositionY + speed;
