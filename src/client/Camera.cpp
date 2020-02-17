@@ -50,7 +50,8 @@ std::string Camera::get_to_render()	{
 	std::pair<unsigned long, unsigned long> map_size = m_map.get_map_size();
 
 	// color of last cell
-	Color last_color = Color::NO_COLOR;
+	Color last_fg_color = Color::NO_COLOR;
+	Color last_bg_color = Color::NO_COLOR;
 
 	// get objects in range of camera
 	get_objects_in_range({-1 * (RENDER_HEIGHT / 2) + m_position.second,  RENDER_HEIGHT / 2 + m_position.second},
@@ -66,20 +67,24 @@ std::string Camera::get_to_render()	{
 			if (i >= 0 && j >= 0 && i < map_size.second && j < map_size.first)
 			{
 				// check if last current cell is in the same color as before
-				if((*plane)[i][j].color!=last_color){
-					// set last_color to current color
-					last_color = (*plane)[i][j].color;
+				if((*plane)[i][j].formating.text_color!=last_fg_color ||
+					(*plane)[i][i].formating.background_color!=last_bg_color){
+					// set last_fg_color to current color
+					last_fg_color = (*plane)[i][j].formating.text_color;
+					last_bg_color = (*plane)[i][j].formating.background_color;
 					// set color code to current color
-					map_to_render.append(std::string("\033[" + std::to_string(static_cast<int>((*plane)[i][j].color) )+ "m"));
+					// \033[3;42;30m
+					map_to_render.append(std::string("\033[3;" + std::to_string(static_cast<int>((*plane)[i][j].formating.background_color)+10 ) + ";" +
+					  std::to_string(static_cast<int>((*plane)[i][j].formating.text_color) ) + "m"));
 				}
 				// flag to check if on current cell is an object
 				bool object = false;
 				// check all objects in range if there is a one on current position
 				for (Object* obj : objects_in_range){
 				if (obj->get_visibility() && obj->get_position().second == i && obj->get_position().first == j){
-					map_to_render.append(std::string("\033[" + std::to_string(static_cast<int>(obj->get_color()) ) + "m"));
+					map_to_render.append(std::string("\033[" + std::to_string(static_cast<int>(obj->get_formating().text_color) ) + "m"));
 					map_to_render += obj->get_char();
-					map_to_render.append(std::string("\033[" + std::to_string(static_cast<int>(last_color) )+ "m"));
+					map_to_render.append(std::string("\033[" + std::to_string(static_cast<int>(last_fg_color) )+ "m"));
 					object = true;
 				}
 				}
@@ -88,8 +93,8 @@ std::string Camera::get_to_render()	{
 			}
 			else
 			{
-				if(last_color != Color::NO_COLOR){
-					last_color = Color::NO_COLOR;
+				if(last_fg_color != Color::NO_COLOR){
+					last_fg_color = Color::NO_COLOR;
 					map_to_render.append("\033[0m");
 				}
 				map_to_render+=m_blank_char;

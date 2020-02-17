@@ -6,9 +6,9 @@ char Object::get_char()
 	return m_character;
 }
 
-Color Object::get_color() const
+Formating Object::get_formating() const
 {
-	return m_color;
+	return m_formating;
 }
 
 bool Object::get_visibility() const

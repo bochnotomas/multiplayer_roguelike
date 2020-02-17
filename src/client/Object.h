@@ -7,10 +7,10 @@ class Object
 public:
 	virtual ~Object() = default;
 
-	Object(const char character, Direction direction, bool visibility, std::pair<long, long> start_position, Color color) :
-		m_character(character), m_dir(direction), m_visibility(visibility), m_position(std::move(start_position)), m_color(color) {}
+	Object(const char character, Direction direction, bool visibility, std::pair<long, long> start_position, Formating formating) :
+		m_character(character), m_dir(direction), m_visibility(visibility), m_position(std::move(start_position)), m_formating(formating) {}
 	Object(const char character, Direction direction, bool visibility, std::pair<long, long> start_position) : 
-		Object(character, direction, visibility, start_position, Color::WHITE) {}
+		Object(character, direction, visibility, start_position, {Color::WHITE, Color::BLACK}) {}
 	Object(const char character, Direction direction, bool visibility) : 
 		Object(character, direction, visibility, { 0,0 }) {}
 	Object(const char character, Direction direction) : 
@@ -22,7 +22,7 @@ public:
 
 	char get_char();
 
-	Color get_color() const;
+	Formating get_formating() const;
 
 	bool get_visibility() const;
 
@@ -46,5 +46,5 @@ protected:
 	// define if object is visible
 	bool m_visibility;
 	// color of the object
-	Color m_color;
+	Formating m_formating;
 };

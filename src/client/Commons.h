@@ -42,10 +42,16 @@ enum ObjectType {
 	ENEMY
 };
 
+struct Formating {
+	Color text_color;
+	Color background_color;
+	// TODO: add bold, curved etc...
+};
+
 struct MapPoint {
 	char character;
 	bool accesible;
-	Color color;
+	Formating formating;
 };
 
 using MapPlane = std::vector<std::vector<MapPoint>>;

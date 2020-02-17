@@ -26,13 +26,13 @@ public:
 	// generate square map
 	void generate_square_map(unsigned int width, unsigned int height) {
 		m_size = { width, height };
-		m_plane = MapPlane(height, std::vector<MapPoint>(width, { ' ', true, Color::WHITE }));
-		m_plane[0] = std::vector<MapPoint>(width, { '#', false, Color::RED });
-		m_plane[height-1] = std::vector<MapPoint>(width, { '#', false, Color::CYAN });
+		m_plane = MapPlane(height, std::vector<MapPoint>(width, { ' ', true, {Color::WHITE, Color::GREEN} }));
+		m_plane[0] = std::vector<MapPoint>(width, { '#', false, {Color::RED, Color::MAGENTA} });
+		m_plane[height-1] = std::vector<MapPoint>(width, { '#', false, {Color::RED, Color::MAGENTA} });
 
 		for (size_t i = 1; i < height; i++) {
-			m_plane[i][0] = { '#', false, Color::MAGENTA };
-			m_plane[i][width-1] = { '#', false, Color::GREEN };
+			m_plane[i][0] = { '#', false, {Color::RED, Color::MAGENTA} };
+			m_plane[i][width-1] = { '#', false, {Color::RED, Color::MAGENTA} };
 		}
 		int x=0;
 	}

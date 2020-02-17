@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 	map.generate_square_map(100, 30);
 
 	// sample object
-	Object player = Object('x', Direction::NORTH, true, { 10,15 }, Color::MAGENTA);
+	Object player = Object('x', Direction::NORTH, true, { 10,15 }, {Color::BLACK, Color::WHITE});
 
 	// add player into main map
 	map.objects.push_back(&player);
