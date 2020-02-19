@@ -5,7 +5,7 @@ Player::Player(Socket* socket) :
     Socket(std::move(*socket)) // Call move constructor. Source invalidated
 {
 	dir = STOP;
-	movementSpeed = 1;
+	speed = 1;
 	health = 100;
 	attack = 1;
 	defense = 1;
