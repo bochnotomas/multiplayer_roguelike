@@ -111,11 +111,11 @@ bool Socket::read(std::vector<uint8_t>& output) {
     
     #ifdef ROGUELIKE_UNIX
     uint8_t read_buf[buffer_size];
+    ssize_t bytes_read = ::recv(raw_sock, read_buf, buffer_size, 0);
     #else
     char read_buf[buffer_size];
+    int bytes_read = ::recv(raw_sock, read_buf, buffer_size, 0);
     #endif
-    
-    ssize_t bytes_read = ::recv(raw_sock, read_buf, buffer_size, 0);
     
     if(bytes_read == SOCKET_ERROR) {
         // If non-blocking, one of these errors are set, but the socket is
@@ -182,11 +182,10 @@ void Socket::bind(SOCKET_ADDRESS_FAMILY address_family, IN_ADDR address, uint16_
         throw SocketException("Socket::bind: Socket has already been invalidated");
     
     // Generate needed struct
-    sockaddr_in sa = {
-        .sin_family = address_family,
-        .sin_port = htons(port),
-        .sin_addr = address
-    };
+    sockaddr_in sa;
+    sa.sin_family = address_family;
+    sa.sin_port = htons(port);
+    sa.sin_addr = address;
     
     // Bind
     if(::bind(raw_sock, (sockaddr*)&sa, sizeof(sa)) == SOCKET_ERROR)
@@ -194,9 +193,7 @@ void Socket::bind(SOCKET_ADDRESS_FAMILY address_family, IN_ADDR address, uint16_
 }
 
 void Socket::bind(SOCKET_ADDRESS_FAMILY address_family, uint16_t port) {
-    IN_ADDR any_address = {};
-    any_address.s_addr = INADDR_ANY;
-    
+    IN_ADDR any_address{ INADDR_ANY };
     bind(address_family, any_address, port);
 }
 
@@ -231,11 +228,10 @@ bool Socket::connect(SOCKET_ADDRESS_FAMILY address_family, IN_ADDR address, uint
     
     // Connect to given address
     const size_t sock_addr_size = sizeof(sockaddr_in);
-    sockaddr_in sock_addr = {
-        .sin_family = address_family,
-        .sin_port = htons(port),
-        .sin_addr = address
-    };
+    sockaddr_in sock_addr;
+    sock_addr.sin_family = address_family;
+    sock_addr.sin_port = htons(port);
+    sock_addr.sin_addr = address;
     
     if(::connect(raw_sock, (sockaddr*)&sock_addr, sock_addr_size) == SOCKET_ERROR) {
         if(SOCKET_LAST_ERROR == SOCKET_EAGAIN || SOCKET_LAST_ERROR == SOCKET_EWOULDBLOCK)
