@@ -1,7 +1,7 @@
 #ifndef ROGUELIKE_SERVER_MESSAGE_HPP_INCLUDED
 #define ROGUELIKE_SERVER_MESSAGE_HPP_INCLUDED
-#include "client_message.hpp"
-#include "../server/player.hpp"
+#include "ClientMessage.hpp"
+#include "../server/Player.hpp"
 
 /// A message sent to a server, which cannot be sent but can be converted to a
 /// ClientMessage
@@ -26,13 +26,13 @@ public:
     
     /// Create a client message from this server message. Should be implemented
     /// or it is assumed there is no counterpart and nullptr is returned
-    virtual std::unique_ptr<ClientMessage> to_client();
+    virtual std::unique_ptr<ClientMessage> toClient();
     
     /// Create a game message from a buffer. If there is enough data for a full
     /// message, buffer is (partially) popped and a new ServerMessage is
     /// returned, else, nullptr is returned and buffer is not popped. This is
     /// a factory
-    static std::unique_ptr<ServerMessage> from_buffer(Buffer& buffer, std::shared_ptr<Player> sender);
+    static std::unique_ptr<ServerMessage> fromBuffer(Buffer& buffer, std::shared_ptr<Player> sender);
 };
 
 struct ServerMessageDoJoin : public ServerMessage {
@@ -45,7 +45,7 @@ struct ServerMessageDoJoin : public ServerMessage {
         name(name)
     {};
     
-    std::unique_ptr<ClientMessage> to_client();
+    std::unique_ptr<ClientMessage> toClient();
     ~ServerMessageDoJoin() = default;
 };
 
@@ -55,7 +55,7 @@ struct ServerMessageDoQuit : public ServerMessage {
         ServerMessage(GameMessageType::DoQuit, sender)
     {};
     
-    std::unique_ptr<ClientMessage> to_client();
+    std::unique_ptr<ClientMessage> toClient();
     ~ServerMessageDoQuit() = default;
 };
 
@@ -68,7 +68,7 @@ struct ServerMessageDoChat : public ServerMessage {
         message(message)
     {};
     
-    std::unique_ptr<ClientMessage> to_client();
+    std::unique_ptr<ClientMessage> toClient();
     ~ServerMessageDoChat() = default;
 };
 

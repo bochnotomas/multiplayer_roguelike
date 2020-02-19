@@ -1,4 +1,4 @@
-#include "socket_exception.hpp"
+#include "SocketException.hpp"
 
 #ifdef ROGUELIKE_UNIX
     #include <cerrno> // errno
@@ -8,24 +8,24 @@
     #include <winsock2.h>
 
     /// Convert winsock2 error code to a human-readable string
-    std::string winsock2_error_to_string(int error) {
+    std::string winsock2ErrorToString(int error) {
         // Get error message
-        char* error_c_str = nullptr;
+        char* errorCStr = nullptr;
         FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 
                     nullptr,
                     error,
                     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                    (LPSTR)&error_c_str,
+                    (LPSTR)&errorCStr,
                     0,
                     nullptr);
         
         // Convert to string
-        std::string error_str(error_c_str);
+        std::string errorStr(errorCStr);
         
         // Free allocated C-string
-        LocalFree(error_c_str);
+        LocalFree(errorCStr);
         
-        return error_str;
+        return errorStr;
     }
 #endif
 
@@ -33,22 +33,22 @@ SocketException::SocketException(std::string message) :
     message(message)
 {}
 
-SocketException SocketException::from_errno(std::string prefix) {
+SocketException SocketException::fromErrno(std::string prefix) {
     #ifdef ROGUELIKE_UNIX
     return SocketException(prefix + strerror(SOCKET_LAST_ERROR));
     #else
-    return SocketException(prefix + winsock2_error_to_string(SOCKET_LAST_ERROR));
+    return SocketException(prefix + winsock2ErrorToString(SOCKET_LAST_ERROR));
     #endif
 }
 
-SocketException SocketException::from_gai_errno(std::string prefix, int gai_errno) {
+SocketException SocketException::fromGaiErrno(std::string prefix, int gaiErrno) {
     #ifdef ROGUELIKE_UNIX
-    if(gai_errno == EAI_SYSTEM)
-        return SocketException::from_errno(prefix);
+    if(gaiErrno == EAI_SYSTEM)
+        return SocketException::fromErrno(prefix);
     else
-        return SocketException(prefix + gai_strerror(gai_errno));
+        return SocketException(prefix + gai_strerror(gaiErrno));
     #else
-    return SocketException(prefix + winsock2_error_to_string(gai_errno));
+    return SocketException(prefix + winsock2ErrorToString(gaiErrno));
     #endif
 }
 

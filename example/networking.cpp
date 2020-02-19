@@ -1,11 +1,11 @@
-#include "../src/server/server.hpp"
-#include "../src/client/client.hpp"
+#include "../src/server/Server.hpp"
+#include "../src/client/Client.hpp"
 #include <iostream>
 #include <limits>
 #include <thread>
 #include <atomic>
 
-void start_server(unsigned short port) {
+void startServer(unsigned short port) {
     std::cout << "Starting server with port " << port << "..." << std::endl;
     auto server = Server(port);
     std::cout << "Server started" << std::endl;
@@ -13,7 +13,7 @@ void start_server(unsigned short port) {
     bool running = true;
     while(running) {
         // Get messages
-        std::deque<std::shared_ptr<ServerMessage>> messages = server.receive(250);
+        std::deque<std::shared_ptr<ServerMessage> > messages = server.receive(250);
         
         // Sleep if there are no players connected
         if(server.players.empty())
@@ -30,13 +30,13 @@ void start_server(unsigned short port) {
             switch((*it)->type) {
                 case GameMessageType::DoJoin:
                     {
-                        auto join_event = std::dynamic_pointer_cast<ServerMessageDoJoin>(*it);
-                        if(join_event->sender->name.empty()) {
-                            std::cout << prefix << " joined as '" << join_event->name << '\'' << std::endl;
-                            join_event->sender->name = join_event->name;
+                        auto joinEvent = std::dynamic_pointer_cast<ServerMessageDoJoin>(*it);
+                        if(joinEvent->sender->name.empty()) {
+                            std::cout << prefix << " joined as '" << joinEvent->name << '\'' << std::endl;
+                            joinEvent->sender->name = joinEvent->name;
                         }
                         else
-                            std::cout << prefix << " tried to join as '" << join_event->name << "', but this was refused as they already joined" << std::endl;
+                            std::cout << prefix << " tried to join as '" << joinEvent->name << "', but this was refused as they already joined" << std::endl;
                     }
                     break;
                 case GameMessageType::DoQuit:
@@ -44,9 +44,9 @@ void start_server(unsigned short port) {
                     break;
                 case GameMessageType::DoChat:
                     {
-                        auto char_event = std::dynamic_pointer_cast<ServerMessageDoChat>(*it);
-                        std::cout << prefix << ": " << char_event->message << std::endl;
-                        if(char_event->message == "@kill_server")
+                        auto charEvent = std::dynamic_pointer_cast<ServerMessageDoChat>(*it);
+                        std::cout << prefix << ": " << charEvent->message << std::endl;
+                        if(charEvent->message == "@kill_server")
                             running = false;
                     }
                     break;
@@ -54,30 +54,30 @@ void start_server(unsigned short port) {
                     std::cout << "Ignored unexpected message of type " << (*it)->type << std::endl;
             }
             
-            std::unique_ptr<ClientMessage> client_message = (*it)->to_client();
-            if(client_message)
-                server.add_message_all_except(*client_message, (*it)->sender);
+            std::unique_ptr<ClientMessage> clientMessage = (*it)->toClient();
+            if(clientMessage)
+                server.addMessageAllExcept(*clientMessage, (*it)->sender);
         }
         
         // Send buffered messages
-        server.send_messages(250);
+        server.sendMessages(250);
     }
 }
 
-void client_thread_loop(std::shared_ptr<Client> client, std::shared_ptr<std::atomic<bool>> running) {
+void clientThreadLoop(std::shared_ptr<Client> client, std::shared_ptr<std::atomic<bool> > running) {
     try {
         while(*running) {
             // Receive data
-            client->receive_messages(250);
+            client->receiveMessages(250);
 
             // Parse messages
-            auto messages = client->get_messages();
+            auto messages = client->getMessages();
             for(auto it = messages.begin(); it != messages.end(); it++) {
                 std::string prefix;
-                if((*it)->sender_name.empty())
+                if((*it)->senderName.empty())
                     prefix = "~anon~";
                 else
-                    prefix = "<" + (*it)->sender_name + ">";
+                    prefix = "<" + (*it)->senderName + ">";
 
                 switch((*it)->type) {
                     case GameMessageType::Join:
@@ -88,8 +88,8 @@ void client_thread_loop(std::shared_ptr<Client> client, std::shared_ptr<std::ato
                         break;
                     case GameMessageType::Chat:
                         {
-                            auto char_event = dynamic_cast<ClientMessageChat*>(it->get());
-                            std::cout << prefix << ": " << char_event->message << std::endl;
+                            auto charEvent = dynamic_cast<ClientMessageChat*>(it->get());
+                            std::cout << prefix << ": " << charEvent->message << std::endl;
                         }
                         break;
                     default:
@@ -98,7 +98,7 @@ void client_thread_loop(std::shared_ptr<Client> client, std::shared_ptr<std::ato
             }
         
             // Send data
-            client->send_messages(250);
+            client->sendMessages(250);
         }
     }
     catch(SocketException e) {
@@ -108,11 +108,11 @@ void client_thread_loop(std::shared_ptr<Client> client, std::shared_ptr<std::ato
     *running = false;
 }
 
-void start_client(std::string host, unsigned short port) {
+void startClient(std::string host, unsigned short port) {
     std::cout << "Connecting to " << host << ':' << port << "..." << std::endl;
     auto client = std::shared_ptr<Client>(new Client(host, port, 5000));
     auto running = std::shared_ptr<std::atomic<bool>>(new std::atomic<bool>(true));
-    std::thread network_thread(client_thread_loop, client, running);
+    std::thread networkThread(clientThreadLoop, client, running);
     std::cout << "Connected. Type '!join' to join, '!quit' to quit or say '@kill_server' to kill the server" << std::endl;
     
     std::string name;
@@ -130,19 +130,19 @@ void start_client(std::string host, unsigned short port) {
             
             std::cout << "What do you want to be called?\n> " << std::flush;
             std::getline(std::cin, name);
-            client->add_message(ClientMessageDoJoin(name));
+            client->addMessage(ClientMessageDoJoin(name));
         }
         else if(message == "!quit")
             *running = false;
         else
-            client->add_message(ClientMessageDoChat(message));
+            client->addMessage(ClientMessageDoChat(message));
     }
 
-    network_thread.join();
+    networkThread.join();
 }
 
 int main(int argc, char **argv) {
-    Socket::winsock2_init();
+    Socket::initSocketApi();
     
     std::cout << "Enter port number: ";
     unsigned short port;
@@ -154,16 +154,16 @@ int main(int argc, char **argv) {
     
     try {
         if(host.empty())
-            start_server(port);
+            startServer(port);
         else
-            start_client(host, port);
+            startClient(host, port);
     }
     catch(SocketException e) {
         std::cout << "Network exception: " << e.what() << std::endl;
     }
     
     std::cout << "Goodbye..." << std::endl;
-    Socket::winsock2_cleanup();
+    Socket::cleanupSocketApi();
     return 0;
 }
 

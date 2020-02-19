@@ -10,13 +10,13 @@ class Buffer {
     std::deque<std::vector<uint8_t>> chunks;
     
     /// Current buffer size
-    size_t cur_size = 0;
+    size_t curSize = 0;
     
     /// Gets data from the buffer, with an offset
-    std::vector<uint8_t> get_bytes(size_t byte_count, size_t offset);
+    std::vector<uint8_t> getBytes(size_t byteCount, size_t offset);
     
     /// Gets data from the buffer, removing read data
-    std::vector<uint8_t> pop_bytes(size_t byte_count);
+    std::vector<uint8_t> popBytes(size_t byteCount);
     
 public:
     /// Current size of buffer
@@ -25,8 +25,8 @@ public:
     /// Clear buffer
     void clear();
     
-    /// Erase byte_count bytes
-    void erase(size_t byte_count);
+    /// Erase byteCount bytes
+    void erase(size_t byteCount);
     
     // Inserts bytes to the buffer
     void insert(const std::vector<uint8_t>& bytes);
@@ -46,11 +46,11 @@ public:
     // Inserts a little-endian uint64_t to the buffer
     void insert(uint64_t uint64);
     
-    // Gets byte_count bytes from the buffer, with an offset
-    void get(std::vector<uint8_t>& bytes, size_t byte_count, size_t offset = 0);
+    // Gets byteCount bytes from the buffer, with an offset
+    void get(std::vector<uint8_t>& bytes, size_t byteCount, size_t offset = 0);
     
-    // Gets a string with byte_count bytes from the buffer, with an offset
-    void get(std::string& string, size_t byte_count, size_t offset = 0);
+    // Gets a string with byteCount bytes from the buffer, with an offset
+    void get(std::string& string, size_t byteCount, size_t offset = 0);
     
     // Gets a byte from the buffer, with an offset
     bool get(uint8_t& byte, size_t offset = 0);
@@ -64,12 +64,12 @@ public:
     // Gets a little-endian uint64_t from the buffer, with an offset
     bool get(uint64_t& uint64, size_t offset = 0);
     
-    // Gets byte_count bytes from the buffer, removing the read data
-    void pop(std::vector<uint8_t>& bytes, size_t byte_count);
+    // Gets byteCount bytes from the buffer, removing the read data
+    void pop(std::vector<uint8_t>& bytes, size_t byteCount);
     
-    // Gets a string with byte_count bytes from the buffer, removing the read
+    // Gets a string with byteCount bytes from the buffer, removing the read
     // data
-    void pop(std::string& string, size_t byte_count);
+    void pop(std::string& string, size_t byteCount);
     
     // Gets a byte from the buffer, removing the read data
     bool pop(uint8_t& byte);

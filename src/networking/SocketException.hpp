@@ -1,6 +1,6 @@
 #ifndef ROGUELIKE_SOCKET_EXCEPTION_HPP_INCLUDED
 #define ROGUELIKE_SOCKET_EXCEPTION_HPP_INCLUDED
-#include "socket_platform.hpp"
+#include "SocketPlatform.hpp"
 #include <exception>
 #include <string>
 
@@ -12,10 +12,10 @@ public:
     SocketException(std::string message);
     
     /// Create exception from errno (factory)
-    static SocketException from_errno(std::string prefix);
+    static SocketException fromErrno(std::string prefix);
     
     /// Create exception from getaddrinfo error (factory)
-    static SocketException from_gai_errno(std::string prefix, int gai_errno);
+    static SocketException fromGaiErrno(std::string prefix, int gaiErrno);
     
     const char* what() const noexcept override;
 };

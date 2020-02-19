@@ -1,6 +1,6 @@
 #ifndef ROGUELIKE_SOCKET_SELECT_HPP_INCLUDED
 #define ROGUELIKE_SOCKET_SELECT_HPP_INCLUDED
-#include "socket.hpp"
+#include "Socket.hpp"
 #include <memory>
 
 /// Type of event to be selected
@@ -25,23 +25,23 @@ struct SelectedEvent {
     
     // Check if event is of the given type. Note that an event can be of
     // multiple types
-    bool is_of_type(SelectedEventType type);
+    bool isOfType(SelectedEventType type);
 };
 
 /// A wrapper for select(). Waits for an event to happen at at least one of the
 /// sockets provided. Can be re-used, assuming sockets remain valid
 class SocketSelector {
     // Sockets to wait for specified event types
-    std::vector<SelectedEvent> event_wait_list;
+    std::vector<SelectedEvent> eventWaitList;
 public:
     // Add an event to the waiting list. Invalidated sockets will be ignored
-    void add_wait(int event_types, std::shared_ptr<Socket> socket);
+    void addWait(int event_types, std::shared_ptr<Socket> socket);
     
     // Wait for an event to happen, with a timeout in milliseconds. If negative
     // this will block until an event happens. If 0, this will immediately
-    // return, else, it will wait up to timeout_ms milliseconds for any event.
+    // return, else, it will wait up to timeoutMs milliseconds for any event.
     // Invalidated sockets will be removed from the waiting list
-    std::vector<SelectedEvent> wait(int timeout_ms);
+    std::vector<SelectedEvent> wait(int timeoutMs);
 };
 
 #endif
