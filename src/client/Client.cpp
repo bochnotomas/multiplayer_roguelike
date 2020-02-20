@@ -1,10 +1,10 @@
-#include "../networking/socket_select.hpp"
-#include "client.hpp"
+#include "../networking/SocketSelector.hpp"
+#include "Client.hpp"
 #include <chrono>
 
-Client::Client(std::string host, uint16_t port, int timeout_ms) :
+Client::Client(std::string host, uint16_t port, int timeoutMs) :
     // Open connection socket
-    client_socket(new Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))
+    clientSocket(new Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))
 {
     // Resolve host
     auto addresses = Socket::resolve(host);
@@ -14,108 +14,108 @@ Client::Client(std::string host, uint16_t port, int timeout_ms) :
     for(auto it = addresses.begin(); it != addresses.end(); it++) {
         try {
             // Create socket
-            std::shared_ptr<Socket> candidate_socket(new Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+            std::shared_ptr<Socket> candidateSocket(new Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
             
             // Connect
-            candidate_socket->connect(AF_INET, *it, port);
+            candidateSocket->connect(AF_INET, *it, port);
             
             // Add to selector. Wait for writing to become available
-            selector.add_wait(SelectedEventType::Write, candidate_socket);
+            selector.addWait(SelectedEventType::Write, candidateSocket);
         }
         catch(SocketException){}; // Ignore exceptions, just don't connect
     }
     
     // Wait for any connection to be accepted
-    auto events = selector.wait(timeout_ms);
+    auto events = selector.wait(timeoutMs);
     
     // Parse events, accepting first available connection. All other sockets
     // are automatically closed
-    std::shared_ptr<Socket> chosen_candidate = nullptr;
+    std::shared_ptr<Socket> chosenCandidate = nullptr;
     for(auto it = events.begin(); it != events.end(); it++) {
         // Pick first available connection
-        if(it->is_of_type(SelectedEventType::Write) && it->socket->is_valid()) {
-            chosen_candidate = std::move(it->socket);
+        if(it->isOfType(SelectedEventType::Write) && it->socket->isValid()) {
+            chosenCandidate = std::move(it->socket);
             break;
         }
     }
     
-    if(chosen_candidate == nullptr)
+    if(chosenCandidate == nullptr)
         throw SocketException("Failed to connect to server: timed out");
     
     // Close connection socket automatically and replace with new connection
-    client_socket = std::move(chosen_candidate);
+    clientSocket = std::move(chosenCandidate);
     
     // Make socket non-blocking as we will be reading and writing from now on
-    client_socket->set_blocking(false);
+    clientSocket->setBlocking(false);
 }
 
-void Client::receive_messages(int timeout_ms) {
+void Client::receiveMessages(int timeoutMs) {
     // Lock socket
-    const std::lock_guard<std::mutex> s_lock_guard(s_lock);
+    const std::lock_guard<std::mutex> sLockGuard(sLock);
         
     std::deque<std::shared_ptr<ClientMessage>> messages;
     
     // Wait for a read event in the client socket
     SocketSelector selector;
-    selector.add_wait(SelectedEventType::Read, client_socket);
-    auto events = selector.wait(timeout_ms);
+    selector.addWait(SelectedEventType::Read, clientSocket);
+    auto events = selector.wait(timeoutMs);
     
     // Parse events
     if(events.empty())
         return;
     
     // There will only be one event. Read data
-    std::vector<uint8_t> read_buf;
-    if(!client_socket->read(read_buf)) {
+    std::vector<uint8_t> readBuf;
+    if(!clientSocket->read(readBuf)) {
         // Close socket if read says it should close
-        client_socket->close();
+        clientSocket->close();
         return;
     }
-    else if(!read_buf.empty()) {
+    else if(!readBuf.empty()) {
         // Lock read buffer
-        const std::lock_guard<std::mutex> r_lock_guard(r_lock);
+        const std::lock_guard<std::mutex> rLockGuard(rLock);
         
         // Insert data to read buffer
-        r_buffer.insert(read_buf);
+        rBuffer.insert(readBuf);
     }
 }
 
-void Client::send_messages(int timeout_ms) {
+void Client::sendMessages(int timeoutMs) {
     // Abort if no data to read
-    if(w_buffer.size() == 0)
+    if(wBuffer.size() == 0)
         return;
     
     // Lock socket and write buffer
-    const std::lock_guard<std::mutex> s_lock_guard(s_lock);
-    const std::lock_guard<std::mutex> w_lock_guard(w_lock);
+    const std::lock_guard<std::mutex> sLockGuard(sLock);
+    const std::lock_guard<std::mutex> wLockGuard(wLock);
     
     // Merge buffer
     std::vector<uint8_t> bytes;
-    w_buffer.get(bytes, w_buffer.size());
+    wBuffer.get(bytes, wBuffer.size());
     size_t sent = 0;
     
     // Setup timer
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
-    if(timeout_ms > 0)
+    if(timeoutMs > 0)
         start = std::chrono::high_resolution_clock::now();
     
     // Start sending
     while(sent != bytes.size()) {
         // Send data
         //size_t result = client_socket->write(bytes.begin() + sent, bytes.size() - sent);
-        size_t result = client_socket->write(bytes.begin() + sent, bytes.size() - sent);
+        size_t result = clientSocket->write(bytes.begin() + sent, bytes.size() - sent);
         
         // Clear sent part of buffer
-        w_buffer.erase(result);
+        wBuffer.erase(result);
         sent += result;
         
         // Stop sending if timeout exceeded
-        if(timeout_ms == 0)
+        if(timeoutMs == 0)
             break;
-        else if(timeout_ms != -1) {
+        else if(timeoutMs != -1) {
             auto end = std::chrono::high_resolution_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            if(elapsed > timeout_ms)
+            if(elapsed > timeoutMs)
                 break;
         }
     }
@@ -123,24 +123,24 @@ void Client::send_messages(int timeout_ms) {
     return;
 }
 
-void Client::add_message(const ClientMessage& message) {
+void Client::addMessage(const ClientMessage& message) {
     // Lock write buffer
-    const std::lock_guard<std::mutex> w_lock_guard(w_lock);
+    const std::lock_guard<std::mutex> wLockGuard(wLock);
     
     // Insert to buffer
-    w_buffer.insert(message.to_bytes());
+    wBuffer.insert(message.toBytes());
 }
 
-std::deque<std::unique_ptr<ClientMessage>> Client::get_messages() {
+std::deque<std::unique_ptr<ClientMessage>> Client::getMessages() {
     std::deque<std::unique_ptr<ClientMessage>> messages;
     
     // Lock read buffer
-    const std::lock_guard<std::mutex> r_lock_guard(r_lock);
+    const std::lock_guard<std::mutex> rLockGuard(rLock);
     
     // Check if a message can be built from the current read buffer.
     // Try to build as many messages as possible
     while(true) {
-        auto message = ClientMessage::from_buffer(r_buffer);
+        auto message = ClientMessage::fromBuffer(rBuffer);
         
         if(!message)
             break;

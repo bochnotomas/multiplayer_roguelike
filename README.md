@@ -1,4 +1,3 @@
-# Progress (add your stuff here if you want to)
 # Building
 #### Linux:
 ```

@@ -1,6 +1,6 @@
 #ifndef ROGUELIKE_SOCKET_HPP_INCLUDED
 #define ROGUELIKE_SOCKET_HPP_INCLUDED
-#include "socket_exception.hpp"
+#include "SocketException.hpp"
 #include <cstdint>
 #include <vector>
 #include <memory>
@@ -16,24 +16,24 @@
 
 /// A cross platform socket object
 class Socket {
-    SOCKET raw_sock = INVALID_SOCKET;
+    SOCKET rawSock = INVALID_SOCKET;
     
     /// Create socket from raw socket. This is private for safety
-    Socket(SOCKET raw_sock);
+    Socket(SOCKET rawSock);
     
     /// Write data. Returns number of bytes written. Can block if the socket is
     /// not in non-blocking mode. WARNING: This will signal a SIGPIPE if you
     /// try to write data after the socket has been closed (Unix-only)
-    size_t write(const uint8_t* data, size_t data_size);
+    size_t write(const uint8_t* data, size_t dataSize);
     
     /// SocketSelector is a friend of Socket
     friend class SocketSelector;
 public:
-    /// Initialise winsock2 if on Windows
-    static void winsock2_init();
+    /// Initialise socket API. Only used for winsock2 if on Windows
+    static void initSocketApi();
     
-    /// Cleanup winsock2 if on Windows
-    static void winsock2_cleanup();
+    /// Cleanup socket API
+    static void cleanupSocketApi();
     
     /// Resolves a host to a list of addresses. If internet access is down,
     /// this _WILL_ block forever
@@ -41,7 +41,7 @@ public:
     static std::vector<IN_ADDR> resolve(std::string host);
     
     /// Create socket with address family, socket type and protocol
-    Socket(SOCKET_ADDRESS_FAMILY address_family, int type, int protocol);
+    Socket(SOCKET_ADDRESS_FAMILY addressFamily, int type, int protocol);
     
     /// Create invalid socket (default constructor)
     Socket();
@@ -73,13 +73,13 @@ public:
     
     /// Same as above, but for vector iterator and size. Assumes iterator is
     /// valid
-    size_t write(const std::vector<uint8_t>::iterator begin, size_t data_size);
+    size_t write(const std::vector<uint8_t>::iterator begin, size_t dataSize);
     
     /// Bind socket to address family, address and port
-    void bind(SOCKET_ADDRESS_FAMILY address_family, IN_ADDR address, uint16_t port);
+    void bind(SOCKET_ADDRESS_FAMILY addressFamily, IN_ADDR address, uint16_t port);
     
     /// Bind socket to address family and port for all addresses
-    void bind(SOCKET_ADDRESS_FAMILY address_family, uint16_t port);
+    void bind(SOCKET_ADDRESS_FAMILY addressFamily, uint16_t port);
     
     /// Mark socket as listening for connections. backlog is the maximum amount
     /// of pending connections
@@ -95,14 +95,14 @@ public:
     /// connection was successful, false otherwise, on non-blocking calls. On
     /// blocking calls, false never gets returned, as the only way this can
     /// fail is by throwing a SocketException
-    bool connect(SOCKET_ADDRESS_FAMILY address_family, IN_ADDR address, uint16_t port);
+    bool connect(SOCKET_ADDRESS_FAMILY addressFamily, IN_ADDR address, uint16_t port);
     
     /// Set socket to blocking or non-blocking mode. Sockets are blocking by
     /// default
-    void set_blocking(bool blocking);
+    void setBlocking(bool blocking);
     
     /// Check if the socket is valid
-    bool is_valid() const;
+    bool isValid() const;
     
     /// Invalidate the socket without closing it. Only call this if you know
     /// what you are doing, e.g. call it if poll() reports that this socket has

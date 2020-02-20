@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 14)
 
 find_package(Threads)
 
-add_executable(networking_example example/networking.cpp src/client/client.cpp src/networking/buffer.cpp src/networking/client_message.cpp src/networking/server_message.cpp src/networking/socket.cpp src/networking/socket_select.cpp src/networking/socket_exception.cpp src/server/player.cpp src/server/server.cpp src/client/client.hpp src/networking/buffer.hpp src/networking/client_message.hpp src/networking/server_message.hpp src/networking/socket.hpp src/networking/socket_select.hpp src/networking/socket_exception.hpp src/server/player.hpp src/server/server.hpp)
+add_executable(networking_example example/networking.cpp src/client/Client.cpp src/networking/Buffer.cpp src/networking/ClientMessage.cpp src/networking/ServerMessage.cpp src/networking/Socket.cpp src/networking/SocketSelector.cpp src/networking/SocketException.cpp src/server/Player.cpp src/server/Server.cpp src/client/Object.cpp src/client/Client.hpp src/networking/Buffer.hpp src/networking/ClientMessage.hpp src/networking/ServerMessage.hpp src/networking/Socket.hpp src/networking/SocketSelector.hpp src/networking/SocketException.hpp src/server/Player.hpp src/server/Server.hpp src/client/Object.h)
 
-add_executable(engine src/client/Main.cpp src/client/Map.cpp src/client/Object.cpp src/client/Renderer.cpp src/client/Camera.cpp)
+add_executable(engine src/client/Main.cpp src/client/Map.cpp src/client/Object.cpp src/client/Renderer.cpp src/client/Camera.cpp src/client/Map.h src/client/Object.h src/client/Renderer.h src/client/Camera.h)
 
 # networking_example
 if (WIN32)
