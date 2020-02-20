@@ -16,16 +16,17 @@ int main(int argc, char* argv[]) {
 	// Main game map
 	Map map;
 	// generate sample map
-	map.generate_square_map(100, 30);
+	//map.generate_square_map(40, 40);
+	map.set_preset_map();
 
 	// sample object
-	Object player = Object('x', Direction::NORTH, true, { 10,15 }, {Color::BLACK, Color::WHITE});
+	Object* player = new Object('x', Direction::NORTH, true, { 2,2 }, {Color::BLACK, Color::RED});
 
 	// add player into main map
-	map.objects.push_back(&player);
+	map.objects.push_back(std::move(player));
 
 	// create camera
-	Camera* main_cam = new Camera('.', map, { 50,15 });
+	Camera* main_cam = new Camera('.', map, { 2,2 });
 
 	// pass camera into the renderer
 	Renderer renderer(main_cam);
@@ -59,23 +60,28 @@ int main(int argc, char* argv[]) {
 		{
 		case 'e':
 			game_end = true;
+			renderer.b_render = false;
 			break;
 		case 'w':
-			player.move(Direction::NORTH);
+			main_cam->move(Direction::NORTH);
 		break;
 		case 's':
-			player.move(Direction::SOUTH);
+			main_cam->move(Direction::SOUTH);
 		break;
 		case 'a':
-			player.move(Direction::WEST);
+			main_cam->rotate(-0.1f);
 		break;
 		case 'd':
-			player.move(Direction::EAST);
+			main_cam->rotate(0.1f);
+		break;
+		case 'z':
+		break;
+		case 'x':
 		break;
 		default:
 			break;
 		}
-
+		player->set_position(main_cam->get_position());
 		//update map objects
 		map.update_objects();
 		//end = std::chrono::high_resolution_clock::now();
@@ -85,9 +91,6 @@ int main(int argc, char* argv[]) {
 	} while (!game_end);
 
 	// end rendering
-	renderer.b_render = false;
 	r_thread.join();
-	main_cam = nullptr;
-	delete main_cam;
 	return 0;
 }

@@ -34,13 +34,13 @@ public:
 		
 	}
 
-	void set_position(const std::pair<long, long> new_position);
+	void set_position(const std::pair<float, float> new_position);
 	
 protected:
 	// graphical representation of object;
 	char m_character;
 	// first - x position, second - y position
-	std::pair<long, long> m_position;
+	std::pair<float, float> m_position;
 	// actual direction that object is facing
 	Direction m_dir;
 	// define if object is visible

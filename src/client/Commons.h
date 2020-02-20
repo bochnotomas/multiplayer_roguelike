@@ -11,9 +11,16 @@
 #define TESTING_MODE
 
 // num of columns rendered on the screen
-constexpr unsigned short RENDER_WIDTH = 100;
+constexpr unsigned short RENDER_WIDTH = 120;
 // num of rows rendered on the screen
 constexpr unsigned short RENDER_HEIGHT = 30;
+// num of columns for minimap
+constexpr unsigned short MINIMAP_WIDTH = 120;
+// num of rows for minimap
+constexpr unsigned short MINIMAP_HEIGHT = 20;
+// depth of 2.5D rendering
+constexpr float RENDER_DEPTH = 16.0f;
+
 // frames per second
 constexpr unsigned short FRAME_RATE = 60;
 

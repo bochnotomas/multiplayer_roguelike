@@ -18,7 +18,7 @@ bool Object::get_visibility() const
 
 std::pair<long, long> Object::get_position() const
 {
-	return m_position;
+	return {static_cast<long>(m_position.first), static_cast<long>(m_position.second)};
 }
 
 void Object::move(const Direction dir)
@@ -26,16 +26,16 @@ void Object::move(const Direction dir)
 	switch (dir)
 	{
 	case Direction::SOUTH:
-		m_position.second++;
+		m_position.second+=1.0f;
 		break;
 	case Direction::EAST:
-		m_position.first++;
+		m_position.first+=1.0f;
 		break;
 	case Direction::NORTH:
-		m_position.second--;
+		m_position.second-=1.0f;
 		break;
 	case Direction::WEST:
-		m_position.first--;
+		m_position.first-=1.0f;
 		break;
 	default:
 		throw;
@@ -43,7 +43,7 @@ void Object::move(const Direction dir)
 	}
 }
 
-void Object::set_position(const std::pair<long, long> new_position)
+void Object::set_position(const std::pair<float, float> new_position)
 {
 	m_position = new_position;
 }

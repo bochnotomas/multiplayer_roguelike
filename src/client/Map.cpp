@@ -10,9 +10,9 @@ Map::~Map()
 {
 	for (Object* obj : objects)
 	{
+		delete obj;
 		obj = nullptr;
 	}
-	objects.clear();
 }
 
 void Map::update_objects()

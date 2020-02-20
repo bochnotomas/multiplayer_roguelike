@@ -21,18 +21,19 @@ public:
 
 	// prints given data into the output stream
 	void render() {
-		std::system("clear");
+		// clear the screen
+		std::cout << "\x1B[2J\x1B[H";
 		// go to new line and disable cursor
 		std::cout << "\e[?25l";
 		while (b_render) {
 			// go to (0,0) position
-			std::cout << "\033[0;0f" << 
-					  m_cam->get_to_render() << "W - move up, S - move down, A - move left, D move right, E - exit";
+			std::cout << "\033[0;0f" << m_cam->get_to_render3D() << "------------\n\033[0m";
+			std::cout<< m_cam->get_minimap_to_render() << "\033[0m";
 		}
+		std::cout << "\033[0m";
 		// re-enable cursor
-		std::cout << "\033[0;0f\e[?25h";
+		std::cout << "\x1B[2J\x1B[H";
 		// clear console
-		std::system("clear");
 	}
 
 	std::thread spawn() {
@@ -73,8 +74,8 @@ public:
 #endif
 
 	~Renderer(){
-		m_cam = nullptr;
-		delete m_cam;
+		//delete m_cam;
+		//m_cam = nullptr;
 	}
 private:
 	Camera* m_cam;
