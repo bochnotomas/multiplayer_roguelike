@@ -11,6 +11,7 @@
 #include "Object.h"
 #include "Map.h"
 #include "Camera.h"
+#include "Menu.hpp"
 
 int main(int argc, char* argv[]) {
 	// Main game map
@@ -26,10 +27,28 @@ int main(int argc, char* argv[]) {
 	map.objects.push_back(std::move(player));
 
 	// create camera
-	Camera* main_cam = new Camera('.', map, { 2,2 });
+	Camera main_cam('.', &map, { 2,2 });
+    
+    // Create sample menu
+    Menu sampleMenu(10, 10, RENDER_WIDTH / 2, RENDER_HEIGHT / 2, {Color::WHITE, Color::RED}, {Color::BLACK, Color::MAGENTA});
+    sampleMenu.addItem("Item 1");
+    sampleMenu.addItem("Item 2");
+    sampleMenu.addItem("Overflowing 1");
+    sampleMenu.addItem("Overflowing 2");
+    for(char c = '0'; c <= '9'; c++)
+        sampleMenu.addItem(std::string("Outbound ") + c);
+    for(char c = 'A'; c <= 'Z'; c++)
+        sampleMenu.addItem(std::string("Outbound ") + c);
+    sampleMenu.center = true;
+    sampleMenu.expand = true;
+    sampleMenu.clamp = true;
 
-	// pass camera into the renderer
-	Renderer renderer(main_cam);
+	// Create a new renderer with the given dimensions
+	Renderer renderer(RENDER_WIDTH, RENDER_HEIGHT);
+    
+    // Add camera and menu to drawables
+    renderer.add_drawable(&main_cam);
+    renderer.add_drawable(&sampleMenu);
 
 	// set window title
 	renderer.set_title("Engine Demo");
@@ -63,25 +82,43 @@ int main(int argc, char* argv[]) {
 			renderer.b_render = false;
 			break;
 		case 'w':
-			main_cam->move(Direction::NORTH);
+			main_cam.move(Direction::NORTH);
 		break;
 		case 's':
-			main_cam->move(Direction::SOUTH);
+			main_cam.move(Direction::SOUTH);
 		break;
 		case 'a':
-			main_cam->rotate(-0.1f);
+			main_cam.rotate(-0.1f);
 		break;
 		case 'd':
-			main_cam->rotate(0.1f);
+			main_cam.rotate(0.1f);
 		break;
 		case 'z':
 		break;
 		case 'x':
 		break;
+        case '7':
+            sampleMenu.moveCursor(-1);
+        break;
+        case '1':
+            sampleMenu.moveCursor(1);
+        break;
+        case '8':
+            sampleMenu.yOffset -= 1;
+        break;
+        case '2':
+            sampleMenu.yOffset += 1;
+        break;
+        case '4':
+            sampleMenu.xOffset -= 1;
+        break;
+        case '6':
+            sampleMenu.xOffset += 1;
+        break;
 		default:
 			break;
 		}
-		player->set_position(main_cam->get_position());
+		player->set_position(main_cam.get_position());
 		//update map objects
 		map.update_objects();
 		//end = std::chrono::high_resolution_clock::now();
