@@ -37,12 +37,15 @@ void Camera::get_objects_in_range(std::pair<long, long> range_y, std::pair<long,
 	}
 }
 
-void Camera::draw(Renderer* renderer, unsigned int viewportWidth, unsigned int viewportHeight) {
-    draw_3D(renderer, viewportWidth, viewportHeight);
-    draw_minimap(renderer, viewportWidth, viewportHeight);
+void Camera::draw(Renderer* renderer) {
+    draw_3D(renderer);
+    draw_minimap(renderer);
 }
 
-void Camera::draw_minimap(Renderer* renderer, unsigned int viewportWidth, unsigned int viewportHeight)	{
+void Camera::draw_minimap(Renderer* renderer)	{
+    unsigned int viewportWidth = renderer->getWidth();
+    unsigned int viewportHeight = renderer->getHeight();
+    
 	// plane of the map
 	MapPlane* plane = m_map->get_map_plane();
 	// size of the map
@@ -97,7 +100,10 @@ void Camera::draw_minimap(Renderer* renderer, unsigned int viewportWidth, unsign
 }
 
 // some parts of code adapted from https://github.com/OneLoneCoder/CommandLineFPS/blob/master/CommandLineFPS.cpp
-void Camera::draw_3D(Renderer* renderer, unsigned int viewportWidth, unsigned int viewportHeight) {
+void Camera::draw_3D(Renderer* renderer) {
+    unsigned int viewportWidth = renderer->getWidth();
+    unsigned int viewportHeight = renderer->getHeight();
+    
 	//lock the position values to avoid changing it while rendering a frame
 	std::lock_guard<std::mutex> lock (pos_mutex);
 	// plane of the map

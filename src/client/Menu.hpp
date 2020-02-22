@@ -1,22 +1,13 @@
 #ifndef ROGUELIKE_MENU_HPP_INCLUDED
 #define ROGUELIKE_MENU_HPP_INCLUDED
-#include "Renderer.h"
+#include "MenuItem.hpp"
+#include <memory>
 #include <mutex>
-
-const Formating defaultItemFormatting = {
-    Color::WHITE,
-    Color::NO_COLOR
-};
-
-const Formating defaultSelectedItemFormatting = {
-    Color::BLACK,
-    Color::WHITE
-};
 
 // Menu class. Called by Renderer
 class Menu : public Drawable {
     // The items in the menu
-    std::vector<std::string> items;
+    std::vector<std::shared_ptr<MenuItem>> items;
     
     // Longest item length. Used for optimisation purposes
     unsigned int longestLength;
@@ -26,10 +17,10 @@ class Menu : public Drawable {
     
     // Prevent changing a menu selected when a frame is being rendered
     std::mutex selectionLock;
-public:
-    Menu(unsigned int width, unsigned int height, int xOffset = 0, int yOffset = 0, Formating formatting = defaultItemFormatting, Formating selectedFormatting = defaultSelectedItemFormatting);
     
-    // TODO getters and setters, mutex needed
+    // Formatting for menu part without an item
+    const Formating formatting;
+    
     // The size of the menu. Each axis can be zero, but it is recommended that
     // you use expand if you do that. Essentially acts as a minimum size if
     // expand is true
@@ -37,12 +28,6 @@ public:
     
     // The position of the top left corner of the menu
     int xOffset, yOffset;
-    
-    // Formatting used for unselected items
-    Formating formatting;
-    
-    // Formatting used for selected items
-    Formating selectedFormatting;
     
     // If true, the menu will expand beyond its size if needed. False by
     // default
@@ -60,18 +45,30 @@ public:
     // If true, the menu will also try to split accross columns if there is
     // not enough height for all items, instead of scrolling. False by default
     bool split; // TODO, implement splitting
+public:
+    Menu(unsigned int width, unsigned int height, int xOffset = 0, int yOffset = 0, const Formating& formatting = {Color::NO_COLOR, Color::NO_COLOR});
+    
+    // Setters for private boolean properties
+    void toggleExpand(bool toggle);
+    void toggleCenter(bool toggle);
+    void toggleClamp(bool toggle);
+    void toggleSplit(bool toggle);
     
     // Add an item to the menu
-    void addItem(std::string item);
+    void addItem(const std::shared_ptr<MenuItem>& item);
     
     // Clear all items from menu
     void clearItems();
     
-    // Move cursor up or down. Tests for bounds and returns the new selection
-    unsigned int moveCursor(int delta);
+    // Move cursor up or down. Tests for bounds
+    void moveCursor(int delta);
+    
+    // Get the current item selection. Returns the selected item or nullptr if
+    // the menu has no items
+    std::shared_ptr<MenuItem> selectCursor();
     
     // Draw the menu in the given viewport
-    void draw(Renderer * renderer, unsigned int viewportWidth, unsigned int viewportHeight) override;
+    void draw(Renderer* renderer) override;
 };
 
 #endif

@@ -21,13 +21,13 @@ public:
 	Camera(char blank_char, Map* map, std::pair<long, long> start_position);
 
 	// Draws the 3D view and minimap to the given renderer
-    void draw(Renderer* renderer, unsigned int viewportWidth, unsigned int viewportHeight);
+    void draw(Renderer* renderer);
     
     // Draws the minimap to the given renderer
-	void draw_minimap(Renderer* renderer, unsigned int viewportWidth, unsigned int viewportHeight);
+	void draw_minimap(Renderer* renderer);
 
     // Draws the 3D view to the given renderer
-	void draw_3D(Renderer* renderer, unsigned int viewportWidth, unsigned int viewportHeight);
+	void draw_3D(Renderer* renderer);
 
 	void rotate(float angle){
 		m_angle+=angle;

@@ -45,7 +45,7 @@ void Renderer::render() {
         
         // Draw all drawables
         for(auto drawable : drawables)
-            drawable->draw(this, width, height);
+            drawable->draw(this);
         
         // Turn buffer into lines of formatted text
         std::string string_buffer;
@@ -87,4 +87,12 @@ void Renderer::render() {
     // re-enable cursor
     std::cout << "\033[2J\033[H";
     // clear console
+}
+
+unsigned int Renderer::getWidth() {
+    return width;
+}
+
+unsigned int Renderer::getHeight() {
+    return height;
 }

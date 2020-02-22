@@ -12,11 +12,10 @@
 
 class Renderer; // Forward-declare Renderer
 
-/// A drawable class. Has a render method that takes in the size of the
-/// viewport and the target Renderer
+/// A drawable class. Has a render method that takes in the target Renderer
 class Drawable {
 public:
-    virtual void draw(Renderer* renderer, unsigned int viewportWidth, unsigned int viewportHeight) = 0;
+    virtual void draw(Renderer* renderer) = 0;
 };
 
 // allows to fast writing data into console
@@ -53,6 +52,12 @@ public:
 		title = nullptr;
 		delete title;
 	}
+	
+	// Get width of renderer's viewport
+	unsigned int getWidth();
+	
+	// Get height of renderer's viewport
+	unsigned int getHeight();
 
 #if defined(unix) || defined(__unix) || defined(__unix__)
 	//Adapted from https://stackoverflow.com/questions/7469139/what-is-the-equivalent-to-getch-getche-in-linux

@@ -1,38 +1,71 @@
 #include "Menu.hpp"
 
-Menu::Menu(unsigned int width, unsigned int height, int xOffset, int yOffset, Formating formatting, Formating selectedFormatting) :
+Menu::Menu(unsigned int width, unsigned int height, int xOffset, int yOffset, const Formating& formatting) :
     longestLength(0),
     selection(0),
+    formatting(formatting),
     width(width),
     height(height),
     xOffset(xOffset),
     yOffset(yOffset),
-    formatting(formatting),
-    selectedFormatting(selectedFormatting),
     expand(false),
     center(false),
     clamp(false),
     split(false)
 {}
 
-void Menu::addItem(std::string item) {
+void Menu::toggleExpand(bool toggle) {
+    // Create guard for selection lock
+    std::lock_guard<std::mutex> selectionGuard(selectionLock);
+    
+    expand = toggle;
+}
+
+void Menu::toggleCenter(bool toggle) {
+    // Create guard for selection lock
+    std::lock_guard<std::mutex> selectionGuard(selectionLock);
+    
+    center = toggle;
+}
+
+void Menu::toggleClamp(bool toggle) {
+    // Create guard for selection lock
+    std::lock_guard<std::mutex> selectionGuard(selectionLock);
+    
+    clamp = toggle;
+}
+
+void Menu::toggleSplit(bool toggle) {
+    // Create guard for selection lock
+    std::lock_guard<std::mutex> selectionGuard(selectionLock);
+    
+    split = toggle;
+}
+
+void Menu::addItem(const std::shared_ptr<MenuItem>& item) {
+    // Create guard for selection lock
+    std::lock_guard<std::mutex> selectionGuard(selectionLock);
+    
     items.push_back(item);
     
-    if(item.size() > longestLength)
-        longestLength = item.size();
+    if(item->getLength() > longestLength)
+        longestLength = item->getLength();
 }
 
 void Menu::clearItems() {
+    // Create guard for selection lock
+    std::lock_guard<std::mutex> selectionGuard(selectionLock);
+    
     items.clear();
     longestLength = 0;
 }
 
-unsigned int Menu::moveCursor(int delta) {
+void Menu::moveCursor(int delta) {
     // Create guard for selection lock
     std::lock_guard<std::mutex> selectionGuard(selectionLock);
     
     if(items.empty())
-        return selection = 0;
+        return;
     
     if(delta > 0) {
         selection += delta;
@@ -45,11 +78,23 @@ unsigned int Menu::moveCursor(int delta) {
         else
             selection += delta;
     }
-    
-    return selection;
 }
 
-void Menu::draw(Renderer* renderer, unsigned int viewportWidth, unsigned int viewportHeight) {
+std::shared_ptr<MenuItem> Menu::selectCursor() {
+    // Create guard for selection lock
+    std::lock_guard<std::mutex> selectionGuard(selectionLock);
+    
+    // Return null if there are no menu items
+    if(items.empty())
+        return nullptr;
+    
+    return items[selection];
+}
+
+void Menu::draw(Renderer* renderer) {
+    unsigned int viewportWidth = renderer->getWidth();
+    unsigned int viewportHeight = renderer->getHeight();
+    
     // Create guard for selection lock
     std::lock_guard<std::mutex> selectionGuard(selectionLock);
     
@@ -107,15 +152,18 @@ void Menu::draw(Renderer* renderer, unsigned int viewportWidth, unsigned int vie
     // Find selection scroll
     int scroll = 0;
     if(items.size() > actualHeight) {
-        scroll = selection - actualHeight + 2;
+        scroll = selection - actualHeight / 2;
+        
+        // Clamp scroll
         if(scroll < 0)
             scroll = 0;
-        else if(selection == items.size() - 1)
-            scroll--;
+        else if(scroll > items.size() - actualHeight)
+            scroll = items.size() - actualHeight;
     }
     
     // Find clipping region end and abort if out of viewport bounds
-    auto endX = actualXOffset + actualWidth;
+    auto itemRight = actualXOffset + actualWidth;
+    auto endX = itemRight;
     if(endX <= 0)
         return;
     if(endX > viewportWidth)
@@ -128,64 +176,17 @@ void Menu::draw(Renderer* renderer, unsigned int viewportWidth, unsigned int vie
         endY = viewportHeight;
     
     // Draw items
-    for(auto i = 0; i < items.size(); i++) {
-        // Abort when out of bounds
-        const auto thisY = actualYOffset + i;
-        if(thisY >= endY)
-            break;
-        if(thisY < 0)
-            continue;
-        
-        // Handle selection
-        const auto thisSelection = i + scroll;
-        Formating& currentFormatting = (thisSelection == selection) ? selectedFormatting : formatting;
-        const auto& thisItem = items[thisSelection];
-        
-        // Handle overflowing items
-        bool overflow = false;
-        int drawableLength = thisItem.size();
-        if(drawableLength > actualWidth) {
-            drawableLength = actualWidth - 3;
-            if(drawableLength <= 0)
-                drawableLength = 1;
-            
-            overflow = true;
+    auto beginY = actualYOffset;
+    if(beginY < 0)
+        beginY = 0;
+    for(auto y = beginY; y < endY; y++) {
+        // Draw item if scroll in bounds, else, draw blank row
+        int itemIndex = y - actualYOffset + scroll;
+        if(itemIndex < items.size())
+            items[itemIndex]->drawAt(renderer, actualXOffset, itemRight, y, itemIndex == selection);
+        else {
+            for(auto x = actualXOffset; x < endX; x++)
+                renderer->draw_cell(x, y, ' ', formatting);
         }
-        
-        // Draw item characters
-        for(auto c = 0; c < drawableLength; c++) {
-            // Clip
-            auto charX = actualXOffset + c;
-            if(charX >= endX)
-                break;
-            if(charX < 0)
-                continue;
-            
-            // Draw
-            renderer->draw_cell(charX, thisY, thisItem[c], currentFormatting);
-        }
-        
-        // Draw overflow and blank spaces if needed
-        const auto itemEndX = actualXOffset + drawableLength;
-        const auto overflowX = itemEndX + 3;
-        for(auto x = itemEndX; x < endX; x++) {
-            // Clip
-            if(x >= endX)
-                break;
-            if(x < 0)
-                continue;
-            
-            // Draw
-            if(overflow && x < overflowX)
-                renderer->draw_cell(x, thisY, '.', currentFormatting);
-            else
-                renderer->draw_cell(x, thisY, ' ', currentFormatting);
-        }
-    }
-    
-    // Draw blank rows if needed
-    for(auto y = items.size() + actualYOffset - scroll; y < endY; y++) {
-        for(auto x = actualXOffset; x < endX; x++)
-            renderer->draw_cell(x, y, ' ', formatting);
     }
 }

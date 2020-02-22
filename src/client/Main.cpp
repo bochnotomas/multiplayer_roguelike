@@ -13,6 +13,13 @@
 #include "Camera.h"
 #include "Menu.hpp"
 
+enum MenuItemKey {
+    Normal,
+    Overflowing,
+    Quit,
+    Filler
+};
+
 int main(int argc, char* argv[]) {
 	// Main game map
 	Map map;
@@ -30,18 +37,15 @@ int main(int argc, char* argv[]) {
 	Camera main_cam('.', &map, { 2,2 });
     
     // Create sample menu
-    Menu sampleMenu(10, 10, RENDER_WIDTH / 2, RENDER_HEIGHT / 2, {Color::WHITE, Color::RED}, {Color::BLACK, Color::MAGENTA});
-    sampleMenu.addItem("Item 1");
-    sampleMenu.addItem("Item 2");
-    sampleMenu.addItem("Overflowing 1");
-    sampleMenu.addItem("Overflowing 2");
+    Menu sampleMenu(10, 10, RENDER_WIDTH / 2, RENDER_HEIGHT / 2);
+    sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Normal, "Item 1")));
+    sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Normal, "Item 2")));
+    sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Overflowing, "Overflowing 1")));
+    sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Overflowing, "Overflowing 2")));
+    sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Quit, "Quit", {Color::WHITE, Color::RED}, {Color::BLACK, Color::MAGENTA})));
     for(char c = '0'; c <= '9'; c++)
-        sampleMenu.addItem(std::string("Outbound ") + c);
-    for(char c = 'A'; c <= 'Z'; c++)
-        sampleMenu.addItem(std::string("Outbound ") + c);
-    sampleMenu.center = true;
-    sampleMenu.expand = true;
-    sampleMenu.clamp = true;
+        sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Filler, std::string("Filler ") + c)));
+    sampleMenu.toggleCenter(true);
 
 	// Create a new renderer with the given dimensions
 	Renderer renderer(RENDER_WIDTH, RENDER_HEIGHT);
@@ -97,24 +101,27 @@ int main(int argc, char* argv[]) {
 		break;
 		case 'x':
 		break;
-        case '7':
-            sampleMenu.moveCursor(-1);
+        case '9':
+            sampleMenu.moveCursor(-5);
         break;
-        case '1':
-            sampleMenu.moveCursor(1);
+        case '3':
+            sampleMenu.moveCursor(5);
         break;
         case '8':
-            sampleMenu.yOffset -= 1;
+            sampleMenu.moveCursor(-1);
         break;
         case '2':
-            sampleMenu.yOffset += 1;
+            sampleMenu.moveCursor(1);
         break;
-        case '4':
-            sampleMenu.xOffset -= 1;
-        break;
-        case '6':
-            sampleMenu.xOffset += 1;
-        break;
+        case '5':
+            {
+                auto selected = sampleMenu.selectCursor();
+                if(selected && selected->getKey() == MenuItemKey::Quit) {
+                    game_end = true;
+                    renderer.b_render = false;
+                }
+            }
+            break;
 		default:
 			break;
 		}
