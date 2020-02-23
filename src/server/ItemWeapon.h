@@ -1,7 +1,7 @@
 #include "ItemClasses.h"
 
-class WeaponItem : public Item {
-  WeaponItem(string name, string type, string desc, char character) :
+class ItemWeapon : public Item {
+  ItemWeapon(string name, string type, string desc, char character) :
     Item(name, type, desc, character)
   {}
 
