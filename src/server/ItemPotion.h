@@ -1,7 +1,7 @@
 #include "ItemClasses.h"
 
-class PotionItem : public Item {
-  PotionItem(string name, string type, string desc) :
+class ItemPotion : public Item {
+  ItemPotion(string name, string type, string desc) :
     Item(name, type, desc, 'P')
   {}
 
