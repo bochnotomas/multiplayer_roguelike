@@ -1,7 +1,7 @@
 #include "ItemClasses.h"
 
-class ArmourItem : public Item {
-  ArmourItem(string name, string type, string desc) :
+class ItemArmour : public Item {
+  ItemArmour(string name, string type, string desc) :
     Item(name, type, desc, 'U')
   {}
 
