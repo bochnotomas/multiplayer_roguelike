@@ -18,7 +18,7 @@ Player::Player(Socket* socket) :
 }
 
 
-void Player::potionCheck(int axisValue1, int axisValue2, std::vector<std::vector<char> >& map) {
+void Player::potionCheck(int axisValue1, int axisValue2, std::vector<std::vector<char>>& map) {
     if (map[axisValue1][axisValue2] == 'P') {
         speed++;
         potionPositionX = rand() % 40 + 1;
@@ -26,7 +26,7 @@ void Player::potionCheck(int axisValue1, int axisValue2, std::vector<std::vector
     }
 }
 
-void Player::playerMovementLogic(std::vector<std::vector<char> >& map) {
+void Player::playerMovementLogic(std::vector<std::vector<char>>& map) {
     bool ifBreak = false;
     switch (dir) {
     case LEFT:
