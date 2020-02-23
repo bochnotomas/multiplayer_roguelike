@@ -17,7 +17,7 @@ class Item
     itemChar(m_itemChar)
   {}
 };
-
+/*
 int objectCreation()
 {
   Item weaponSword("Sword", "WEAPON", "A noble blade, created by the ancient blacksmiths many years ago.", '!'); //create sword object
@@ -28,4 +28,4 @@ int objectCreation()
   Item ammoBow("Arrow", "AMMO", "When fired, these arrows fly through the air with such finesse until they strike their target, at which point they will inflict an ungodly amount of damage.", '/'); //create arrow object
 
   return 0;
-}
+}*/
