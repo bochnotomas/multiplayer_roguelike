@@ -1,4 +1,5 @@
 #include "Player.hpp"
+#include "Enemy.cpp"
 
 Player::Player(Socket* socket) :
     Socket(std::move(*socket)) // Call move constructor. Source invalidated
