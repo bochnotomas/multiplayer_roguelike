@@ -15,9 +15,9 @@ constexpr unsigned short RENDER_WIDTH = 120;
 // num of rows rendered on the screen
 constexpr unsigned short RENDER_HEIGHT = 30;
 // num of columns for minimap
-constexpr unsigned short MINIMAP_WIDTH = 120;
+constexpr unsigned short MINIMAP_WIDTH = 20;
 // num of rows for minimap
-constexpr unsigned short MINIMAP_HEIGHT = 20;
+constexpr unsigned short MINIMAP_HEIGHT = 10;
 // depth of 2.5D rendering
 constexpr float RENDER_DEPTH = 16.0f;
 
