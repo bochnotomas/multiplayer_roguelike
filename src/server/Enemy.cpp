@@ -1,23 +1,90 @@
-#include <iostream>
-#include <queue>
-#include "../client/Map.h"
+#include "Enemy.hpp"
 
-class Enemy
+
+
+Enemy::Enemy(int positionX_, int positionY_)
+{	
+	PositionX = positionX_;
+	PositionY = positionY_;
+}
+
+
+void Enemy::moveAiByPath(std::vector<std::pair<int, int> > pathToWalkBy)
 {
-public:
-	int startingPositionX;
-	int startingPositionY;
+	for (int i = 0; i < pathToWalkBy.size(); i++)
+	{
+		std::cout << pathToWalkBy[i].first << ", " << pathToWalkBy[i].second << std::endl;
+		PositionY = pathToWalkBy[i].first;
+		PositionX = pathToWalkBy[i].second;
+	}
+
+}
+
+std::vector<std::pair<int, int> > Enemy::trackThePath(int startingPositionY, int startingPositionX, int finalPositionY, int finalPositionX, std::vector<std::vector<std::pair<int, int>>>& parentNodes)
+{
+	std::vector<std::pair<int, int>> path;
+	std::pair<int, int> curPos(finalPositionY, finalPositionX);
+
+	while (true)
+	{
+		path.push_back(curPos);
+		if (curPos.first == startingPositionY && curPos.second == startingPositionX)
+			break;
+		curPos = parentNodes[curPos.first][curPos.second];
+	}
+
+	std::reverse(path.begin(), path.end());
+	moveAiByPath(path);
+	return path;
+}
+
+void Enemy::exploreNeighbours(int rowIndex_, int columnIndex_,std::queue <int>& rowQueue , std::queue <int>& columnQueue , int& nodesInNextLayer, std::vector<std::vector<bool> >& visitedNodes, std::vector<std::vector<std::pair<int, int>>>& parentNodes, std::vector<std::vector<char> >& map)
+{
+	int newRowIndex;
+	int newColumnIndex;
+
+	int directionVectorsRows[] = { -1 , +1 , 0 , 0 };
+	int direcitonVectorsColumns[] = { 0 , 0 , +1 , -1 };
+
+
+	for (int i = 0; i < 4; i++)
+	{
+		newRowIndex = rowIndex_ + directionVectorsRows[i];
+		newColumnIndex = columnIndex_ + direcitonVectorsColumns[i];
+
+		if (newRowIndex < 1 || newColumnIndex < 1)
+		{
+			continue;
+		}
+		if (newRowIndex > 8 || newColumnIndex > 8)
+		{
+			continue;
+		}
+
+		if (visitedNodes[newRowIndex][newColumnIndex])
+		{
+			continue;
+		}
+		if (map[newRowIndex][newColumnIndex] == '#')
+		{
+			continue;
+		}
+
+		rowQueue.push(newRowIndex);
+		columnQueue.push(newColumnIndex);
+
+
+		visitedNodes[newRowIndex][newColumnIndex] = true;
+		parentNodes[newRowIndex][newColumnIndex] = std::pair<int, int>(rowIndex_, columnIndex_);
+		nodesInNextLayer++;
+	}
+}
+
+std::vector<std::pair<int, int> > Enemy::findTheWay(int startingPositionY, int startingPositionX, int finalPositionY, int finalPositionX, std::vector<std::vector<char> >& map)
+{
 	
-	//variables for BFS
-	int mapRows;
-	int mapColumns;
-
-	char matrix[mapRows][mapColumns];
-	char map[mapRows][mapColumns];
-
-
-	int finalPositionX = 2;
-	int finalPositionY = 4;
+	int mapRows = map.size();
+	int mapColumns = map[0].size();
 
 	std::queue <int> rowQueue;
 	std::queue <int> columnQueue;
@@ -28,117 +95,53 @@ public:
 
 	bool reachedEnd = false;
 
-	bool visitedNodes[mapRows - 2][mapColumns - 2];
+	std::vector<bool> tempBoolRow(mapColumns, false);
+	std::vector<std::vector<bool> > visitedNodes(mapRows, tempBoolRow);
 
-	int directionVectorsRows[] = { -1 , +1 , 0 , 0 };
-	int direcitonVecotrsColumns[] = { 0 , 0 , +1 , -1 };
+	std::vector<std::pair<int, int>> tempPairRow(mapColumns, std::make_pair(0,0));
+	std::vector<std::vector<std::pair<int, int>>> parentNodes(mapRows, tempPairRow);
+	
+	
 
-	std::vector <int> parentNodesRows;
-	std::vector <int> parentNodesColumns;
+	rowQueue.push(startingPositionY);
+	columnQueue.push(startingPositionX);
 
-	Enemy(int positionX_, int positionY_, Map& mapObject )
+	visitedNodes[startingPositionY][startingPositionX] = true;
+
+	while (!rowQueue.empty())
 	{
-		startingPositionX = positionX_;
-		startingPositionY = positionY_;	
-		mapRows = mapObject.get_map_size().second;
-		mapColumns = mapObject.get_map_size().first;
-	}
+		int rowIndex = 0, columnIndex = 0;
 
-	void outputPreviousVector()
-	{
-		std::cout << "Rows: ";
-		for (int i = 0; i < parentNodesRows.size(); i++)
-		{
-			std::cout << parentNodesRows[i] << ", ";
+		if (!rowQueue.empty()) {
+			rowIndex = rowQueue.front();
+			rowQueue.pop();
 		}
-		std::cout << std::endl;
-
-		std::cout << "Columns: ";
-		for (int i = 0; i < parentNodesColumns.size(); i++)
-		{
-			std::cout << parentNodesColumns[i] << ", ";
+		if (!columnQueue.empty()) {
+			columnIndex = columnQueue.front();
+			columnQueue.pop();
 		}
 
-		std::cout << std::endl;
-	}
-
-	void exploreNeighbours(int rowIndex_, int columnIndex_)
-	{
-		int newRowIndex;
-		int newColumnIndex;
-
-		parentNodesRows.push_back(rowIndex_);
-		parentNodesColumns.push_back(columnIndex_);
-
-		for (int i = 0; i < 4; i++)
+		if (map[rowIndex][columnIndex] == 'F')
 		{
-			newRowIndex = rowIndex_ + directionVectorsRows[i];
-			newColumnIndex = columnIndex_ + direcitonVecotrsColumns[i];
+			reachedEnd = true;
+			break;
+		}
 
-			if (newRowIndex < 1 || newColumnIndex < 1)
-			{
-				continue;
-			}
-			if (newRowIndex > 8 || newColumnIndex > 8)
-			{
-				continue;
-			}
-
-			if (visitedNodes[newRowIndex][newColumnIndex])
-			{
-				continue;
-			}
-			if (map[newRowIndex][newColumnIndex] == '#')
-			{
-				continue;
-			}
-
-			rowQueue.push(newRowIndex);
-			columnQueue.push(newColumnIndex);
-
-
-			visitedNodes[newRowIndex][newColumnIndex] = true;
-			nodesInNextLayer++;
+		exploreNeighbours(rowIndex, columnIndex, rowQueue, columnQueue , nodesInNextLayer, visitedNodes, parentNodes , map);
+		nodesLeftInLayer--;
+		if (nodesLeftInLayer == 0)
+		{
+			nodesLeftInLayer = nodesInNextLayer;
+			nodesInNextLayer = 0;
+			moveCount++;
 		}
 	}
-
-	int findTheWay(int startingPositionY, int startingPositionX)
+	if (reachedEnd == true)
 	{
-
-		rowQueue.push(startingPositionY);
-		columnQueue.push(startingPositionX);
-
-		visitedNodes[startingPositionY][startingPositionX] = true;
-
-
-
-		while (rowQueue.size() > 0)
-		{
-			int rowIndex = rowQueue.front(); rowQueue.pop();
-			int columnIndex = columnQueue.front(); columnQueue.pop();
-
-			if (map[rowIndex][columnIndex] == 'F')
-			{
-				reachedEnd = true;
-				break;
-			}
-
-			exploreNeighbours(rowIndex, columnIndex);
-			nodesLeftInLayer--;
-			if (nodesLeftInLayer == 0)
-			{
-				nodesLeftInLayer = nodesInNextLayer;
-				nodesInNextLayer = 0;
-				moveCount++;
-			}
-		}
-		if (reachedEnd == true)
-		{
-			return moveCount;
-		}
-		else {
-			return -1;
-		}
-
+		return trackThePath(startingPositionY, startingPositionX, finalPositionY, finalPositionX,  parentNodes);
 	}
-};
+	else {
+		return std::vector<std::pair<int, int>>();
+	}
+
+}
