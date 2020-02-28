@@ -6,12 +6,12 @@
 #include <conio.h>
 #endif
 
-#include "Commons.h"
-#include "Renderer.h"
-#include "Object.h"
-#include "Map.h"
-#include "Camera.h"
-#include "Menu.hpp"
+#include "../src/client/Commons.h"
+#include "../src/client/Renderer.h"
+#include "../src/client/Object.h"
+#include "../src/client/Map.h"
+#include "../src/client/Camera.h"
+#include "../src/client/Menu.hpp"
 
 enum MenuItemKey {
     Normal,
