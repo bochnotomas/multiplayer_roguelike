@@ -1,5 +1,6 @@
 #include <iostream>
 #include <queue>
+#include "../client/Map.h"
 
 class Enemy
 {
@@ -8,8 +9,8 @@ public:
 	int startingPositionY;
 	
 	//variables for BFS
-	const int mapRows = 10;
-	const int mapColumns = 10;
+	int mapRows;
+	int mapColumns;
 
 	char matrix[mapRows][mapColumns];
 	char map[mapRows][mapColumns];
@@ -35,10 +36,12 @@ public:
 	std::vector <int> parentNodesRows;
 	std::vector <int> parentNodesColumns;
 
-	Enemy(int positionX_, int positionY_)
+	Enemy(int positionX_, int positionY_, Map& mapObject )
 	{
 		startingPositionX = positionX_;
-		startingPositionY = positionY_;
+		startingPositionY = positionY_;	
+		mapRows = mapObject.get_map_size().second;
+		mapColumns = mapObject.get_map_size().first;
 	}
 
 	void outputPreviousVector()
