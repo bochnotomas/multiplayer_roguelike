@@ -28,7 +28,8 @@ void Camera::move(const Direction dir){
 
 void Camera::get_objects_in_range(std::pair<long, long> range_y, std::pair<long, long> range_x){
 	for (Object* obj : m_map->objects){
-		if (obj->get_visibility() && obj->get_position().second >= range_y.first && 
+		if (obj->get_visibility() && 
+			obj->get_position().second >= range_y.first && 
 			obj->get_position().second < range_y.second &&
 			obj->get_position().first >= range_x.first &&
 			obj->get_position().first < range_x.second) {
@@ -79,6 +80,9 @@ void Camera::draw_minimap(Renderer* renderer)	{
 				for (Object* obj : objects_in_range){
                     if (obj->get_visibility() && obj->get_position().second == i && obj->get_position().first == j){
                         // Draw object to cell
+						//auto temp = obj->get_position();
+						//obj->get_position().first = obj->get_position().second;
+						//obj->get_position().second = temp.first;
                         renderer->draw_cell(j - start_j, i - start_i + y_offset, obj->get_char(), obj->get_formating());
                         object = true;
                     }
@@ -86,7 +90,7 @@ void Camera::draw_minimap(Renderer* renderer)	{
 				
 				if(!object) {
                     // Draw tile to cell
-                    renderer->draw_cell(j - start_j, i - start_i + y_offset, (*plane)[i][j].character, (*plane)[i][j].formating);
+                    renderer->draw_cell(j - start_j, i - start_i + y_offset, (*plane)[j][i].character, (*plane)[j][i].formating);
                 }
 			}
 			else
@@ -104,6 +108,14 @@ void Camera::draw_3D(Renderer* renderer) {
     unsigned int viewportWidth = renderer->getWidth();
     unsigned int viewportHeight = renderer->getHeight();
     
+	int start_i = -1 * (MINIMAP_HEIGHT / 2) + m_position.second;
+    int start_j = -1 * (MINIMAP_WIDTH / 2) + m_position.first;
+    int end_i = MINIMAP_HEIGHT / 2 + m_position.second;
+    int end_j = MINIMAP_WIDTH / 2 + m_position.first;
+
+	// get objects in range of camera
+	get_objects_in_range({start_i, end_i}, {start_j, end_j});
+
 	//lock the position values to avoid changing it while rendering a frame
 	std::lock_guard<std::mutex> lock (pos_mutex);
 	// plane of the map
@@ -122,18 +134,18 @@ void Camera::draw_3D(Renderer* renderer) {
 	for(size_t i = 0; i<viewportWidth; i++){
 		// For each column, calculate the projected ray angle into world space
 		float fRayAngle = (m_angle - m_fov/2.0f) + ((float)i / (float)viewportWidth) * m_fov;
-
 		
 		float step = 0.1f; // step for incrementing distance of ray				
 		float dist = 0.0f; // distance of ray
 
-		bool obstacle_flag = false;		// true if there is a wall on the path of ray
+		bool wall_flag = false;		// true if there is a wall on the path of ray
+		bool item_flag = false;		// true if there is an object on the path of ray
 		bool boundary_flag = false;		// true if ray hit between the walls
 
 		float fEyeX = sinf(fRayAngle); // Unit vector for ray in player space
 		float fEyeY = cosf(fRayAngle);
 
-		while(!obstacle_flag && dist<RENDER_DEPTH){
+		while(!wall_flag && dist<RENDER_DEPTH){
 			// increment the ray distance
 			dist += step;
 
@@ -147,7 +159,7 @@ void Camera::draw_3D(Renderer* renderer) {
 			}
 			// check if ray hitted the wall
 			else if(!(*plane)[ray_pos_x][ray_pos_y].accesible) {
-				obstacle_flag = true;
+				wall_flag = true;
 				char render_char;
 				std::string color_code;
 				// set character equivalent to distance from wall
@@ -206,5 +218,6 @@ void Camera::draw_3D(Renderer* renderer) {
             renderer->draw_cell(j, i, vec_map_to_render[j][i], default_formatting);
 		}
 	}
+	objects_in_range.clear();
 }
 // end of adapted code

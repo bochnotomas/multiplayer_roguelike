@@ -7,9 +7,9 @@ class Object
 public:
 	virtual ~Object() = default;
 
-	Object(const char character, Direction direction, bool visibility, std::pair<long, long> start_position, Formating formating) :
+	Object(const char character, Direction direction, bool visibility, std::pair<float, float> start_position, Formating formating) :
 		m_character(character), m_dir(direction), m_visibility(visibility), m_position(std::move(start_position)), m_formating(formating) {}
-	Object(const char character, Direction direction, bool visibility, std::pair<long, long> start_position) : 
+	Object(const char character, Direction direction, bool visibility, std::pair<float, float> start_position) : 
 		Object(character, direction, visibility, start_position, {Color::WHITE, Color::BLACK}) {}
 	Object(const char character, Direction direction, bool visibility) : 
 		Object(character, direction, visibility, { 0,0 }) {}

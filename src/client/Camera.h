@@ -37,7 +37,7 @@ public:
 
 private:
 // 2.5D rendering
-	float m_angle = 0.f; // angle for ray_casting
+	float m_angle = 9.f; // angle for ray_casting
 	float m_fov =  3.14159f / 4.0f; // field of view
 // 2.5D rendering
 	char m_blank_char; // character to put if there is nothing to render on position

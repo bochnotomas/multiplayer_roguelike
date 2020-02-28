@@ -28,13 +28,15 @@ int main(int argc, char* argv[]) {
 	map.set_preset_map();
 
 	// sample object
-	Object* player = new Object('x', Direction::NORTH, true, { 2,2 }, {Color::BLACK, Color::RED});
+	Object* player = new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
+	Object* object = new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
 
 	// add player into main map
 	map.objects.push_back(std::move(player));
+	map.objects.push_back(std::move(object));
 
 	// create camera
-	Camera main_cam('.', &map, { 2,2 });
+	Camera main_cam('.', &map, { 2.f,2.f });
     
     // Create sample menu
     Menu sampleMenu(10, 10, RENDER_WIDTH / 2, RENDER_HEIGHT / 2);
