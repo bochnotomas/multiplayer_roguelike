@@ -1,40 +1,46 @@
-#pragma once
+#ifndef ROGUELIKE_RENDERER_H_INCLUDED
+#define ROGUELIKE_RENDERER_H_INCLUDED
 #include <time.h>
 #include <iostream>
 #include "Commons.h"
 #include <thread>
-#include "Camera.h"
+#include <vector>
 #if defined(unix) || defined(__unix) || defined(__unix__)
 #include <unistd.h>
 #include <termios.h>
 #endif
 
+class Renderer; // Forward-declare Renderer
+
+/// A drawable class. Has a render method that takes in the target Renderer
+class Drawable {
+public:
+    virtual void draw(Renderer* renderer) = 0;
+};
+
 // allows to fast writing data into console
 class Renderer
 {
+    std::vector<Drawable*> drawables;
+    std::vector<std::vector<Formating>> format_buffer;
+    std::vector<std::vector<char>> chars_buffer;
+    unsigned int width, height;
+    
 public:
 	// change to false to end rendering
 	bool b_render = true;
-
-	Renderer(Camera* cam) : m_cam(cam) {
-	}
+    
+    // Create new Renderer with given window size
+    Renderer(unsigned int viewportWidth, unsigned int viewportHeight);
+    
+    // Add drawable to drawables list
+    void add_drawable(Drawable* drawable);
+    
+    // Draw cell to buffers
+    void draw_cell(unsigned int x, unsigned int y, char character, Formating formatting);
 
 	// prints given data into the output stream
-	void render() {
-		// clear the screen
-		std::cout << "\x1B[2J\x1B[H";
-		// go to new line and disable cursor
-		std::cout << "\e[?25l";
-		while (b_render) {
-			// go to (0,0) position
-			std::cout << "\033[0;0f" << m_cam->get_to_render3D() << "------------\n\033[0m";
-			std::cout<< m_cam->get_minimap_to_render() << "\033[0m";
-		}
-		std::cout << "\033[0m";
-		// re-enable cursor
-		std::cout << "\x1B[2J\x1B[H";
-		// clear console
-	}
+	void render();
 
 	std::thread spawn() {
 		return std::thread(&Renderer::render, this);
@@ -46,6 +52,12 @@ public:
 		title = nullptr;
 		delete title;
 	}
+	
+	// Get width of renderer's viewport
+	unsigned int getWidth();
+	
+	// Get height of renderer's viewport
+	unsigned int getHeight();
 
 #if defined(unix) || defined(__unix) || defined(__unix__)
 	//Adapted from https://stackoverflow.com/questions/7469139/what-is-the-equivalent-to-getch-getche-in-linux
@@ -72,11 +84,6 @@ public:
 	}
 	//End of Adapted
 #endif
-
-	~Renderer(){
-		//delete m_cam;
-		//m_cam = nullptr;
-	}
-private:
-	Camera* m_cam;
 };
+
+#endif

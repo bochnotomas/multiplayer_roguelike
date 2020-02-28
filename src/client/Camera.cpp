@@ -4,7 +4,7 @@
 Camera::Camera()
 {}
 
-Camera::Camera(char blank_char, Map& map, std::pair<long, long> start_position):
+Camera::Camera(char blank_char, Map* map, std::pair<long, long> start_position):
 	m_blank_char(blank_char), m_map(map), Object('\0', Direction::NORTH, false, start_position)
 {}
 
@@ -27,7 +27,7 @@ void Camera::move(const Direction dir){
 }
 
 void Camera::get_objects_in_range(std::pair<long, long> range_y, std::pair<long, long> range_x){
-	for (Object* obj : m_map.objects){
+	for (Object* obj : m_map->objects){
 		if (obj->get_visibility() && obj->get_position().second >= range_y.first && 
 			obj->get_position().second < range_y.second &&
 			obj->get_position().first >= range_x.first &&
@@ -37,89 +37,91 @@ void Camera::get_objects_in_range(std::pair<long, long> range_y, std::pair<long,
 	}
 }
 
-std::string Camera::get_minimap_to_render()	{
-	// keeps generated map string
-	std::string map_to_render = "";
+void Camera::draw(Renderer* renderer) {
+    draw_3D(renderer);
+    draw_minimap(renderer);
+}
 
+void Camera::draw_minimap(Renderer* renderer)	{
+    unsigned int viewportWidth = renderer->getWidth();
+    unsigned int viewportHeight = renderer->getHeight();
+    
 	// plane of the map
-	MapPlane* plane = m_map.get_map_plane();
+	MapPlane* plane = m_map->get_map_plane();
 	// size of the map
-	std::pair<unsigned long, unsigned long> map_size = m_map.get_map_size();
-
-	// color of last cell
-	Color last_fg_color = Color::NO_COLOR;
-	Color last_bg_color = Color::NO_COLOR;
-
-	// get objects in range of camera
-	get_objects_in_range({-1 * (MINIMAP_HEIGHT / 2) + m_position.second,  MINIMAP_HEIGHT / 2 + m_position.second},
-						 {-1 * (MINIMAP_WIDTH / 2) + m_position.first,    MINIMAP_WIDTH / 2 + m_position.first});
+	std::pair<unsigned long, unsigned long> map_size = m_map->get_map_size();
 
 	// lock camera position to avoid changing position during rendering
 	std::lock_guard<std::mutex> lock (pos_mutex);
 
-	for (int i = -1 * (MINIMAP_HEIGHT / 2) + m_position.second; i < MINIMAP_HEIGHT / 2 + m_position.second; i++)
+    int y_offset = viewportHeight - MINIMAP_HEIGHT;
+    int start_i = -1 * (MINIMAP_HEIGHT / 2) + m_position.second;
+    int start_j = -1 * (MINIMAP_WIDTH / 2) + m_position.first;
+    int end_i = MINIMAP_HEIGHT / 2 + m_position.second;
+    int end_j = MINIMAP_WIDTH / 2 + m_position.first;
+    const Formating default_formatting {
+        Color::NO_COLOR,
+        Color::NO_COLOR
+    };
+
+	// get objects in range of camera
+	get_objects_in_range({start_i, end_i}, {start_j, end_j});
+    
+	for (int i = start_i; i < end_i; i++)
 	{
-		for (int j = -1 * (MINIMAP_WIDTH / 2) + m_position.first; j < MINIMAP_WIDTH / 2 + m_position.first; j++)
+		for (int j = start_j; j < end_j; j++)
 		{
 			if (i >= 0 && j >= 0 && i < map_size.second && j < map_size.first)
 			{
-				// check if last current cell is in the same color as before
-				if((*plane)[i][j].formating.text_color!=last_fg_color ||
-					(*plane)[i][i].formating.background_color!=last_bg_color){
-					// set last_fg_color to current color
-					last_fg_color = (*plane)[i][j].formating.text_color;
-					last_bg_color = (*plane)[i][j].formating.background_color;
-					// set color code to current color
-					// \033[3;42;30m
-					map_to_render.append(std::string("\033[3;" + std::to_string(static_cast<int>((*plane)[i][j].formating.background_color)+10 ) + ";" +
-					  std::to_string(static_cast<int>((*plane)[i][j].formating.text_color) ) + "m"));
-				}
 				// flag to check if on current cell is an object
 				bool object = false;
 				// check all objects in range if there is a one on current position
 				for (Object* obj : objects_in_range){
-				if (obj->get_visibility() && obj->get_position().second == i && obj->get_position().first == j){
-					map_to_render.append(std::string("\033[3;" + std::to_string(static_cast<int>(obj->get_formating().background_color)+10 ) + ";" +
-					  std::to_string(static_cast<int>(obj->get_formating().text_color) ) + "m"));
-					map_to_render += obj->get_char();
-					map_to_render.append(std::string("\033[" + std::to_string(static_cast<int>(last_bg_color)+10 )+ ";" + std::to_string(static_cast<int>(last_fg_color)) +"m"));
-					object = true;
+                    if (obj->get_visibility() && obj->get_position().second == i && obj->get_position().first == j){
+                        // Draw object to cell
+                        renderer->draw_cell(j - start_j, i - start_i + y_offset, obj->get_char(), obj->get_formating());
+                        object = true;
+                    }
 				}
-				}
-				if(!object)
-					map_to_render += (*plane)[i][j].character;
+				
+				if(!object) {
+                    // Draw tile to cell
+                    renderer->draw_cell(j - start_j, i - start_i + y_offset, (*plane)[i][j].character, (*plane)[i][j].formating);
+                }
 			}
 			else
 			{
-				if(last_fg_color != Color::NO_COLOR){
-					last_fg_color = Color::NO_COLOR;
-					map_to_render.append("\033[0m");
-				}
-				map_to_render+=' ';
+                // Draw blank cell
+                renderer->draw_cell(j - start_j, i - start_i + y_offset, ' ', default_formatting);
 			}
 		}
-		map_to_render += '\n';
 	}
-	map_to_render.append("\033[0m");
 	objects_in_range.clear();
-	return {map_to_render};
 }
 
 // some parts of code adapted from https://github.com/OneLoneCoder/CommandLineFPS/blob/master/CommandLineFPS.cpp
-std::string Camera::get_to_render3D() {
+void Camera::draw_3D(Renderer* renderer) {
+    unsigned int viewportWidth = renderer->getWidth();
+    unsigned int viewportHeight = renderer->getHeight();
+    
 	//lock the position values to avoid changing it while rendering a frame
 	std::lock_guard<std::mutex> lock (pos_mutex);
 	// plane of the map
-	MapPlane* plane = m_map.get_map_plane();
+	MapPlane* plane = m_map->get_map_plane();
 	// size of the map
-	std::pair<unsigned long, unsigned long> map_size = m_map.get_map_size();
+	std::pair<unsigned long, unsigned long> map_size = m_map->get_map_size();
 
-	std::vector<std::string> vec_map_to_render(RENDER_WIDTH, std::string(RENDER_HEIGHT, ' '));
+	std::vector<std::string> vec_map_to_render(viewportWidth, std::string(viewportHeight, ' '));
+    
+    const Formating default_formatting {
+        Color::NO_COLOR,
+        Color::NO_COLOR
+    };
 
 	// cast a ray for every column in a screen
-	for(size_t i = 0; i<RENDER_WIDTH; i++){
+	for(size_t i = 0; i<viewportWidth; i++){
 		// For each column, calculate the projected ray angle into world space
-		float fRayAngle = (m_angle - m_fov/2.0f) + ((float)i / (float)RENDER_WIDTH) * m_fov;
+		float fRayAngle = (m_angle - m_fov/2.0f) + ((float)i / (float)viewportWidth) * m_fov;
 
 		
 		float step = 0.1f; // step for incrementing distance of ray				
@@ -184,11 +186,11 @@ std::string Camera::get_to_render3D() {
 				if (acos(p.at(1).second) < fBound) boundary_flag = true;
 				if (acos(p.at(2).second) < fBound) boundary_flag = true;
 
-				unsigned short len_of_column = static_cast<int>(RENDER_HEIGHT-dist*2.0f);
-				if(len_of_column>=RENDER_HEIGHT) len_of_column = RENDER_HEIGHT-1;
+				unsigned short len_of_column = static_cast<int>(viewportHeight-dist*2.0f);
+				if(len_of_column>=viewportHeight) len_of_column = viewportHeight-1;
 
 					if(!boundary_flag) {
-						vec_map_to_render[i].replace((RENDER_HEIGHT-len_of_column)/2,
+						vec_map_to_render[i].replace((viewportHeight-len_of_column)/2,
 						len_of_column,
 						std::string(len_of_column,
 						render_char));
@@ -198,17 +200,11 @@ std::string Camera::get_to_render3D() {
 			}
 	}
 
-	// convert frame from vector to string
-	std::string str_map_to_render;
-	bool color_flag = false;
-	int last_color = -1;
-	for(int i = 0; i<RENDER_HEIGHT; i++){
-		for(int j = 0; j<RENDER_WIDTH; j++){
-			str_map_to_render += vec_map_to_render[j][i];
+	// draw frame to renderer
+	for(int i = 0; i<viewportHeight; i++){
+		for(int j = 0; j<viewportWidth; j++){
+            renderer->draw_cell(j, i, vec_map_to_render[j][i], default_formatting);
 		}
-		str_map_to_render+='\n';
 	}
-	str_map_to_render.append(std::to_string(m_angle));
-	return str_map_to_render;
 }
 // end of adapted code
