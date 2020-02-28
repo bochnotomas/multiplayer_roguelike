@@ -91,9 +91,42 @@ std::shared_ptr<MenuItem> Menu::selectCursor() {
     return items[selection];
 }
 
+void Menu::drawRows(Renderer* renderer, int left, int top, int right, int bottom, int scroll) {
+    const unsigned int viewportWidth = renderer->getWidth();
+    const unsigned int viewportHeight = renderer->getHeight();
+    
+    // Find clipping region end and abort if out of viewport bounds
+    auto endX = right;
+    if(endX <= 0)
+        return;
+    if(endX > viewportWidth)
+        endX = viewportWidth;
+    
+    auto endY = bottom;
+    if(endY <= 0)
+        return;
+    if(endY > viewportHeight)
+        endY = viewportHeight;
+    
+    // Draw items
+    auto beginY = top;
+    if(beginY < 0)
+        beginY = 0;
+    for(auto y = beginY; y < endY; y++) {
+        // Draw item if scroll in bounds, else, draw blank row
+        int itemIndex = y - top + scroll;
+        if(itemIndex < items.size())
+            items[itemIndex]->drawAt(renderer, left, right, y, itemIndex == selection);
+        else {
+            for(auto x = left; x < endX; x++)
+                renderer->draw_cell(x, y, ' ', formatting);
+        }
+    }
+}
+
 void Menu::draw(Renderer* renderer) {
-    unsigned int viewportWidth = renderer->getWidth();
-    unsigned int viewportHeight = renderer->getHeight();
+    const unsigned int viewportWidth = renderer->getWidth();
+    const unsigned int viewportHeight = renderer->getHeight();
     
     // Create guard for selection lock
     std::lock_guard<std::mutex> selectionGuard(selectionLock);
@@ -147,46 +180,26 @@ void Menu::draw(Renderer* renderer) {
             actualYOffset = viewportWidth - actualWidth;
     }
     
-    // TODO implement splitting
-    
-    // Find selection scroll
-    int scroll = 0;
-    if(items.size() > actualHeight) {
-        scroll = selection - actualHeight / 2;
-        
-        // Clamp scroll
-        if(scroll < 0)
-            scroll = 0;
-        else if(scroll > items.size() - actualHeight)
-            scroll = items.size() - actualHeight;
+    // Draw rows
+    if(split) {
+        // Splitting, multiple columns
+        // TODO
     }
-    
-    // Find clipping region end and abort if out of viewport bounds
-    auto itemRight = actualXOffset + actualWidth;
-    auto endX = itemRight;
-    if(endX <= 0)
-        return;
-    if(endX > viewportWidth)
-        endX = viewportWidth;
-    
-    auto endY = actualYOffset + actualHeight;
-    if(endY <= 0)
-        return;
-    if(endY > viewportHeight)
-        endY = viewportHeight;
-    
-    // Draw items
-    auto beginY = actualYOffset;
-    if(beginY < 0)
-        beginY = 0;
-    for(auto y = beginY; y < endY; y++) {
-        // Draw item if scroll in bounds, else, draw blank row
-        int itemIndex = y - actualYOffset + scroll;
-        if(itemIndex < items.size())
-            items[itemIndex]->drawAt(renderer, actualXOffset, itemRight, y, itemIndex == selection);
-        else {
-            for(auto x = actualXOffset; x < endX; x++)
-                renderer->draw_cell(x, y, ' ', formatting);
+    else {
+        // No splitting, single column
+        // Find selection scroll
+        int scroll = 0;
+        if(items.size() > actualHeight) {
+            scroll = selection - actualHeight / 2;
+            
+            // Clamp scroll
+            if(scroll < 0)
+                scroll = 0;
+            else if(scroll > items.size() - actualHeight)
+                scroll = items.size() - actualHeight;
         }
+        
+        // Draw
+        drawRows(renderer, actualXOffset, actualYOffset, actualXOffset + actualWidth, actualYOffset + actualHeight, scroll);
     }
 }
