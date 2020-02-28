@@ -45,6 +45,9 @@ class Menu : public Drawable {
     // If true, the menu will also try to split accross columns if there is
     // not enough height for all items, instead of scrolling. False by default
     bool split; // TODO, implement splitting
+    
+    // Internal function. Draws a strip of rows in a given rectangle
+    void drawRows(Renderer* renderer, int left, int top, int right, int bottom, int scroll);
 public:
     Menu(unsigned int width, unsigned int height, int xOffset = 0, int yOffset = 0, const Formating& formatting = {Color::NO_COLOR, Color::NO_COLOR});
     

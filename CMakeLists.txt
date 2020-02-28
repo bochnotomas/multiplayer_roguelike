@@ -10,6 +10,8 @@ add_executable(networking_example example/networking.cpp src/client/Client.cpp s
 
 add_executable(engine src/client/Main.cpp src/client/Map.cpp src/client/Object.cpp src/client/Renderer.cpp src/client/Camera.cpp src/client/Menu.cpp src/client/MenuItem.cpp src/client/Map.h src/client/Object.h src/client/Renderer.h src/client/Camera.h src/client/Menu.hpp src/client/MenuItem.hpp)
 
+add_executable(server example/levelGeneration.cpp src/server/LevelGeneration2D.cpp src/server/LevelGeneration2D.h)
+
 # networking_example
 if (WIN32)
     # Link with winsock2 if on Windows
