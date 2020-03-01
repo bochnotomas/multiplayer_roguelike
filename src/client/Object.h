@@ -1,14 +1,17 @@
 #pragma once
 #include <utility>
 #include "Commons.h"
+#include "Texture.h"
 
 class Object
 {
 public:
 	virtual ~Object() = default;
 
+	Object(const char character, Direction direction, bool visibility, std::pair<float, float> start_position, Formating formating, Texture texture) :
+		m_character(character), m_dir(direction), m_visibility(visibility), m_position(std::move(start_position)), m_formating(formating), m_texture(texture) {}
 	Object(const char character, Direction direction, bool visibility, std::pair<float, float> start_position, Formating formating) :
-		m_character(character), m_dir(direction), m_visibility(visibility), m_position(std::move(start_position)), m_formating(formating) {}
+		Object(character, direction, visibility, start_position, formating, {}) {}
 	Object(const char character, Direction direction, bool visibility, std::pair<float, float> start_position) : 
 		Object(character, direction, visibility, start_position, {Color::WHITE, Color::BLACK}) {}
 	Object(const char character, Direction direction, bool visibility) : 
@@ -28,6 +31,8 @@ public:
 
 	std::pair<long, long> get_position() const;
 
+	Texture get_texture() const;
+
 	virtual void move(const Direction dir);
 
 	virtual void update() {
@@ -35,6 +40,8 @@ public:
 	}
 
 	void set_position(const std::pair<float, float> new_position);
+
+	bool is_player = false;
 	
 protected:
 	// graphical representation of object;
@@ -47,4 +54,5 @@ protected:
 	bool m_visibility;
 	// color of the object
 	Formating m_formating;
+	Texture m_texture;
 };

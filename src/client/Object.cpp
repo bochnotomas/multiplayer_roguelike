@@ -16,6 +16,11 @@ bool Object::get_visibility() const
 	return m_visibility;
 }
 
+Texture Object::get_texture() const
+{
+	return m_texture;
+}
+
 std::pair<long, long> Object::get_position() const
 {
 	return {static_cast<long>(m_position.first), static_cast<long>(m_position.second)};

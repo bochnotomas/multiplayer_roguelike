@@ -107,14 +107,6 @@ void Camera::draw_minimap(Renderer* renderer)	{
 void Camera::draw_3D(Renderer* renderer) {
     unsigned int viewportWidth = renderer->getWidth();
     unsigned int viewportHeight = renderer->getHeight();
-    
-	int start_i = -1 * (MINIMAP_HEIGHT / 2) + m_position.second;
-    int start_j = -1 * (MINIMAP_WIDTH / 2) + m_position.first;
-    int end_i = MINIMAP_HEIGHT / 2 + m_position.second;
-    int end_j = MINIMAP_WIDTH / 2 + m_position.first;
-
-	// get objects in range of camera
-	get_objects_in_range({start_i, end_i}, {start_j, end_j});
 
 	//lock the position values to avoid changing it while rendering a frame
 	std::lock_guard<std::mutex> lock (pos_mutex);
@@ -129,6 +121,13 @@ void Camera::draw_3D(Renderer* renderer) {
         Color::NO_COLOR,
         Color::NO_COLOR
     };
+
+	// get objects in range of camera
+	get_objects_in_range({-1 * (MINIMAP_HEIGHT / 2) + m_position.second, MINIMAP_HEIGHT / 2 + m_position.second},
+	{-1 * (MINIMAP_WIDTH / 2) + m_position.first, MINIMAP_WIDTH / 2 + m_position.first});
+
+	using obj_to_render = std::pair<Object*, std::pair<float, size_t>>;  // <object, <distance, viewport i>>
+	std::vector<obj_to_render> objects_to_render;
 
 	// cast a ray for every column in a screen
 	for(size_t i = 0; i<viewportWidth; i++){
@@ -206,10 +205,37 @@ void Camera::draw_3D(Renderer* renderer) {
 						len_of_column,
 						std::string(len_of_column,
 						render_char));
-						(*plane)[ray_pos_x][ray_pos_y].character = 'x';
 					}
 				}
+				for(auto obj : objects_in_range){
+				if(obj->get_position().first == ray_pos_x && obj->get_position().second == ray_pos_y
+				&& !obj->is_player){
+					objects_to_render.push_back({obj, {dist, i}});
+				}
 			}
+			}
+	}
+
+	auto Pred = [](obj_to_render a, obj_to_render b) {
+		return (a.first==b.first) ? true : false;
+	};
+	// filter vector to have unique objects
+	std::vector<obj_to_render>::iterator it; 
+    it = std::unique(objects_to_render.begin(), objects_to_render.end(), Pred); 
+    objects_to_render.resize(std::distance(objects_to_render.begin(), it)); 
+	for(obj_to_render obj : objects_to_render){
+		unsigned short size_of_obj = static_cast<int>(viewportHeight-obj.second.first*4.0f);
+		long i_start = (static_cast<long>(obj.second.second)-size_of_obj/2);
+		i_start = (i_start<0) ? 0 : i_start;
+		long i_end = (static_cast<long>(obj.second.second)+size_of_obj/2);
+		i_end = (i_end>=viewportWidth) ? viewportWidth-1 : i_end;
+		for(long i = i_start; i<=i_end; ++i){
+			
+		vec_map_to_render[i].replace((viewportHeight-size_of_obj)/2,
+						size_of_obj,
+						std::string(size_of_obj,
+						obj.first->get_char()));
+		}
 	}
 
 	// draw frame to renderer
