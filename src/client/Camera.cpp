@@ -129,6 +129,8 @@ void Camera::draw_3D(Renderer* renderer) {
 	using obj_to_render = std::pair<Object*, std::pair<float, size_t>>;  // <object, <distance, viewport i>>
 	std::vector<obj_to_render> objects_to_render;
 
+	//std::cout<<objects_in_range.size()<<' ';
+
 	// cast a ray for every column in a screen
 	for(size_t i = 0; i<viewportWidth; i++){
 		// For each column, calculate the projected ray angle into world space
@@ -207,10 +209,11 @@ void Camera::draw_3D(Renderer* renderer) {
 						render_char));
 					}
 				}
-				for(auto obj : objects_in_range){
-				if(obj->get_position().first == ray_pos_x && obj->get_position().second == ray_pos_y
-				&& !obj->is_player){
-					objects_to_render.push_back({obj, {dist, i}});
+				for(std::vector<Object*>::iterator it = objects_in_range.begin(); it<objects_in_range.end(); ++it){
+				if((*it)->get_position().first == ray_pos_x && (*it)->get_position().second == ray_pos_y
+				&& !(*it)->is_player){
+					objects_to_render.push_back({(*it), {dist, i}});
+					objects_in_range.erase(it);
 				}
 			}
 			}
@@ -219,31 +222,54 @@ void Camera::draw_3D(Renderer* renderer) {
 	auto Pred = [](obj_to_render a, obj_to_render b) {
 		return (a.first==b.first) ? true : false;
 	};
+	// draw frame to renderer
+	for(int i = 0; i<viewportHeight; i++){
+		for(int j = 0; j<viewportWidth; j++){
+			if(vec_map_to_render[j][i]=='#')
+			    renderer->draw_cell(j, i, vec_map_to_render[j][i], {Color::WHITE, Color::WHITE});
+			else if(vec_map_to_render[j][i]=='8')
+				renderer->draw_cell(j, i, '#', {Color::BLACK, Color::WHITE});
+			else if(vec_map_to_render[j][i]=='-')
+				renderer->draw_cell(j, i, '#', {Color::WHITE, Color::NO_COLOR});
+			else
+            	renderer->draw_cell(j, i, vec_map_to_render[j][i], default_formatting);
+		}
+	}
 	// filter vector to have unique objects
 	std::vector<obj_to_render>::iterator it; 
     it = std::unique(objects_to_render.begin(), objects_to_render.end(), Pred); 
     objects_to_render.resize(std::distance(objects_to_render.begin(), it)); 
+	std::cout<<objects_to_render.size()<<" ";
 	for(obj_to_render obj : objects_to_render){
-		unsigned short size_of_obj = static_cast<int>(viewportHeight-obj.second.first*4.0f);
-		long i_start = (static_cast<long>(obj.second.second)-size_of_obj/2);
-		i_start = (i_start<0) ? 0 : i_start;
-		long i_end = (static_cast<long>(obj.second.second)+size_of_obj/2);
-		i_end = (i_end>=viewportWidth) ? viewportWidth-1 : i_end;
-		for(long i = i_start; i<=i_end; ++i){
-			
-		vec_map_to_render[i].replace((viewportHeight-size_of_obj)/2,
-						size_of_obj,
-						std::string(size_of_obj,
-						obj.first->get_char()));
+		float scaling;
+		if (obj.second.first <= RENDER_DEPTH / 4.0f){
+			scaling = 1.0f;	
+		}
+		else if (obj.second.first < RENDER_DEPTH / 3.0f){
+			scaling = 2.f;
+		}
+		else if (obj.second.first < RENDER_DEPTH / 2.0f){
+			scaling = 3.f;
+		}
+		else if (obj.second.first < RENDER_DEPTH){
+			scaling = 4.f;
+		}
+		float w = obj.first->get_texture().get_plane().size()/scaling;
+		float tw = obj.first->get_texture().get_plane().size();
+		unsigned short len_of_column = static_cast<int>((viewportHeight-obj.second.first)/1.75f);
+		if(len_of_column>=viewportHeight) len_of_column = viewportHeight-1;
+		for(int i = obj.second.second, y = 0; i<obj.second.second + obj.first->get_texture().get_plane().size()/scaling && i<viewportWidth; ++i, ++y){
+			for(int j = len_of_column, x = 0; j<len_of_column + obj.first->get_texture().get_plane().size()/scaling && j<viewportWidth; ++j, ++x){
+				try{
+					renderer->draw_cell(i, j, obj.first->get_texture().get_plane()[static_cast<int>(x/w*tw)][static_cast<int>(y/w*tw)].character,
+					obj.first->get_texture().get_plane()[static_cast<int>(x/w*tw)][static_cast<int>(y/w*tw)].formating);
+				}
+				catch(...){
+					throw;
+					continue;
+				}
+			}
 		}
 	}
-
-	// draw frame to renderer
-	for(int i = 0; i<viewportHeight; i++){
-		for(int j = 0; j<viewportWidth; j++){
-            renderer->draw_cell(j, i, vec_map_to_render[j][i], default_formatting);
-		}
-	}
-	objects_in_range.clear();
 }
 // end of adapted code
