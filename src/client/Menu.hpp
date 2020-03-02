@@ -42,9 +42,11 @@ class Menu : public Drawable {
     // viewport. False by default
     bool clamp;
     
-    // If true, the menu will also try to split accross columns if there is
-    // not enough height for all items, instead of scrolling. False by default
-    bool split; // TODO, implement splitting
+    // If not 0, the menu will also try to split accross columns if there is
+    // not enough height for all items, with a minimum width per column of this
+    // value, instead of scrolling verticaly. If expand is true, the menu will
+    // only expand by adding new columns. 0 by default
+    unsigned int split;
     
     // Internal function. Draws a strip of rows in a given rectangle
     void drawRows(Renderer* renderer, int left, int top, int right, int bottom, int scroll);
@@ -55,7 +57,7 @@ public:
     void toggleExpand(bool toggle);
     void toggleCenter(bool toggle);
     void toggleClamp(bool toggle);
-    void toggleSplit(bool toggle);
+    void setSplit(unsigned int minColumnWidth);
     
     // Add an item to the menu
     void addItem(const std::shared_ptr<MenuItem>& item);

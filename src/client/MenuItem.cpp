@@ -17,6 +17,13 @@ unsigned int MenuItem::getLength() const {
 }
 
 void MenuItem::drawAt(Renderer* renderer, int left, int right, int y, bool selected) const {
+    // Clip y
+    if(y < 0)
+        return;
+    const auto limitY = renderer->getHeight();
+    if(y >= limitY)
+        return;
+    
     // Get formatting
     const Formating& thisFormatting = selected ? selectedFormatting : formatting;
     
@@ -33,10 +40,11 @@ void MenuItem::drawAt(Renderer* renderer, int left, int right, int y, bool selec
     }
     
     // Draw item characters
+    const auto limitX = renderer->getWidth();
     for(auto c = 0; c < drawableLength; c++) {
-        // Clip
+        // Clip x
         auto charX = left + c;
-        if(charX >= right)
+        if(charX >= limitX)
             break;
         if(charX < 0)
             continue;
@@ -49,9 +57,11 @@ void MenuItem::drawAt(Renderer* renderer, int left, int right, int y, bool selec
     const auto itemEndX = left + drawableLength;
     const auto overflowX = itemEndX + 3;
     for(auto x = itemEndX; x < right; x++) {
-        // Clip
+        // Clip x
         if(x < 0)
             continue;
+        if(x >= limitX)
+            break;
         
         // Draw
         if(overflow && x < overflowX)
