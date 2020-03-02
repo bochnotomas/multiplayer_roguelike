@@ -220,6 +220,9 @@ void Menu::draw(Renderer* renderer) {
         // Find selection scroll
         int scroll = 0;
         int screenCols = actualWidth / colWidth;
+        if(screenCols > colCount)
+            screenCols = colCount;
+        
         if(colCount * actualHeight > items.size()) {
             scroll = selection / actualHeight - screenCols / 2;
             
@@ -232,7 +235,7 @@ void Menu::draw(Renderer* renderer) {
         
         // Draw columns
         int rightLimit = actualXOffset + actualWidth;
-        for(int c = 0; c < colCount; c++) {
+        for(int c = 0; c < screenCols; c++) {
             // Stop if left is out of bounds
             int left = actualXOffset + c * colWidth;
             if(left >= rightLimit)
@@ -246,6 +249,11 @@ void Menu::draw(Renderer* renderer) {
             // Draw rows in this column
             drawRows(renderer, left, actualYOffset, right, actualYOffset + actualHeight, (c + scroll) * actualHeight);
         }
+        
+        // TODO Dead space if needed
+        int lastLeft = actualXOffset + screenCols * colWidth;
+        if(lastLeft != rightLimit)
+            drawRows(renderer, lastLeft, actualYOffset, rightLimit, actualYOffset + actualHeight, (screenCols + scroll) * actualHeight);
     }
     else {
         // No splitting, single column
