@@ -250,7 +250,7 @@ void Menu::draw(Renderer* renderer) {
             drawRows(renderer, left, actualYOffset, right, actualYOffset + actualHeight, (c + scroll) * actualHeight);
         }
         
-        // TODO Dead space if needed
+        // Dead space if needed
         int lastLeft = actualXOffset + screenCols * colWidth;
         if(lastLeft != rightLimit)
             drawRows(renderer, lastLeft, actualYOffset, rightLimit, actualYOffset + actualHeight, (screenCols + scroll) * actualHeight);
