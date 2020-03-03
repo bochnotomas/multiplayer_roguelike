@@ -16,6 +16,8 @@ class Renderer; // Forward-declare Renderer
 class Drawable {
 public:
     virtual void draw(Renderer* renderer) = 0;
+    
+    virtual ~Drawable() = default; // Virtual destructor needed since this class is abstract
 };
 
 // allows to fast writing data into console
@@ -35,6 +37,9 @@ public:
     
     // Add drawable to drawables list
     void add_drawable(Drawable* drawable);
+    
+    // Clear drawables list
+    void clear_drawables();
     
     // Draw cell to buffers
     void draw_cell(unsigned int x, unsigned int y, char character, Formating formatting);

@@ -25,6 +25,10 @@ void Renderer::add_drawable(Drawable* drawable) {
     drawables.push_back(drawable);
 }
 
+void Renderer::clear_drawables() {
+    drawables.clear();
+}
+
 void Renderer::draw_cell(unsigned int x, unsigned int y, char character, Formating formatting) {
     if(y >= height || x >= width)
         throw std::range_error("Renderer::draw_cell called at position " + std::to_string(x) + ", " + std::to_string(y) + " but size is " + std::to_string(width) + ", " + std::to_string(height));

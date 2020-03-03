@@ -80,6 +80,22 @@ void Menu::moveCursor(int delta) {
     }
 }
 
+void Menu::setCursor(int pos) {
+    // Create guard for selection lock
+    std::lock_guard<std::mutex> selectionGuard(selectionLock);
+    
+    if(items.empty()) {
+        selection = 0;
+        return;
+    }
+    
+    selection = pos;
+    if(selection >= items.size())
+        selection = items.size() - 1;
+    else if(selection < 0)
+        selection = 0;
+}
+
 std::shared_ptr<MenuItem> Menu::selectCursor() {
     // Create guard for selection lock
     std::lock_guard<std::mutex> selectionGuard(selectionLock);

@@ -68,6 +68,9 @@ public:
     // Move cursor up or down. Tests for bounds
     void moveCursor(int delta);
     
+    // Set cursor position. If not possible, resets to nearest possible
+    void setCursor(int pos);
+    
     // Get the current item selection. Returns the selected item or nullptr if
     // the menu has no items
     std::shared_ptr<MenuItem> selectCursor();
