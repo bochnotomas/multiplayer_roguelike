@@ -1,5 +1,6 @@
 #include "client/Menu.hpp"
 #include "client/Client.hpp"
+#include "server/LevelGeneration2D.h"
 
 enum MenuOption {
     // Main menu options
@@ -108,4 +109,35 @@ int main() {
     
     // Wait for render thread to stop
     renderThread.join();
+
+    //end of whatever rafaels 200iq brain did, start of single digit iq euan
+
+
+    // get in players
+
+    //initialise level
+    LevelGeneration2D levelOne;
+
+    levelOne.setGrid();
+
+    for (int i = 0; i <= 100; i++) {
+        levelOne.generation();
+    }
+
+    for (int i = 0; i <= 3; i++) {
+        levelOne.refine();
+    }
+
+    levelOne.coutGrid();
+
+    //place players and objects in level
+
+    // gameloop
+        //send out player choice
+        //sleep
+        // recieve choice
+        // update
+
+    //everyone died end game
+
 }
