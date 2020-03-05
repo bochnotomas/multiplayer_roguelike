@@ -10,7 +10,6 @@ public:
     /// Connected players
     std::vector<std::shared_ptr<Player> > players;
     
-    // TODO proper xml docstrings
     /// Create server with port number
     Server(uint16_t port);
     
