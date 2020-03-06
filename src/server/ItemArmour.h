@@ -1,6 +1,7 @@
 #ifndef ITEM_ARMOUR_H
 #define ITEM_ARMOUR_H
 #include "ItemClasses.h"
+#include <string>
 
 using namespace std;
 

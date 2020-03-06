@@ -1,6 +1,7 @@
 #ifndef WEAPON_SWORD_H
 #define WEAPON_SWORD_H
 #include "ItemWeapon.h"
+#include <string>
 using namespace std;
 
 class WeaponSword : public ItemWeapon {

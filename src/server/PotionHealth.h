@@ -1,6 +1,7 @@
 #ifndef POTION_HEALTH_H
 #define POTION_HEALTH_H
 #include "ItemPotion.h"
+#include <string>
 using namespace std;
 
 class PotionHealth : public ItemPotion {

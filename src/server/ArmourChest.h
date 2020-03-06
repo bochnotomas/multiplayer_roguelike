@@ -1,6 +1,7 @@
 #ifndef ARMOUR_CHEST_H
 #define ARMOUR_CHEST_H
 #include "ItemArmour.h"
+#include <string>
 
 using namespace std;
 

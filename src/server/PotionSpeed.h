@@ -1,6 +1,7 @@
 #ifndef POTION_SPEED_H
 #define POTION_SPEED_H
 #include "ItemPotion.h"
+#include <string>
 using namespace std;
 
 class PotionSpeed : public ItemPotion {
