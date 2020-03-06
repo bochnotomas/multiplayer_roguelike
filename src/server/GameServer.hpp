@@ -1,12 +1,16 @@
 #ifndef ROGUELIKE_GAME_SERVER_HPP_INCLUDED
 #define ROGUELIKE_GAME_SERVER_HPP_INCLUDED
 #include "Server.hpp"
+#include "Map.h"
 #include <atomic>
 #include <thread>
 
 class GameServer : private Server {
     /// True when the server is running
     std::atomic<bool> running;
+    
+    // Levels in the game
+    std::vector<Map> levels;
     
     /// Game logic goes here... Yup...
     void logic();

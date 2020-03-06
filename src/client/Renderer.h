@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <termios.h>
 #endif
+#include <mutex>
 
 class Renderer; // Forward-declare Renderer
 
@@ -31,6 +32,10 @@ class Renderer
 public:
 	// change to false to end rendering
 	bool b_render = true;
+    
+    // Renderer lock. Create a lock guard with this mutex when changing the
+    // drawables list
+    std::mutex r_lock;
     
     // Create new Renderer with given window size
     Renderer(unsigned int viewportWidth, unsigned int viewportHeight);

@@ -44,6 +44,9 @@ void Renderer::render() {
     std::cout << "\033[?25l";
     
     while (b_render) {
+        // Guard render mutex lock
+        std::lock_guard<std::mutex> r_lock_guard(r_lock);
+        
         // go to (0,0) position
         std::cout << "\033[0;0f";
         

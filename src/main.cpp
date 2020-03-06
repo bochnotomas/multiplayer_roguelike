@@ -1,6 +1,7 @@
 #include "client/Menu.hpp"
-#include "client/Client.hpp"
 #include "server/LevelGeneration2D.h"
+#include "client/GameClient.hpp"
+#include "server/GameServer.hpp"
 
 // num of columns rendered on the screen
 constexpr unsigned short RENDER_WIDTH = 120;
@@ -18,6 +19,20 @@ enum MenuOption {
     ConnectMenuDone,
     ConnectMenuCancel
 };
+
+/// Change to a new menu
+void changeMenu(Renderer& renderer, Menu*& currentMenu, Menu* newMenu) {
+    // Lock renderer (and wait for current frame to end)
+    std::lock_guard<std::mutex> rLockGuard(renderer.r_lock);
+    
+    // Change current menu
+    currentMenu = newMenu;
+    currentMenu->setCursor(0);
+    
+    // Rebuild drawables list in renderer
+    renderer.clear_drawables();
+    renderer.add_drawable(currentMenu);
+}
 
 /// Main
 int main() {
@@ -64,7 +79,9 @@ int main() {
     // Input loop
     while(renderer.b_render) {
         // Wait for input
-        switch(Renderer::getch()) {
+        char input = Renderer::getch();
+        
+        switch(input) {
             case 'w':
             case 'W':
                 // Move cursor up
@@ -84,10 +101,7 @@ int main() {
                         // TODO
                         break;
                     case MenuOption::MainMenuConnect:
-                        currentMenu = &connectMenu;
-                        currentMenu->setCursor(0);
-                        renderer.clear_drawables();
-                        renderer.add_drawable(currentMenu);
+                        changeMenu(renderer, currentMenu, &connectMenu);
                         break;
                     case MenuOption::MainMenuQuit:
                         renderer.b_render = false;
@@ -99,13 +113,11 @@ int main() {
                         // TODO
                         break;
                     case MenuOption::ConnectMenuDone:
-                        // TODO
+                        // Connect to server
+                        new GameClient(&renderer, "127.0.0.1", 7777);
                         break;
                     case MenuOption::ConnectMenuCancel:
-                        currentMenu = &mainMenu;
-                        currentMenu->setCursor(0);
-                        renderer.clear_drawables();
-                        renderer.add_drawable(currentMenu);
+                        changeMenu(renderer, currentMenu, &mainMenu);
                         break;
                 }
                 break;
