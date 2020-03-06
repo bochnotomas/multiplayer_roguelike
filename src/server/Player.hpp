@@ -34,6 +34,8 @@ struct Player : Socket, Object {
     int defense;
     int strength;
     int speed;
+    int speedPotionCooldown;
+    int healthPotionCooldown;
     eDirection dir;
 
     void potionCheck(int axisValue1, int axisValue2, std::vector<std::vector<char> >& map);
