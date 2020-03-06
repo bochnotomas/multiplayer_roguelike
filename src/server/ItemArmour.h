@@ -11,6 +11,7 @@ class ItemArmour : public Item {
         Item(name, type, desc, 'U')
     {}
 
-    virtual void extraHealth() = 0;
+    virtual void equipArmour() = 0;
+	virtual void unequipArmour() = 0;
 };
 #endif
