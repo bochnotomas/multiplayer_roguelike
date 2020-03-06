@@ -6,12 +6,14 @@
 #include <conio.h>
 #endif
 
-#include "../src/client/Commons.h"
 #include "../src/client/Renderer.h"
-#include "../src/client/Object.h"
-#include "../src/client/Map.h"
 #include "../src/client/Camera.h"
 #include "../src/client/Menu.hpp"
+#include "../src/server/Object.h"
+#include "../src/server/Map.h"
+
+constexpr unsigned short RENDER_WIDTH = 120;
+constexpr unsigned short RENDER_HEIGHT = 30;
 
 enum MenuItemKey {
     Normal,
@@ -36,7 +38,7 @@ int main(int argc, char* argv[]) {
 	map.objects.push_back(std::move(object));
 
 	// create camera
-	Camera main_cam('.', &map, { 2.f,2.f });
+	Camera main_cam('.', &map, { 2.f,2.f }, { 20, 10 });
     
     // Create sample menu
     Menu sampleMenu(10, 10, RENDER_WIDTH / 2, RENDER_HEIGHT / 2);

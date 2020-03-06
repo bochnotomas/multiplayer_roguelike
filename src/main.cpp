@@ -2,6 +2,11 @@
 #include "client/Client.hpp"
 #include "server/LevelGeneration2D.h"
 
+// num of columns rendered on the screen
+constexpr unsigned short RENDER_WIDTH = 120;
+// num of rows rendered on the screen
+constexpr unsigned short RENDER_HEIGHT = 30;
+
 enum MenuOption {
     // Main menu options
     MainMenuNewGame,

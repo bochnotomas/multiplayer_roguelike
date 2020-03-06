@@ -2,7 +2,7 @@
 #define ROGUELIKE_RENDERER_H_INCLUDED
 #include <time.h>
 #include <iostream>
-#include "Commons.h"
+#include "Formatting.hpp"
 #include <thread>
 #include <vector>
 #if defined(unix) || defined(__unix) || defined(__unix__)

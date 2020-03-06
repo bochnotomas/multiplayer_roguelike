@@ -1,11 +1,8 @@
 #include "Camera.h"
 #include <iostream>
 
-Camera::Camera()
-{}
-
-Camera::Camera(char blank_char, Map* map, std::pair<long, long> start_position):
-	m_blank_char(blank_char), m_map(map), Object('\0', Direction::NORTH, false, start_position)
+Camera::Camera(char blank_char, Map* map, std::pair<long, long> start_position, std::pair<long, long> minimap_size):
+	Object('\0', Direction::NORTH, false, start_position), m_minimap_size(minimap_size), m_blank_char(blank_char), m_map(map)
 {}
 
 void Camera::move(const Direction dir){
@@ -55,11 +52,11 @@ void Camera::draw_minimap(Renderer* renderer)	{
 	// lock camera position to avoid changing position during rendering
 	std::lock_guard<std::mutex> lock (pos_mutex);
 
-    int y_offset = viewportHeight - MINIMAP_HEIGHT;
-    int start_i = -1 * (MINIMAP_HEIGHT / 2) + m_position.second;
-    int start_j = -1 * (MINIMAP_WIDTH / 2) + m_position.first;
-    int end_i = MINIMAP_HEIGHT / 2 + m_position.second;
-    int end_j = MINIMAP_WIDTH / 2 + m_position.first;
+    int y_offset = viewportHeight - m_minimap_size.second;
+    int start_i = -1 * (m_minimap_size.second / 2) + m_position.second;
+    int start_j = -1 * (m_minimap_size.first / 2) + m_position.first;
+    int end_i = m_minimap_size.second / 2 + m_position.second;
+    int end_j = m_minimap_size.first / 2 + m_position.first;
     const Formating default_formatting {
         Color::NO_COLOR,
         Color::NO_COLOR
@@ -123,8 +120,8 @@ void Camera::draw_3D(Renderer* renderer) {
     };
 
 	// get objects in range of camera
-	get_objects_in_range({-1 * (MINIMAP_HEIGHT / 2) + m_position.second, MINIMAP_HEIGHT / 2 + m_position.second},
-	{-1 * (MINIMAP_WIDTH / 2) + m_position.first, MINIMAP_WIDTH / 2 + m_position.first});
+	get_objects_in_range({-1 * (m_minimap_size.second / 2) + m_position.second, m_minimap_size.second / 2 + m_position.second},
+	{-1 * (m_minimap_size.first / 2) + m_position.first, m_minimap_size.first / 2 + m_position.first});
 
 	using obj_to_render = std::pair<Object*, std::pair<float, size_t>>;  // <object, <distance, viewport i>>
 	std::vector<obj_to_render> objects_to_render;
@@ -254,6 +251,8 @@ void Camera::draw_3D(Renderer* renderer) {
 		else if (obj.second.first < RENDER_DEPTH){
 			scaling = 4.f;
 		}
+		else
+            continue; // Skip this object, too far away (or else, scaling would be uninitialised, xoxo - raf)
 		float w = obj.first->get_texture().get_plane().size()/scaling;
 		float tw = obj.first->get_texture().get_plane().size();
 		unsigned short len_of_column = static_cast<int>((viewportHeight-obj.second.first)/1.75f);
@@ -266,7 +265,6 @@ void Camera::draw_3D(Renderer* renderer) {
 				}
 				catch(...){
 					throw;
-					continue;
 				}
 			}
 		}

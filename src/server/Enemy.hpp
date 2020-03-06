@@ -6,7 +6,7 @@
 
 #include <thread>
 
-#include "../client/Map.h"
+#include "Map.h"
 
 class Enemy
 {

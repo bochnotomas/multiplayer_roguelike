@@ -2,7 +2,7 @@
 #define ROGUELIKE_PLAYER_HPP_INCLUDED
 #include "../networking/Socket.hpp"
 #include "../networking/Buffer.hpp"
-#include "../client/Object.h"
+#include "Object.h"
 #include <vector>
 
 enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
