@@ -10,6 +10,8 @@ Player::Player(Socket* socket) :
     attack = 1;
     defense = 1;
     strength = 1;
+    speedPotionCooldown = 0;
+    healthPotionCooldown = 0;
     playerPositionX = 10;
     playerPositionY = 15;
     obstaclePositionY = 15;
