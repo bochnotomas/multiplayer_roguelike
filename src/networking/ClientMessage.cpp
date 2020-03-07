@@ -33,8 +33,7 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
     
     // Parse data size field
     uint64_t dataSize;
-    if(!buffer.get(dataSize, 2))
-        return nullptr;
+    buffer.get(dataSize, 2);
     
     // Abort if body (data) not received
     if(buffer.size() < dataSize + 10)
@@ -42,8 +41,7 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
     
     // Parse type field
     uint16_t type;
-    if(!buffer.get(type))
-        return nullptr;
+    buffer.get(type);
     
     // Clear header from buffer, full message received
     buffer.erase(10);
@@ -71,11 +69,11 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 // Body is a player name length, a player name and a chat
                 // message for Chat messages.
                 // Parse player name length
-                uint8_t senderNameLength;
-                if(!buffer.pop(senderNameLength)) {
-                    buffer.erase(dataSize - 1);
+                if(dataSize == 0)
                     return nullptr;
-                }
+                
+                uint8_t senderNameLength;
+                buffer.pop(senderNameLength);
                 
                 // Prevent buffer size heartbleed-style bugs and 0-length player names
                 if(senderNameLength > dataSize - 1) {

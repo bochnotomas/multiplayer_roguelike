@@ -11,8 +11,7 @@ std::unique_ptr<ServerMessage> ServerMessage::fromBuffer(Buffer& buffer, std::sh
     
     // Parse data size field
     uint64_t dataSize;
-    if(!buffer.get(dataSize, 2))
-        return nullptr;
+    buffer.get(dataSize, 2);
     
     // Abort if body (data) not received
     if(buffer.size() < dataSize + 10)
@@ -20,8 +19,7 @@ std::unique_ptr<ServerMessage> ServerMessage::fromBuffer(Buffer& buffer, std::sh
     
     // Parse type field
     uint16_t type;
-    if(!buffer.get(type))
-        return nullptr;
+    buffer.get(type);
     
     // Clear header from buffer, full message received
     buffer.erase(10);
