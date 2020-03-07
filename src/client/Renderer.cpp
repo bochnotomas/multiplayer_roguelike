@@ -36,7 +36,7 @@ void Renderer::draw_cell(unsigned int x, unsigned int y, char character, Formati
     format_buffer[y][x] = formatting;
     chars_buffer[y][x] = character;
 }
-    
+
 void Renderer::render() {
     // clear the screen
     std::cout << "\033[2J\033[H";

@@ -7,6 +7,9 @@ class GameClient : private Client {
     /// Renderer used by this client. NOT OWNED BY THE CLIENT
     Renderer* renderer;
     
+    /// Render exception message to screen
+    void exceptionScreen(std::string message);
+    
     /// Client logic
     void logic();
     

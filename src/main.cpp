@@ -2,6 +2,7 @@
 #include "server/LevelGeneration2D.h"
 #include "client/GameClient.hpp"
 #include "server/GameServer.hpp"
+#include "client/ClearScreenDrawable.hpp"
 
 // num of columns rendered on the screen
 constexpr unsigned short RENDER_WIDTH = 120;
@@ -21,7 +22,7 @@ enum MenuOption {
 };
 
 /// Change to a new menu
-void changeMenu(Renderer& renderer, Menu*& currentMenu, Menu* newMenu) {
+void changeMenu(Renderer& renderer, Menu*& currentMenu, Menu* newMenu, ClearScreenDrawable* clearDrawable) {
     // Lock renderer (and wait for current frame to end)
     std::lock_guard<std::mutex> rLockGuard(renderer.r_lock);
     
@@ -31,7 +32,72 @@ void changeMenu(Renderer& renderer, Menu*& currentMenu, Menu* newMenu) {
     
     // Rebuild drawables list in renderer
     renderer.clear_drawables();
+    renderer.add_drawable(clearDrawable);
     renderer.add_drawable(currentMenu);
+}
+
+/// Show exception screen and change back to main menu
+void exceptionScreen(Renderer& renderer, Menu*& currentMenu, Menu* mainMenu, ClearScreenDrawable* clearDrawable, std::string message) {
+    // Create error menu
+    Menu errorMenu(10, 4, renderer.getWidth() / 2, renderer.getHeight() / 2);
+    errorMenu.toggleExpand(true);
+    errorMenu.toggleCenter(true);
+    errorMenu.toggleClamp(true);
+    
+    static const Formating errorItemFormatting{
+        Color::BLACK,
+        Color::RED
+    };
+    std::shared_ptr<MenuItem> headerItem(new MenuItem(0, "Client error! Press space or enter to continue...", errorItemFormatting, errorItemFormatting));
+    std::shared_ptr<MenuItem> messageItem(new MenuItem(0, message, errorItemFormatting, errorItemFormatting));
+    errorMenu.addItem(headerItem);
+    errorMenu.addItem(messageItem);
+    
+    {
+        // Lock renderer
+        std::lock_guard<std::mutex> r_lock_guard(renderer.r_lock);
+        
+        // Set drawables to error menu only
+        renderer.clear_drawables();
+        renderer.add_drawable(&errorMenu);
+    }
+    
+    // Wait for space or enter
+    while(true) {
+        char input = renderer.getch();
+        if(input == ' ' || input == '\n')
+            break;
+    }
+    
+    // Go to main menu
+    changeMenu(renderer, currentMenu, mainMenu, clearDrawable);
+}
+
+/// Connect client to server, handling exceptions
+void connectClientToServer(Renderer& renderer, Menu*& currentMenu, Menu* mainMenu, ClearScreenDrawable* clearDrawable, std::string host, uint16_t port) {
+    try {
+        // Connect to server
+        new GameClient(&renderer, host, port);
+    }
+    catch(const std::exception& err) {
+        exceptionScreen(renderer, currentMenu, mainMenu, clearDrawable, err.what());
+        return;
+    }
+    catch(const std::string err) {
+        exceptionScreen(renderer, currentMenu, mainMenu, clearDrawable, err);
+        return;
+    }
+    catch(const char* err) {
+        exceptionScreen(renderer, currentMenu, mainMenu, clearDrawable, err);
+        return;
+    }
+    catch(...) {
+        exceptionScreen(renderer, currentMenu, mainMenu, clearDrawable, "Unknown exception");
+        return;
+    }
+    
+    // Go to main menu
+    changeMenu(renderer, currentMenu, mainMenu, clearDrawable);
 }
 
 /// Main
@@ -41,6 +107,9 @@ int main() {
     auto defaultMenuH = RENDER_HEIGHT / 4;
     auto centerX = RENDER_WIDTH / 2;
     auto centerY = RENDER_HEIGHT / 2;
+    
+    // Create drawable that clears the screen
+    ClearScreenDrawable clearDrawable;
     
     // Create main menu
     Menu mainMenu(defaultMenuW, defaultMenuH, centerX, centerY);
@@ -72,8 +141,8 @@ int main() {
     
     // Setup renderer
     Renderer renderer(RENDER_WIDTH, RENDER_HEIGHT);
-    Menu* currentMenu = &mainMenu;
-    renderer.add_drawable(currentMenu);
+    Menu* currentMenu;
+    changeMenu(renderer, currentMenu, &mainMenu, &clearDrawable);
     auto renderThread = renderer.spawn();
     
     // Input loop
@@ -101,7 +170,7 @@ int main() {
                         // TODO
                         break;
                     case MenuOption::MainMenuConnect:
-                        changeMenu(renderer, currentMenu, &connectMenu);
+                        changeMenu(renderer, currentMenu, &connectMenu, &clearDrawable);
                         break;
                     case MenuOption::MainMenuQuit:
                         renderer.b_render = false;
@@ -113,11 +182,15 @@ int main() {
                         // TODO
                         break;
                     case MenuOption::ConnectMenuDone:
-                        // Connect to server
-                        new GameClient(&renderer, "127.0.0.1", 7777);
+                        // Connect client to server
+                        // TODO get input from other menu items
+                        connectClientToServer(renderer, currentMenu, &mainMenu, &clearDrawable, "localhost", 7777);
+                        
+                        // Client stopped, reset to main menu
+                        changeMenu(renderer, currentMenu, &mainMenu, &clearDrawable);
                         break;
                     case MenuOption::ConnectMenuCancel:
-                        changeMenu(renderer, currentMenu, &mainMenu);
+                        changeMenu(renderer, currentMenu, &mainMenu, &clearDrawable);
                         break;
                 }
                 break;
