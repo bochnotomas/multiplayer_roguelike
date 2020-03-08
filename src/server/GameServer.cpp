@@ -35,6 +35,9 @@ void GameServer::logic() {
                         }
                     }
                     break;
+                case GameMessageType::DoQuit:
+                    propagate = true;
+                    break;
                 // TODO parse message types
             }
             
