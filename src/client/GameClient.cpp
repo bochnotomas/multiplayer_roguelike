@@ -12,12 +12,20 @@ enum ClientMenuItem {
 void GameClient::netLoop() {
     try {
         while(playing) {
+            // Receive messages with 250 ms timeout
             receiveMessages(250);
+            
+            // Send messages with 250 ms timeout
             sendMessages(250);
+            
+            // Kill network loop if socket was closed
+            if(!isSocketOpen())
+                playing = false;
         }
     }
     catch(const SocketException& err) {
         playing = false; // TODO error screen?
+        return;
     }
 }
 
@@ -79,6 +87,7 @@ void GameClient::logic(Renderer* renderer) {
                                 renderer->clear_drawables();
                                 renderer->add_drawable(clearDrawable);
                                 renderer->add_drawable(actionMenu);
+                                focus = actionMenu;
                             }
                         }
                     }
@@ -87,45 +96,47 @@ void GameClient::logic(Renderer* renderer) {
         }
         
         // Parse input
-        switch(renderer->getch()) {
-            case 'w':
-            case 'W':
-                break; // TODO move
-            case 's':
-            case 'S':
-                break; // TODO move
-            case 'a':
-            case 'A':
-                break; // TODO move
-            case 'd':
-            case 'D':
-                break; // TODO move
-            case 'r':
-            case 'R':
-                if(focus)
-                    focus->moveCursor(-1);
-                break;
-            case 'f':
-            case 'F':
-                if(focus)
-                    focus->moveCursor(1);
-                break;
-            case ' ':
-            case '\n':
-                if(focus) {
-                    auto selection = focus->selectCursor();
-                    if(!selection)
-                        break;
-                    
-                    switch(selection->getKey()) {
-                        case ClientMenuItem::JoinCancel:
-                        case ClientMenuItem::ActionQuit:
-                            addMessage(ClientMessageDoQuit());
-                            playing = false;
+        if(renderer->kbhit()) {
+            switch(renderer->getch()) {
+                case 'w':
+                case 'W':
+                    break; // TODO move
+                case 's':
+                case 'S':
+                    break; // TODO move
+                case 'a':
+                case 'A':
+                    break; // TODO move
+                case 'd':
+                case 'D':
+                    break; // TODO move
+                case 'r':
+                case 'R':
+                    if(focus)
+                        focus->moveCursor(-1);
+                    break;
+                case 'f':
+                case 'F':
+                    if(focus)
+                        focus->moveCursor(1);
+                    break;
+                case ' ':
+                case '\n':
+                    if(focus) {
+                        auto selection = focus->selectCursor();
+                        if(!selection)
                             break;
+                        
+                        switch(selection->getKey()) {
+                            case ClientMenuItem::JoinCancel:
+                            case ClientMenuItem::ActionQuit:
+                                addMessage(ClientMessageDoQuit());
+                                playing = false;
+                                break;
+                        }
                     }
-                }
-                break;
+                    break;
+            }
         }
     }
 }

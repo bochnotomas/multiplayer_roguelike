@@ -18,6 +18,10 @@ Server::Server(uint16_t port) :
     listenSocket.setBlocking(false);
 }
 
+Server::~Server() {
+    close();
+}
+
 std::deque<std::shared_ptr<ServerMessage> > Server::receive(int timeoutMs) {
     // Accept connections from listening socket. New socket is blocking
     auto newSocket = listenSocket.accept();
@@ -170,4 +174,28 @@ void Server::disconnectPlayer(std::shared_ptr<Player> player) {
     }
 }
 
+bool Server::isSocketOpen() {
+    return listenSocket.isValid();
+}
+
+void Server::close() {
+    if(listenSocket.isValid()) {
+        try {
+            // Shutdown listening socket completely
+            listenSocket.shutdown(SocketShutdownMode::ShutReadWrite);
+            
+            // Shutdown player socket reads
+            for(auto player : players)
+                player->shutdown(SocketShutdownMode::ShutRead);
+        
+            // Send all buffered data. Abort after, at most, 10 seconds
+            auto quarters = 0;
+            while(!sendMessages(250)) {
+                if(++quarters >= 40)
+                    break;
+            }
+        }
+        catch(SocketException e) {}; // Ignore network exceptions
+    }
+}
 

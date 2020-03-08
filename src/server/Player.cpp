@@ -20,6 +20,15 @@ Player::Player(Socket* socket) :
     potionPositionY = 2;
 }
 
+Player::~Player() {
+    if(isValid()) {
+        try {
+            // Shutdown socket completely
+            shutdown(SocketShutdownMode::ShutReadWrite);
+        }
+        catch(SocketException e) {}; // Ignore network exceptions
+    }
+}
 
 void Player::potionCheck(int axisValue1, int axisValue2, std::vector<std::vector<char>>& map) {
     if (map[axisValue1][axisValue2] == 'P') {

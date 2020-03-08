@@ -14,6 +14,12 @@
     #include <ws2tcpip.h>
 #endif
 
+enum SocketShutdownMode {
+    ShutRead,
+    ShutWrite,
+    ShutReadWrite
+};
+
 /// A cross platform socket object
 class Socket {
     SOCKET rawSock = INVALID_SOCKET;
@@ -96,6 +102,10 @@ public:
     /// blocking calls, false never gets returned, as the only way this can
     /// fail is by throwing a SocketException
     bool connect(SOCKET_ADDRESS_FAMILY addressFamily, IN_ADDR address, uint16_t port);
+    
+    /// Shutdown the socket, flagging that you will no longer read data, write
+    /// data, or both;
+    void shutdown(SocketShutdownMode mode);
     
     /// Set socket to blocking or non-blocking mode. Sockets are blocking by
     /// default

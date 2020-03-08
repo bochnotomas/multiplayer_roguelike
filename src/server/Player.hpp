@@ -22,7 +22,7 @@ struct Player : Socket, Object {
     Player(Socket* socket);
     
     /// Destructor
-    ~Player() = default;
+    ~Player();
 
     int playerPositionX, playerPositionY;
     int obstaclePositionX, obstaclePositionY;

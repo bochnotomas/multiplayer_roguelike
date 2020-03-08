@@ -6,11 +6,18 @@ void GameServer::logic() {
         // Get messages
         std::deque<std::shared_ptr<ServerMessage> > messages = receive(250);
         
-        // Kill server if there are no players connected for 10 loops
-        if(players.empty() && ++killCounter >= 10) {
-            running = false;
-            return;
+        // Kill server if there are no players connected for 10 loops, waiting
+        // on every iteration for 250ms
+        if(players.empty()) {
+            if(++killCounter >= 10) {
+                running = false;
+                break;
+            }
+            
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
         }
+        else
+            killCounter = 0;
         
         // Parse messages
         for(auto it = messages.begin(); it != messages.end(); it++) {
@@ -45,7 +52,16 @@ void GameServer::logic() {
         
         // Send buffered messages
         sendMessages(250);
+        
+        // Kill server if the socket is closed
+        if(!isSocketOpen()) {
+            running = false;
+            return;
+        }
     }
+    
+    if(isSocketOpen())
+        close();
 }
 
 GameServer::GameServer(uint16_t port) :

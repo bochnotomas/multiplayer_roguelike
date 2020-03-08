@@ -161,11 +161,15 @@ int main() {
         switch(input) {
             case 'w':
             case 'W':
+            case 'r':
+            case 'R':
                 // Move cursor up
                 currentMenu->moveCursor(-1);
                 break;
             case 's':
             case 'S':
+            case 'f':
+            case 'F':
                 // Move cursor down
                 currentMenu->moveCursor(1);
                 break;
