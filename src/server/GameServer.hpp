@@ -15,6 +15,9 @@ class GameServer : private Server {
     // Server thread
     std::thread thread;
     
+    /// Get the n-th level. Generate levels if needed
+    Map& getLevel(int n);
+    
     /// Game logic goes here... Yup...
     void logic();
 public:

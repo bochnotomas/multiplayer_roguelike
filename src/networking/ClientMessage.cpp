@@ -95,6 +95,54 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 return std::unique_ptr<ClientMessage>(new ClientMessageChat(senderName, message));
             }
             break;
+        case GameMessageType::MapTileData:
+            {
+                // Parse map dimensions
+                if(dataSize == 0)
+                    return nullptr;
+                
+                if(dataSize < 16) {
+                    buffer.erase(dataSize);
+                    return nullptr;
+                }
+                
+                uint64_t width, height, tileCount;
+                buffer.pop(width);
+                buffer.pop(height);
+                
+                // Parse tile data
+                tileCount = width * height;
+                if(dataSize != 16 + tileCount * 3) {
+                    buffer.erase(dataSize - 16);
+                    return nullptr;
+                }
+                
+                MapPlane tileData;
+                tileData.reserve(height);
+                for(auto y = 0; y < height; y++) {
+                    std::vector<MapPoint> row;
+                    row.reserve(width);
+                    
+                    for(auto x = 0; x < width; x++) {
+                        uint8_t first, second, third;
+                        buffer.pop(first);
+                        buffer.pop(second);
+                        buffer.pop(third);
+                        
+                        MapPoint point;
+                        point.character = first;
+                        point.accesible = third & 0b01000000;
+                        point.formating.text_color = static_cast<Color>(third & 0b00111111);
+                        point.formating.background_color = static_cast<Color>(second);
+                        row.push_back(point);
+                    }
+                    
+                    tileData.push_back(row);
+                }
+                
+                return std::unique_ptr<ClientMessage>(new ClientMessageMapTileData(std::move(tileData), width, height));
+            }
+            break;
     }
     
     // Unknown message type or action message, clear body
@@ -123,6 +171,38 @@ const std::vector<uint8_t> ClientMessageChat::toBytes() const {
     std::vector<uint8_t> data;
     bodyBuffer.pop(data, 1 + senderName.size() + message.size());
     
+    return toBytesHelper(data);
+}
+
+const std::vector<uint8_t> ClientMessageMapTileData::toBytes() const {
+    // Insert map dimensions into buffer
+    // Buffers are expensive, so only use them to encode data that isn't a
+    // bunch of bytes
+    Buffer dimBuffer;
+    dimBuffer.insert(width);
+    dimBuffer.insert(height);
+    
+    std::vector<uint8_t> data;
+    dimBuffer.pop(data, 16);
+    
+    // Insert tile data
+    data.reserve(16 + 3 * width * height); // 3 bytes per tile
+    for(const auto row : tileData) {
+        for(const auto tile : row) {
+            // Add single byte representing tile character
+            data.push_back((uint8_t)tile.character);
+            
+            // Add single byte representing background color
+            data.push_back((uint8_t)tile.formating.background_color);
+            
+            // Encode accessible flag and text color into a byte
+            // [1 byte - empty][1 byte - accessible][6 bytes - text_color]
+            uint8_t mixedByte = (uint16_t)tile.formating.text_color | ((uint16_t)tile.accesible << 6);
+            data.push_back(mixedByte);
+        }
+    }
+    
+    // Generate full message with header
     return toBytesHelper(data);
 }
 

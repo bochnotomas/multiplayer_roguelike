@@ -1,6 +1,7 @@
-#include "GameClient.hpp"
 #include "ClearScreenDrawable.hpp"
+#include "GameClient.hpp"
 #include "Menu.hpp"
+#include "Camera.h"
 #include "../server/Map.h"
 
 enum ClientMenuItem {
@@ -41,6 +42,8 @@ void GameClient::logic(Renderer* renderer) {
     addMessage(ClientMessageDoJoin(playerName));
     
     // Setup renderer with joining message
+    std::shared_ptr<Map> map = nullptr;
+    std::shared_ptr<Camera> cam = nullptr;
     std::shared_ptr<Menu> focus = nullptr;
     {
         std::shared_ptr<MenuItem> joiningText(new MenuItem(ClientMenuItem::TextItem, "Joining as " + playerName + "..."));
@@ -74,11 +77,10 @@ void GameClient::logic(Renderer* renderer) {
                             if(joinEvent->senderName == playerName) {
                                 joined = true;
                                 focus = nullptr;
-                                // TODO request map
                                 
                                 // Setup action menu
                                 std::shared_ptr<MenuItem> quitAction(new MenuItem(ClientMenuItem::ActionQuit, "Quit"));
-                                std::shared_ptr<Menu> actionMenu(new Menu(renderer->getWidth() - minimapW, renderer->getHeight() - minimapH, minimapW, minimapH));
+                                std::shared_ptr<Menu> actionMenu(new Menu(renderer->getWidth() - minimapW, 4, minimapW, renderer->getHeight() - 4));
                                 actionMenu->addItem(quitAction);
                                 actionMenu->toggleExpand(false);
                                 actionMenu->setSplit(10);
@@ -86,10 +88,22 @@ void GameClient::logic(Renderer* renderer) {
                                 std::lock_guard<std::mutex> rLockGuard(renderer->r_lock);
                                 renderer->clear_drawables();
                                 renderer->add_drawable(clearDrawable);
+                                if(map) {
+                                    cam = std::shared_ptr<Camera>(new Camera(' ', map.get(), { 5, 5 }, { 20, 10 }));
+                                    renderer->add_drawable(cam);
+                                }
                                 renderer->add_drawable(actionMenu);
                                 focus = actionMenu;
                             }
                         }
+                    }
+                    break;
+                case GameMessageType::MapTileData:
+                    {
+                        auto mapTileDataMessage = dynamic_cast<ClientMessageMapTileData*>(it->get());
+                        map = std::shared_ptr<Map>(new Map());
+                        map->generate_square_map(mapTileDataMessage->width, mapTileDataMessage->height); // TODO better api
+                        *map->get_map_plane() = mapTileDataMessage->tileData;
                     }
                     break;
             }
@@ -100,16 +114,24 @@ void GameClient::logic(Renderer* renderer) {
             switch(renderer->getch()) {
                 case 'w':
                 case 'W':
-                    break; // TODO move
+                    if(cam)
+                        cam->move(Direction::NORTH);
+                    break;
                 case 's':
                 case 'S':
-                    break; // TODO move
+                    if(cam)
+                        cam->move(Direction::SOUTH);
+                    break;
                 case 'a':
                 case 'A':
-                    break; // TODO move
+                    if(cam)
+                        cam->rotate(-0.1f);
+                    break;
                 case 'd':
                 case 'D':
-                    break; // TODO move
+                    if(cam)
+                        cam->rotate(0.1f);
+                    break;
                 case 'r':
                 case 'R':
                     if(focus)
@@ -138,7 +160,11 @@ void GameClient::logic(Renderer* renderer) {
                     break;
             }
         }
+        else // Wait if there is no input. Logic should run at most at 60 FPS
+            std::this_thread::sleep_for(std::chrono::microseconds(16667));
     }
+    
+    renderer->clear_drawables_lock();
 }
 
 GameClient::GameClient(Renderer* renderer, std::string host, uint16_t port) :

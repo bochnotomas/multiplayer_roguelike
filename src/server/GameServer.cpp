@@ -1,5 +1,17 @@
 #include "GameServer.hpp"
 
+Map& GameServer::getLevel(int n) {
+    // Generate missing levels
+    for(auto depth = levels.size(); depth <= n; depth++) {
+        // TODO call the level generator here
+        Map newLevel;
+        newLevel.set_preset_map();
+        levels.emplace_back(std::move(newLevel));
+    }
+    
+    return levels[n];
+}
+
 void GameServer::logic() {
     int killCounter = 0;
     while(running) {
@@ -33,6 +45,9 @@ void GameServer::logic() {
                             propagate = true;
                             propagateAll = true;
                         }
+                        
+                        // Send level data to newly joined player
+                        addMessage(ClientMessageMapTileData(getLevel(0)), joinEvent->sender);
                     }
                     break;
                 case GameMessageType::DoQuit:

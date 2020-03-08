@@ -2,7 +2,8 @@
 #include "Enemy.cpp"
 
 Player::Player(Socket* socket) :
-    Socket(std::move(*socket)) // Call move constructor. Source invalidated
+    Socket(std::move(*socket)), // Call move constructor. Source invalidated
+    level(0)
 {
     dir = STOP;
     speed = 1;
