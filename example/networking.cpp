@@ -7,7 +7,7 @@
 
 void startServer(unsigned short port) {
     std::cout << "Starting server with port " << port << "..." << std::endl;
-    auto server = Server(port);
+    Server server(port);
     std::cout << "Server started" << std::endl;
     
     bool running = true;

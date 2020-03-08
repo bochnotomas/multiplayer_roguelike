@@ -22,12 +22,22 @@ Renderer::Renderer(unsigned int viewportWidth, unsigned int viewportHeight) :
     }
 }
 
-void Renderer::add_drawable(Drawable* drawable) {
+void Renderer::add_drawable(std::shared_ptr<Drawable> drawable) {
     drawables.push_back(drawable);
 }
 
 void Renderer::clear_drawables() {
     drawables.clear();
+}
+
+void Renderer::add_drawable_lock(std::shared_ptr<Drawable> drawable) {
+    std::lock_guard<std::mutex> r_lock_guard(r_lock);
+    add_drawable(drawable);
+}
+
+void Renderer::clear_drawables_lock() {
+    std::lock_guard<std::mutex> r_lock_guard(r_lock);
+    clear_drawables();
 }
 
 void Renderer::draw_cell(unsigned int x, unsigned int y, char character, Formating formatting) {

@@ -15,6 +15,9 @@ public:
     /// Connect client to server via host and port, with a timeout
     Client(std::string host, uint16_t port, int timeoutMs);
     
+    /// Destructor
+    virtual ~Client() = default;
+    
     /// Receive messages, with a timeout
     void receiveMessages(int timeoutMs);
     

@@ -29,7 +29,7 @@ class Menu : public Drawable {
     // The position of the top left corner of the menu
     int xOffset, yOffset;
     
-    // If true, the menu will expand beyond its size if needed. False by
+    // If true, the menu will expand beyond its size if needed. True by
     // default
     bool expand;
     
@@ -39,7 +39,7 @@ class Menu : public Drawable {
     
     // If true, the menu will be put back in bounds if it goes out of bounds.
     // It will also be shortened if there is no way for it to fit in the
-    // viewport. False by default
+    // viewport. True by default
     bool clamp;
     
     // If not 0, the menu will also try to split accross columns if there is

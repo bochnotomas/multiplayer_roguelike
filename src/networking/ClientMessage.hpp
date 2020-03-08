@@ -7,6 +7,7 @@ enum GameMessageType {
     Join = 0,
     Quit = 1,
     Chat = 2,
+    JoinOK = 3,
     DoJoin = 100,
     DoQuit = 101,
     DoChat = 102

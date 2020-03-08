@@ -12,17 +12,23 @@ class GameServer : private Server {
     // Levels in the game
     std::vector<Map> levels;
     
+    // Server thread
+    std::thread thread;
+    
     /// Game logic goes here... Yup...
     void logic();
 public:
     /// Create a new server. Still needs to be started with GameServer::start
     GameServer(uint16_t port);
     
-    /// Start the server. Returns the server's thread
-    std::thread start();
+    /// Destructor. Automatically stops the server but does not wait for the
+    /// thread
+    ~GameServer();
     
-    /// Stop the server. Make sure to join the thread before returning from
-    /// main
+    /// Start the server in a thread
+    void start();
+    
+    /// Stop the server and wait for the thread to die
     void stop();
 };
 

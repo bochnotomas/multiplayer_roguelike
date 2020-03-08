@@ -21,8 +21,6 @@ struct Player : Socket, Object {
     /// is invalidated, the source Socket instance is not destroyed)
     Player(Socket* socket);
     
-    // TODO make players explicitly move-only
-    
     /// Destructor
     ~Player() = default;
 

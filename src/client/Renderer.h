@@ -24,7 +24,7 @@ public:
 // allows to fast writing data into console
 class Renderer
 {
-    std::vector<Drawable*> drawables;
+    std::vector<std::shared_ptr<Drawable>> drawables;
     std::vector<std::vector<Formating>> format_buffer;
     std::vector<std::vector<char>> chars_buffer;
     unsigned int width, height;
@@ -41,10 +41,14 @@ public:
     Renderer(unsigned int viewportWidth, unsigned int viewportHeight);
     
     // Add drawable to drawables list
-    void add_drawable(Drawable* drawable);
+    void add_drawable(std::shared_ptr<Drawable> drawable);
     
     // Clear drawables list
     void clear_drawables();
+    
+    // Same as two functions above, but automatically locks mutex
+    void add_drawable_lock(std::shared_ptr<Drawable> drawable);
+    void clear_drawables_lock();
     
     // Draw cell to buffers
     void draw_cell(unsigned int x, unsigned int y, char character, Formating formatting);

@@ -13,6 +13,9 @@ public:
     /// Create server with port number
     Server(uint16_t port);
     
+    /// Destructor
+    virtual ~Server() = default;
+    
     /// Receive messages, with a timeout. Automatically accepts connections. If
     /// there are no players connected, then this will immediately return
     std::deque<std::shared_ptr<ServerMessage> > receive(int timeoutMs);
