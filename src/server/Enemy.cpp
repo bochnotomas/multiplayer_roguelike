@@ -1,6 +1,6 @@
 #include "Enemy.hpp"
 #include <algorithm>
-#include "cmath"
+#include <cmath>
 
 
 
@@ -101,7 +101,7 @@ std::vector<std::pair<int, int> > Enemy::trackThePath(int startingPositionY, int
 	return path;
 }
 
-void Enemy::exploreNeighbours(int rowIndex_, int columnIndex_,std::queue <int>& rowQueue , std::queue <int>& columnQueue , int& nodesInNextLayer, std::vector<std::vector<bool> >& visitedNodes, std::vector<std::vector<std::pair<int, int>>>& parentNodes, std::vector<std::vector<char> >& map)
+void Enemy::exploreNeighbours(int rowIndex_, int columnIndex_,std::queue <int>& rowQueue , std::queue <int>& columnQueue , int& nodesInNextLayer, std::vector<std::vector<bool> >& visitedNodes, std::vector<std::vector<std::pair<int, int>>>& parentNodes, Map& map)
 {
 	int newRowIndex;
 	int newColumnIndex;
@@ -128,7 +128,7 @@ void Enemy::exploreNeighbours(int rowIndex_, int columnIndex_,std::queue <int>& 
 		{
 			continue;
 		}
-		if (map[newRowIndex][newColumnIndex] == '#')
+		if (!(*map.get_map_plane())[newColumnIndex][newRowIndex].accesible)
 		{
 			continue;
 		}
@@ -184,7 +184,7 @@ std::vector<std::pair<int, int> > Enemy::findTheWay(int startingPositionY, int s
 			columnQueue.pop();
 		}
 
-		if (map[rowIndex][columnIndex] == 'F')
+		if (rowIndex == finalPositionY && columnIndex == finalPositionX)
 		{
 			reachedEnd = true;
 			break;
