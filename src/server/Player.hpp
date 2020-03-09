@@ -25,8 +25,6 @@ struct Player : Socket, Object {
     ~Player();
 
     int playerPositionX, playerPositionY;
-    int obstaclePositionX, obstaclePositionY;
-    int potionPositionX, potionPositionY;
     int health;
     int attack;
     int defense;

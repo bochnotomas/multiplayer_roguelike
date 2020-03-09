@@ -15,10 +15,6 @@ Player::Player(Socket* socket) :
     healthPotionCooldown = 0;
     playerPositionX = 10;
     playerPositionY = 15;
-    obstaclePositionY = 15;
-    obstaclePositionX = 15;
-    potionPositionX = 12;
-    potionPositionY = 2;
 }
 
 Player::~Player() {
@@ -34,8 +30,6 @@ Player::~Player() {
 void Player::potionCheck(int axisValue1, int axisValue2, std::vector<std::vector<char>>& map) {
     if (map[axisValue1][axisValue2] == 'P') {
         speed++;
-        potionPositionX = rand() % 40 + 1;
-        potionPositionY = rand() % 20 + 1;
     }
 }
 
