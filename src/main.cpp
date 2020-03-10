@@ -230,7 +230,7 @@ int main() {
                 break;
         }
     }
-    
+
     // Wait for render thread to stop
     renderThread.join();
     

@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
     std::cout << "Enter port number: ";
     unsigned short port;
     std::cin >> port;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.ignore(9999999999999, '\n');
     std::cout << "Enter host (leave empty to host): ";
     std::string host;
     std::getline(std::cin, host);
