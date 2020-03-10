@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <utility>
-#include "LevelGeneraion2D.h"
+#include "LevelGeneration2D.h"
 #include "Object.h"
 #include "../client/Formatting.hpp"
 
