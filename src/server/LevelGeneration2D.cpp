@@ -4,6 +4,10 @@ void LevelGeneration2D::setCell(int xCoordinate, int yCoordinate, char setValue)
 	grid[yCoordinate][xCoordinate] = setValue;
 }
 
+std::vector<std::vector<char>> LevelGeneration2D::getGrid() {
+	return grid;
+}
+
 void LevelGeneration2D::setGrid() {
 	std::vector<std::vector<char>> firstGeneration;
 	for (int y = 0; y <= 99; y++) {
