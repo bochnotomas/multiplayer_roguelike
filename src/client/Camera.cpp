@@ -206,13 +206,17 @@ void Camera::draw_3D(Renderer* renderer) {
 						render_char));
 					}
 				}
-				for(std::vector<Object*>::iterator it = objects_in_range.begin(); it<objects_in_range.end(); ++it){
-				if((*it)->get_position().first == ray_pos_x && (*it)->get_position().second == ray_pos_y
-				&& !(*it)->is_player){
-					objects_to_render.push_back({(*it), {dist, i}});
-					objects_in_range.erase(it);
+				for(auto it = objects_in_range.begin(); it != objects_in_range.end();){
+					auto objX = (*it)->get_position().first;
+					auto objY = (*it)->get_position().second;
+					if (objX == ray_pos_x && objY == ray_pos_y
+						&& !(*it)->is_player && objX >= 0 && objX < plane->size() && objY >= 0 && objY < (*plane)[0].size()) {
+						objects_to_render.push_back({ (*it), {dist, i} });
+						it = objects_in_range.erase(it);
+					}
+					else
+						it++;
 				}
-			}
 			}
 	}
 
