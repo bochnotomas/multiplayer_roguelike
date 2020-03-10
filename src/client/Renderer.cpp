@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include <chrono>
+#include <string>
 
 Renderer::Renderer(unsigned int viewportWidth, unsigned int viewportHeight) :
     width(viewportWidth),
