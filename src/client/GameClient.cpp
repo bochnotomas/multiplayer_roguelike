@@ -3,6 +3,7 @@
 #include "Menu.hpp"
 #include "Camera.h"
 #include "../server/Map.h"
+#include "PlayerSnapshot.hpp"
 
 enum ClientMenuItem {
     TextItem,
@@ -60,6 +61,9 @@ void GameClient::logic(Renderer* renderer) {
         focus = joiningMenu;
     }
     
+    // Player data this turn
+    std::vector<PlayerSnapshot> players;
+    
     // Client logic loop
     bool joined = false;
     while(playing) {
@@ -104,6 +108,20 @@ void GameClient::logic(Renderer* renderer) {
                         map = std::shared_ptr<Map>(new Map());
                         map->generate_square_map(mapTileDataMessage->width, mapTileDataMessage->height); // TODO better api
                         *map->get_map_plane() = mapTileDataMessage->tileData;
+                    }
+                    break;
+                case GameMessageType::PlayerData:
+                    {
+                        auto playerDataMessage = dynamic_cast<ClientMessagePlayerData*>(it->get());
+                        players.clear();
+                        for(auto i = 0; i < playerDataMessage->names.size(); i++) {
+                            players.emplace_back(
+                                playerDataMessage->names[i],
+                                playerDataMessage->positions[i].first,
+                                playerDataMessage->positions[i].second,
+                                playerDataMessage->levels[i]
+                            );
+                        }
                     }
                     break;
             }

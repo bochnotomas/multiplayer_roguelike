@@ -46,8 +46,10 @@ void GameServer::logic() {
                             propagateAll = true;
                         }
                         
-                        // Send level data to newly joined player
+                        // Send level data and player data to newly joined player
                         addMessage(ClientMessageMapTileData(getLevel(0)), joinEvent->sender);
+                        // TODO level objects
+                        addMessage(ClientMessagePlayerData(players), joinEvent->sender);
                     }
                     break;
                 case GameMessageType::DoQuit:

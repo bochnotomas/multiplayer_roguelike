@@ -1,5 +1,6 @@
 #ifndef ROGUELIKE_CLIENT_MESSAGE_HPP_INCLUDED
 #define ROGUELIKE_CLIENT_MESSAGE_HPP_INCLUDED
+#include "../server/Player.hpp"
 #include "../server/Map.h"
 #include "Buffer.hpp"
 #include <memory>
@@ -115,6 +116,41 @@ struct ClientMessageMapTileData : public ClientMessage {
     {}
     
     ~ClientMessageMapTileData() = default;
+    const std::vector<uint8_t> toBytes() const override;
+};
+
+struct ClientMessagePlayerData : public ClientMessage {
+    /// Player names
+    std::vector<std::string> names;
+    
+    /// Player positions
+    std::vector<std::pair<int, int> > positions;
+    
+    /// Player levels
+    std::vector<int> levels;
+    
+    /// Create message from players
+    ClientMessagePlayerData(std::vector<std::shared_ptr<Player> >& players) :
+        ClientMessage(GameMessageType::PlayerData, "")
+    {
+        for(auto player : players) {
+            if(!player->name.empty()) {
+                names.push_back(player->name);
+                positions.emplace_back(player->playerPositionX, player->playerPositionY);
+                levels.push_back(player->level);
+            }
+        }
+    }
+    
+    /// Create message
+    ClientMessagePlayerData(std::vector<std::string>&& names, std::vector<std::pair<int, int> >&& positions, std::vector<int>&& levels) :
+        ClientMessage(GameMessageType::PlayerData, ""),
+        names(names),
+        positions(positions),
+        levels(levels)
+    {}
+    
+    ~ClientMessagePlayerData() = default;
     const std::vector<uint8_t> toBytes() const override;
 };
 
