@@ -1,6 +1,9 @@
 #ifndef ITEM_POTION_H
 #define ITEM_POTION_H
 #include "ItemClasses.h"
+#include <string>
+
+using namespace std;
 
 class ItemPotion : public Item {
     public:

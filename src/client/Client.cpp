@@ -49,6 +49,27 @@ Client::Client(std::string host, uint16_t port, int timeoutMs) :
     clientSocket->setBlocking(false);
 }
 
+Client::~Client() {
+    if(clientSocket->isValid()) {
+        try {
+            // Shutdown socket read
+            clientSocket->shutdown(SocketShutdownMode::ShutRead);
+        
+            // Send all buffered data. Abort after, at most, 10 seconds
+            auto quarters = 0;
+            while(wBuffer.size() > 0) {
+                sendMessages(250);
+                if(++quarters >= 40)
+                    break;
+            }
+            
+            // Shutdown socket completely
+            clientSocket->shutdown(SocketShutdownMode::ShutReadWrite);
+        }
+        catch(SocketException e) {}; // Ignore network exceptions
+    }
+}
+
 void Client::receiveMessages(int timeoutMs) {
     // Lock socket
     const std::lock_guard<std::mutex> sLockGuard(sLock);
@@ -150,5 +171,9 @@ std::deque<std::unique_ptr<ClientMessage>> Client::getMessages() {
     }
     
     return messages;
+}
+
+bool Client::isSocketOpen() {
+    return clientSocket->isValid();
 }
 

@@ -6,12 +6,14 @@
 #include <conio.h>
 #endif
 
-#include "../src/client/Commons.h"
 #include "../src/client/Renderer.h"
-#include "../src/client/Object.h"
-#include "../src/client/Map.h"
 #include "../src/client/Camera.h"
 #include "../src/client/Menu.hpp"
+#include "../src/server/Object.h"
+#include "../src/server/Map.h"
+
+constexpr unsigned short RENDER_WIDTH = 120;
+constexpr unsigned short RENDER_HEIGHT = 30;
 
 enum MenuItemKey {
     Normal,
@@ -39,25 +41,25 @@ int main(int argc, char* argv[]) {
 	map.objects.push_back(std::move(object2));
 
 	// create camera
-	Camera main_cam('.', &map, { 2.f,2.f });
+	std::shared_ptr<Camera> main_cam(new Camera('.', &map, { 2.f,2.f }, { 20, 10 }));
     
     // Create sample menu
-    Menu sampleMenu(10, 10, RENDER_WIDTH / 2, RENDER_HEIGHT / 2);
-    sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Normal, "Item 1")));
-    sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Normal, "Item 2")));
-    sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Overflowing, "Overflowing 1")));
-    sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Overflowing, "Overflowing 2")));
-    sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Quit, "Quit", {Color::WHITE, Color::RED}, {Color::BLACK, Color::MAGENTA})));
+    std::shared_ptr<Menu> sampleMenu(new Menu(10, 10, RENDER_WIDTH / 2, RENDER_HEIGHT / 2));
+    sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Normal, "Item 1")));
+    sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Normal, "Item 2")));
+    sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Overflowing, "Overflowing 1")));
+    sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Overflowing, "Overflowing 2")));
+    sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Quit, "Quit", {Color::WHITE, Color::RED}, {Color::BLACK, Color::MAGENTA})));
     for(char c = '0'; c <= '9'; c++)
-        sampleMenu.addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Filler, std::string("Filler ") + c)));
-    sampleMenu.toggleCenter(true);
+        sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Filler, std::string("Filler ") + c)));
+    sampleMenu->toggleCenter(true);
 
 	// Create a new renderer with the given dimensions
 	Renderer renderer(RENDER_WIDTH, RENDER_HEIGHT);
     
     // Add camera and menu to drawables
-    renderer.add_drawable(&main_cam);
-    //renderer.add_drawable(&sampleMenu);
+    renderer.add_drawable(main_cam);
+    renderer.add_drawable(sampleMenu);
 
 	// set window title
 	renderer.set_title("Engine Demo");
@@ -91,36 +93,36 @@ int main(int argc, char* argv[]) {
 			renderer.b_render = false;
 			break;
 		case 'w':
-			main_cam.move(Direction::NORTH);
+			main_cam->move(Direction::NORTH);
 		break;
 		case 's':
-			main_cam.move(Direction::SOUTH);
+			main_cam->move(Direction::SOUTH);
 		break;
 		case 'a':
-			main_cam.rotate(-0.1f);
+			main_cam->rotate(-0.1f);
 		break;
 		case 'd':
-			main_cam.rotate(0.1f);
+			main_cam->rotate(0.1f);
 		break;
 		case 'z':
 		break;
 		case 'x':
 		break;
         case '9':
-            sampleMenu.moveCursor(-5);
+            sampleMenu->moveCursor(-5);
         break;
         case '3':
-            sampleMenu.moveCursor(5);
+            sampleMenu->moveCursor(5);
         break;
         case '8':
-            sampleMenu.moveCursor(-1);
+            sampleMenu->moveCursor(-1);
         break;
         case '2':
-            sampleMenu.moveCursor(1);
+            sampleMenu->moveCursor(1);
         break;
         case '5':
             {
-                auto selected = sampleMenu.selectCursor();
+                auto selected = sampleMenu->selectCursor();
                 if(selected && selected->getKey() == MenuItemKey::Quit) {
                     game_end = true;
                     renderer.b_render = false;
@@ -130,7 +132,7 @@ int main(int argc, char* argv[]) {
 		default:
 			break;
 		}
-		player->set_position(main_cam.get_position());
+		player->set_position(main_cam->get_position());
 		//update map objects
 		map.update_objects();
 		//end = std::chrono::high_resolution_clock::now();

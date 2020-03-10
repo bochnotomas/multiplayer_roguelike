@@ -4,7 +4,7 @@
 #include <exception>
 #include <string>
 
-class SocketException : std::exception {
+class SocketException : public std::exception {
     std::string message;
     
 public:

@@ -15,6 +15,9 @@ public:
     /// Connect client to server via host and port, with a timeout
     Client(std::string host, uint16_t port, int timeoutMs);
     
+    /// Destructor
+    virtual ~Client();
+    
     /// Receive messages, with a timeout
     void receiveMessages(int timeoutMs);
     
@@ -28,6 +31,9 @@ public:
     
     /// Get messages sent to the client
     std::deque<std::unique_ptr<ClientMessage>> getMessages();
+    
+    /// Check if client socket is still open
+    bool isSocketOpen();
 };
 
 #endif

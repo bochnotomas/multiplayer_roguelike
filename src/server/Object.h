@@ -1,7 +1,14 @@
 #pragma once
 #include <utility>
-#include "Commons.h"
-#include "Texture.h"
+#include "../client/Formatting.hpp"
+#include "../client/Texture.h"
+
+enum class Direction {
+	NORTH = 0,
+	EAST,
+	SOUTH,
+	WEST
+};
 
 class Object
 {

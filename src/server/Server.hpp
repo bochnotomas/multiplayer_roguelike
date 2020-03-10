@@ -10,9 +10,11 @@ public:
     /// Connected players
     std::vector<std::shared_ptr<Player> > players;
     
-    // TODO proper xml docstrings
     /// Create server with port number
     Server(uint16_t port);
+    
+    /// Destructor
+    virtual ~Server();
     
     /// Receive messages, with a timeout. Automatically accepts connections. If
     /// there are no players connected, then this will immediately return
@@ -38,6 +40,12 @@ public:
     
     /// Disconnects a player. Their socket is automatically closed
     void disconnectPlayer(std::shared_ptr<Player> player);
+    
+    /// Check if listening socket is still open
+    bool isSocketOpen();
+    
+    /// Close the server
+    void close();
 };
 
 #endif

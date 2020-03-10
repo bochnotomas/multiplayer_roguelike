@@ -8,17 +8,17 @@
 #include <math.h>
 #include <algorithm>
 
-#include "Map.h"
-#include "Object.h"
-#include "Commons.h"
+#include "../server/Map.h"
 #include "Renderer.h"
 #include <chrono>
+
+// depth of 2.5D rendering
+constexpr float RENDER_DEPTH = 16.0f;
 
 class Camera final : public Object, public Drawable
 {
 public:
-	Camera();
-	Camera(char blank_char, Map* map, std::pair<long, long> start_position);
+	Camera(char blank_char, Map* map, std::pair<long, long> start_position, std::pair<long, long> minimap_size);
 
 	// Draws the 3D view and minimap to the given renderer
     void draw(Renderer* renderer);
@@ -36,6 +36,8 @@ public:
 	void move(const Direction dir);
 
 private:
+    // Minimap size (width x height)
+	std::pair<float, float> m_minimap_size;
 // 2.5D rendering
 	float m_angle = 0.f; // angle for ray_casting
 	float m_fov =  3.14159f / 4.0f; // field of view

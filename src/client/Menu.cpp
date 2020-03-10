@@ -8,9 +8,9 @@ Menu::Menu(unsigned int width, unsigned int height, int xOffset, int yOffset, co
     height(height),
     xOffset(xOffset),
     yOffset(yOffset),
-    expand(false),
+    expand(true),
     center(false),
-    clamp(false),
+    clamp(true),
     split(false)
 {}
 

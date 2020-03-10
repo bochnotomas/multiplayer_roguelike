@@ -2,7 +2,8 @@
 #include "Enemy.cpp"
 
 Player::Player(Socket* socket) :
-    Socket(std::move(*socket)) // Call move constructor. Source invalidated
+    Socket(std::move(*socket)), // Call move constructor. Source invalidated
+    level(0)
 {
     dir = STOP;
     speed = 1;
@@ -10,20 +11,25 @@ Player::Player(Socket* socket) :
     attack = 1;
     defense = 1;
     strength = 1;
+    speedPotionCooldown = 0;
+    healthPotionCooldown = 0;
     playerPositionX = 10;
     playerPositionY = 15;
-    obstaclePositionY = 15;
-    obstaclePositionX = 15;
-    potionPositionX = 12;
-    potionPositionY = 2;
 }
 
+Player::~Player() {
+    if(isValid()) {
+        try {
+            // Shutdown socket completely
+            shutdown(SocketShutdownMode::ShutReadWrite);
+        }
+        catch(SocketException e) {}; // Ignore network exceptions
+    }
+}
 
 void Player::potionCheck(int axisValue1, int axisValue2, std::vector<std::vector<char>>& map) {
     if (map[axisValue1][axisValue2] == 'P') {
         speed++;
-        potionPositionX = rand() % 40 + 1;
-        potionPositionY = rand() % 20 + 1;
     }
 }
 

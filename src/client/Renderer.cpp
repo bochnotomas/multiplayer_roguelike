@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include <chrono>
 
 Renderer::Renderer(unsigned int viewportWidth, unsigned int viewportHeight) :
     width(viewportWidth),
@@ -21,12 +22,22 @@ Renderer::Renderer(unsigned int viewportWidth, unsigned int viewportHeight) :
     }
 }
 
-void Renderer::add_drawable(Drawable* drawable) {
+void Renderer::add_drawable(std::shared_ptr<Drawable> drawable) {
     drawables.push_back(drawable);
 }
 
 void Renderer::clear_drawables() {
     drawables.clear();
+}
+
+void Renderer::add_drawable_lock(std::shared_ptr<Drawable> drawable) {
+    std::lock_guard<std::mutex> r_lock_guard(r_lock);
+    add_drawable(drawable);
+}
+
+void Renderer::clear_drawables_lock() {
+    std::lock_guard<std::mutex> r_lock_guard(r_lock);
+    clear_drawables();
 }
 
 void Renderer::draw_cell(unsigned int x, unsigned int y, char character, Formating formatting) {
@@ -36,20 +47,30 @@ void Renderer::draw_cell(unsigned int x, unsigned int y, char character, Formati
     format_buffer[y][x] = formatting;
     chars_buffer[y][x] = character;
 }
-    
+
 void Renderer::render() {
     // clear the screen
     std::cout << "\033[2J\033[H";
     // go to new line and disable cursor
     std::cout << "\033[?25l";
     
+    // Clock for syncing frame-rate
+    std::chrono::high_resolution_clock clock;
+    auto lastFrameTime(clock.now());
+    std::chrono::microseconds expectedFrameTime(16667); // 60 FPS
+    
     while (b_render) {
-        // go to (0,0) position
-        std::cout << "\033[0;0f";
-        
-        // Draw all drawables
-        for(auto drawable : drawables)
-            drawable->draw(this);
+        {
+            // Guard render mutex lock
+            std::lock_guard<std::mutex> r_lock_guard(r_lock);
+            
+            // go to (0,0) position
+            std::cout << "\033[0;0f";
+            
+            // Draw all drawables
+            for(auto drawable : drawables)
+                drawable->draw(this);
+        }
         
         // Turn buffer into lines of formatted text
         std::string string_buffer;
@@ -85,6 +106,21 @@ void Renderer::render() {
         
         // Print buffer and reset colors
         std::cout << string_buffer << "\033[0m" << std::flush;
+        
+        // Wait for next frame
+        auto thisFrameTime(clock.now());
+        auto frameDuration = std::chrono::duration_cast<std::chrono::microseconds>(thisFrameTime - lastFrameTime);
+        lastFrameTime = thisFrameTime;
+        
+        // Don't wait if falling behind on expected frame-rate
+        if(frameDuration > expectedFrameTime) {
+            std::cout << "\33[J\r" << frameDuration.count() << "us passed, running behind schedule" << std::endl;
+            continue;
+        }
+        
+        auto waitTime = expectedFrameTime - frameDuration;
+        std::cout << "\33[J\r" << frameDuration.count() << "us passed, waiting " << waitTime.count() << "us" << std::endl;
+        std::this_thread::sleep_for(waitTime);
     }
     
     std::cout << "\033[0m";

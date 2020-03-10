@@ -2,7 +2,7 @@
 #define ROGUELIKE_PLAYER_HPP_INCLUDED
 #include "../networking/Socket.hpp"
 #include "../networking/Buffer.hpp"
-#include "../client/Object.h"
+#include "Object.h"
 #include <vector>
 
 enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
@@ -21,20 +21,20 @@ struct Player : Socket, Object {
     /// is invalidated, the source Socket instance is not destroyed)
     Player(Socket* socket);
     
-    // TODO make players explicitly move-only
-    
     /// Destructor
-    ~Player() = default;
+    ~Player();
 
     int playerPositionX, playerPositionY;
-    int obstaclePositionX, obstaclePositionY;
-    int potionPositionX, potionPositionY;
     int health;
     int attack;
     int defense;
     int strength;
     int speed;
+    int speedPotionCooldown;
+    int healthPotionCooldown;
     eDirection dir;
+    
+    int level;
 
     void potionCheck(int axisValue1, int axisValue2, std::vector<std::vector<char> >& map);
 

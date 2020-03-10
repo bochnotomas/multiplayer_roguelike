@@ -1,5 +1,8 @@
 #include "Enemy.hpp"
 #include <algorithm>
+#include <cmath>
+
+
 
 
 
@@ -8,7 +11,66 @@ Enemy::Enemy(int positionX_, int positionY_)
 	PositionX = positionX_;
 	PositionY = positionY_;
 }
+void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& map)
+{
+	std::shared_ptr<Player> chasing = nullptr;
 
+	if (chasing != nullptr)
+	{
+		float distance = sqrt(pow((PositionX - chasing->playerPositionX), 2) + pow((PositionY - chasing->playerPositionY), 2));
+		if(distance > 5)
+		{
+			chasing = nullptr;
+			return;
+		}
+		currentPath = findTheWay(PositionY, PositionX, chasing->playerPositionY, chasing->playerPositionX, map);
+		PositionX = currentPath[0].first;
+		PositionY = currentPath[0].second;
+		currentPath.erase(currentPath.begin());
+	}
+	else {
+		float closestDistance = 5;
+		for(int i = 0 ; i < players.size(); i++)
+		{
+			float distance = sqrt(pow((PositionX - players[i]->playerPositionX), 2) + pow((PositionY - players[i]->playerPositionY), 2));
+			if(distance <= closestDistance)
+			{
+				closestDistance = distance;
+				chasing = players[i];
+			}
+		}
+
+		if(chasing != nullptr)
+		{
+			currentPath = findTheWay(PositionY, PositionX, chasing->playerPositionY, chasing->playerPositionX, map);
+			PositionX = currentPath[0].first;
+			PositionY = currentPath[0].second;
+			currentPath.erase(currentPath.begin());
+		}else
+		{
+			if(currentPath.empty())
+			{
+				int randomFinalPositionX;
+				int randomFinalPositionY;
+				while(true )
+				{
+					randomFinalPositionX = rand() % map.get_map_size().first;
+					randomFinalPositionY = rand() % map.get_map_size().second;
+					if ((*map.get_map_plane())[randomFinalPositionX][randomFinalPositionY].accesible)
+						break;
+
+				}
+				currentPath=findTheWay(PositionY, PositionX, randomFinalPositionY, randomFinalPositionX, map);
+			}
+
+			if (!currentPath.empty()) {
+				PositionX = currentPath[0].first;
+				PositionY = currentPath[0].second;
+				currentPath.erase(currentPath.begin());
+			}
+		}
+	}
+}
 
 void Enemy::moveAiByPath(std::vector<std::pair<int, int> > pathToWalkBy)
 {
@@ -39,7 +101,7 @@ std::vector<std::pair<int, int> > Enemy::trackThePath(int startingPositionY, int
 	return path;
 }
 
-void Enemy::exploreNeighbours(int rowIndex_, int columnIndex_,std::queue <int>& rowQueue , std::queue <int>& columnQueue , int& nodesInNextLayer, std::vector<std::vector<bool> >& visitedNodes, std::vector<std::vector<std::pair<int, int>>>& parentNodes, std::vector<std::vector<char> >& map)
+void Enemy::exploreNeighbours(int rowIndex_, int columnIndex_,std::queue <int>& rowQueue , std::queue <int>& columnQueue , int& nodesInNextLayer, std::vector<std::vector<bool> >& visitedNodes, std::vector<std::vector<std::pair<int, int>>>& parentNodes, Map& map)
 {
 	int newRowIndex;
 	int newColumnIndex;
@@ -66,7 +128,7 @@ void Enemy::exploreNeighbours(int rowIndex_, int columnIndex_,std::queue <int>& 
 		{
 			continue;
 		}
-		if (map[newRowIndex][newColumnIndex] == '#')
+		if (!(*map.get_map_plane())[newColumnIndex][newRowIndex].accesible)
 		{
 			continue;
 		}
@@ -81,11 +143,11 @@ void Enemy::exploreNeighbours(int rowIndex_, int columnIndex_,std::queue <int>& 
 	}
 }
 
-std::vector<std::pair<int, int> > Enemy::findTheWay(int startingPositionY, int startingPositionX, int finalPositionY, int finalPositionX, std::vector<std::vector<char> >& map)
+std::vector<std::pair<int, int> > Enemy::findTheWay(int startingPositionY, int startingPositionX, int finalPositionY, int finalPositionX, Map& map)
 {
 	
-	int mapRows = map.size();
-	int mapColumns = map[0].size();
+	int mapRows = map.get_map_size().second;
+	int mapColumns = map.get_map_size().first;
 
 	std::queue <int> rowQueue;
 	std::queue <int> columnQueue;
@@ -122,7 +184,7 @@ std::vector<std::pair<int, int> > Enemy::findTheWay(int startingPositionY, int s
 			columnQueue.pop();
 		}
 
-		if (map[rowIndex][columnIndex] == 'F')
+		if (rowIndex == finalPositionY && columnIndex == finalPositionX)
 		{
 			reachedEnd = true;
 			break;

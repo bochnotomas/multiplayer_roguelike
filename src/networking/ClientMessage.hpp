@@ -1,5 +1,6 @@
 #ifndef ROGUELIKE_CLIENT_MESSAGE_HPP_INCLUDED
 #define ROGUELIKE_CLIENT_MESSAGE_HPP_INCLUDED
+#include "../server/Map.h"
 #include "Buffer.hpp"
 #include <memory>
 
@@ -7,6 +8,9 @@ enum GameMessageType {
     Join = 0,
     Quit = 1,
     Chat = 2,
+    MapTileData = 3,
+    MapObjectData = 4,
+    PlayerData = 5,
     DoJoin = 100,
     DoQuit = 101,
     DoChat = 102
@@ -78,6 +82,39 @@ struct ClientMessageChat : public ClientMessage {
     {};
     
     ~ClientMessageChat() = default;
+    const std::vector<uint8_t> toBytes() const override;
+};
+
+struct ClientMessageMapTileData : public ClientMessage {
+    /// Map plane
+    MapPlane tileData;
+    
+    /// Map size
+    uint64_t width;
+    uint64_t height;
+    
+    /// Create message from map
+    ClientMessageMapTileData(Map& map) :
+        ClientMessage(GameMessageType::MapTileData, "")
+    {
+        auto mapSize = map.get_map_size();
+        width = mapSize.first;
+        height = mapSize.second;
+        
+        auto mapPlane = map.get_map_plane();
+        for(auto itRow = mapPlane->begin(); itRow != mapPlane->end(); itRow++)
+            tileData.push_back(*itRow);
+    }
+    
+    /// Create message from map plane (tileData move constructor)
+    ClientMessageMapTileData(MapPlane&& mapPlane, uint64_t width, uint64_t height) :
+        ClientMessage(GameMessageType::MapTileData, ""),
+        tileData(mapPlane),
+        width(width),
+        height(height)
+    {}
+    
+    ~ClientMessageMapTileData() = default;
     const std::vector<uint8_t> toBytes() const override;
 };
 

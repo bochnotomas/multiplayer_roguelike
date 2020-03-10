@@ -242,6 +242,42 @@ bool Socket::connect(SOCKET_ADDRESS_FAMILY addressFamily, IN_ADDR address, uint1
     return true;
 }
 
+void Socket::shutdown(SocketShutdownMode mode) {
+    if(!isValid())
+        throw SocketException("Socket::shutdown: Socket has already been invalidated");
+    
+    int how;
+    switch(mode) {
+        #ifdef ROGUELIKE_UNIX
+        case SocketShutdownMode::ShutRead:
+            how = SHUT_RD;
+            break;
+        case SocketShutdownMode::ShutWrite:
+            how = SHUT_WR;
+            break;
+        case SocketShutdownMode::ShutReadWrite:
+            how = SHUT_RDWR;
+            break;
+        #else
+        case SocketShutdownMode::ShutRead:
+            how = SD_RECEIVE;
+            break;
+        case SocketShutdownMode::ShutWrite:
+            how = SD_SEND;
+            break;
+        case SocketShutdownMode::ShutReadWrite:
+            how = SD_BOTH;
+            break;
+        #endif
+        default:
+            throw SocketException("Socket::shutdown: Invalid mode value " +std::to_string(mode));
+    }
+    
+    int shutdownResult = ::shutdown(rawSock, how);
+    if(shutdownResult == SOCKET_ERROR)
+        throw SocketException::fromErrno("Socket::shutdown: ");
+}
+
 void Socket::setBlocking(bool blocking) {
     if(!isValid())
         throw SocketException("Socket::setBlocking: Socket has already been invalidated");

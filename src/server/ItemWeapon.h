@@ -1,6 +1,9 @@
 #ifndef ITEM_WEAPON_H
 #define ITEM_WEAPON_H
 #include "ItemClasses.h"
+#include <string>
+
+using namespace std;
 
 class ItemWeapon : public Item {
     public:

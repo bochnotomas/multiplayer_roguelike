@@ -2,6 +2,15 @@
 #include <vector>
 #include <utility>
 #include "Object.h"
+#include "../client/Formatting.hpp"
+
+struct MapPoint {
+	char character;
+	bool accesible;
+	Formating formating;
+};
+
+using MapPlane = std::vector<std::vector<MapPoint>>;
 
 class Map
 {
