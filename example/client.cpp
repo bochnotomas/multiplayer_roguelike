@@ -28,12 +28,15 @@ int main(int argc, char* argv[]) {
 	map.set_preset_map();
 
 	// sample object
-	Object* player = new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
+	Object* player = new Object('P', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
+	player->is_player = true;
 	Object* object = new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
+	Object* object2 = new Object('x', Direction::NORTH, true, { 5.f,5.f }, {Color::BLACK, Color::BLUE});
 
 	// add player into main map
 	map.objects.push_back(std::move(player));
 	map.objects.push_back(std::move(object));
+	map.objects.push_back(std::move(object2));
 
 	// create camera
 	Camera main_cam('.', &map, { 2.f,2.f });
@@ -54,7 +57,7 @@ int main(int argc, char* argv[]) {
     
     // Add camera and menu to drawables
     renderer.add_drawable(&main_cam);
-    renderer.add_drawable(&sampleMenu);
+    //renderer.add_drawable(&sampleMenu);
 
 	// set window title
 	renderer.set_title("Engine Demo");
