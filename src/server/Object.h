@@ -10,6 +10,13 @@ enum class Direction {
 	WEST
 };
 
+enum ObjectType {
+    GENERIC = 0,
+    ENEMY = 1,
+    PLAYER = 2,
+    ITEM = 3
+};
+
 class Object
 {
 public:
@@ -49,6 +56,8 @@ public:
 	void set_position(const std::pair<int, int> new_position);
 
 	bool is_player = false;
+    
+    ObjectType type = ObjectType::GENERIC;
 	
 protected:
 	// graphical representation of object;

@@ -7,8 +7,8 @@
 
 
 Enemy::Enemy(int positionX_, int positionY_) : Object('X', Direction::NORTH, true, {positionX_, positionY_})
-{	
-
+{
+    type = ObjectType::ENEMY;
 }
 
 

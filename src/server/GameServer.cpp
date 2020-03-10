@@ -5,7 +5,7 @@ Map& GameServer::getLevel(int n) {
     for(auto depth = levels.size(); depth <= n; depth++) {
         // TODO call the level generator here
         Map newLevel;
-        newLevel.set_preset_map();
+        newLevel.create_random_map();
         levels.emplace_back(std::move(newLevel));
     }
     
@@ -67,6 +67,15 @@ void GameServer::logic() {
                     addMessageAll(*clientMessage);
                 else
                     addMessageAllExcept(*clientMessage, (*it)->sender);
+            }
+        }
+        
+        // Simulate turn
+        // TODO only do this when all players sent their actions
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        for(auto level : levels) {
+            for(auto object : level.objects) {
+                object // TODO
             }
         }
         

@@ -14,6 +14,8 @@ Player::Player(Socket* socket) :
     healthPotionCooldown = 0;
     playerPositionX = 10;
     playerPositionY = 15;
+    
+    type = ObjectType::PLAYER;
 }
 
 Player::~Player() {
