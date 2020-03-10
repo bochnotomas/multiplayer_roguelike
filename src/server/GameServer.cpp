@@ -75,7 +75,7 @@ void GameServer::logic() {
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
         for(auto level : levels) {
             for(auto object : level.objects) {
-                object // TODO
+                //object // TODO
             }
         }
         
