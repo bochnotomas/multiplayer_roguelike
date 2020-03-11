@@ -207,28 +207,37 @@ const std::vector<uint8_t> ClientMessageMapTileData::toBytes() const {
 }
 
 const std::vector<uint8_t> ClientMessagePlayerData::toBytes() const {
-    Buffer buffer;
+    std::vector<uint8_t> data;
     
-    // Insert player count into buffer
-    buffer.insert(static_cast<uint64_t>(names.size()));
-    
-    // Insert player names into buffer
-    for(auto name : names) {
-        // Add name size; names are limited to 256 bytes
-        buffer.insert(static_cast<uint8_t>(name.size()));
-        // Add name bytes
-        buffer.insert(name);
+    {
+        Buffer buffer;
+        
+        // Insert player count into buffer
+        buffer.insert(static_cast<uint64_t>(names.size()));
+        
+        // Insert player names into buffer
+        for(auto name : names) {
+            // Add name size; names are limited to 256 bytes
+            buffer.insert(static_cast<uint8_t>(name.size()));
+            // Add name bytes
+            buffer.insert(name);
+        }
+        
+        // Insert positions into buffer
+        for(auto position : positions) {
+            buffer.insert(static_cast<int64_t>(position.first));
+            buffer.insert(static_cast<int64_t>(position.second));
+        }
+        
+        // Insert levels into buffer
+        for(auto level : levels)
+            buffer.insert(static_cast<int64_t>(level));
+        
+        buffer.pop(data, buffer.size());
     }
     
-    // Insert positions into buffer
-    for(auto position : positions) {
-        buffer.insert(static_cast<int64_t>(position.first));
-        buffer.insert(static_cast<int64_t>(position.second));
-    }
-    
-    // Insert levels into buffer
-    for(auto level : levels)
-        buffer.insert(static_cast<int64_t>(level));
+    // Generate full message with header
+    return toBytesHelper(data);
 }
 
 const std::vector<uint8_t> ClientMessageDoJoin::toBytes() const {

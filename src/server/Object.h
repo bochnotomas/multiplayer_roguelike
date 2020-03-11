@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ROGUELIKE_OBJECT_H_INCLUDED
+#define ROGUELIKE_OBJECT_H_INCLUDED
 #include <utility>
 #include "../client/Formatting.hpp"
 #include "../client/Texture.h"
@@ -72,3 +73,5 @@ protected:
 	Formating m_formating;
 	Texture m_texture;
 };
+
+#endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ROGUELIKE_MAP_H_INCLUDED
+#define ROGUELIKE_MAP_H_INCLUDED
 #include <vector>
 #include <utility>
 #include "LevelGeneration2D.h"
@@ -105,3 +106,5 @@ private:
 	MapPlane m_plane;
 	std::pair<unsigned long, unsigned long> m_size; // width, height
 };
+
+#endif

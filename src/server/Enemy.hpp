@@ -24,6 +24,7 @@ class Enemy : public Object
 	
 	std::vector<std::pair<int, int> > findTheWay(int startingPositionY, int startingPositionX,int finalPositionY, int finalPositionX , Map& map);
 
+public:
 	void aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& map);
 };
 

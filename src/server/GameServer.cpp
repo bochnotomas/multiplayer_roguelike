@@ -1,4 +1,5 @@
 #include "GameServer.hpp"
+#include "Enemy.hpp"
 
 Map& GameServer::getLevel(int n) {
     // Generate missing levels
@@ -10,6 +11,26 @@ Map& GameServer::getLevel(int n) {
     }
     
     return levels[n];
+}
+
+void GameServer::doTurn() {
+    for(auto l = 0; l < levels.size(); l++) {
+        // Get players in this level
+        std::vector<std::shared_ptr<Player> > levelPlayers;
+        for(auto player : players) {
+            if(player->level == l)
+                levelPlayers.emplace_back(player);
+        }
+        
+        for(auto object : levels[l].objects) {
+            // Generic object update
+            object->update();
+            
+            // Object type-specific update
+            if(object->type == ObjectType::ENEMY)
+                dynamic_cast<Enemy*>(object)->aiTick(levelPlayers, levels[l]);
+        }
+    }
 }
 
 void GameServer::logic() {
@@ -47,7 +68,8 @@ void GameServer::logic() {
                         }
                         
                         // Send level data and player data to newly joined player
-                        addMessage(ClientMessageMapTileData(getLevel(0)), joinEvent->sender);
+                        auto thisLevel = getLevel(0);
+                        addMessage(ClientMessageMapTileData(thisLevel), joinEvent->sender);
                         // TODO level objects
                         addMessage(ClientMessagePlayerData(players), joinEvent->sender);
                     }
@@ -73,11 +95,7 @@ void GameServer::logic() {
         // Simulate turn
         // TODO only do this when all players sent their actions
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
-        for(auto level : levels) {
-            for(auto object : level.objects) {
-                //object // TODO
-            }
-        }
+        doTurn();
         
         // Send buffered messages
         sendMessages(250);

@@ -5,7 +5,7 @@
 #include "client/ClearScreenDrawable.hpp"
 
 // num of columns rendered on the screen
-constexpr unsigned short RENDER_WIDTH = 120;
+constexpr unsigned short RENDER_WIDTH = 100;
 // num of rows rendered on the screen
 constexpr unsigned short RENDER_HEIGHT = 30;
 
