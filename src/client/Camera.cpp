@@ -210,7 +210,7 @@ void Camera::draw_3D(Renderer* renderer) {
 					auto objX = (*it)->get_position().first;
 					auto objY = (*it)->get_position().second;
 					if (objX == ray_pos_x && objY == ray_pos_y
-						&& !(*it)->is_player && objX >= 0 && objX < plane->size() && objY >= 0 && objY < (*plane)[0].size()) {
+						&& (*it)->get_type() != ObjectType::PLAYER && objX >= 0 && objX < plane->size() && objY >= 0 && objY < (*plane)[0].size()) {
 						objects_to_render.push_back({ (*it), {dist, i} });
 						it = objects_in_range.erase(it);
 					}

@@ -95,27 +95,26 @@ struct ClientMessageMapTileData : public ClientMessage {
     uint64_t height;
     
     /// Create message from map
-    ClientMessageMapTileData(Map& map) :
-        ClientMessage(GameMessageType::MapTileData, "")
-    {
-        auto mapSize = map.get_map_size();
-        width = mapSize.first;
-        height = mapSize.second;
-        
-        auto mapPlane = map.get_map_plane();
-        for(auto itRow = mapPlane->begin(); itRow != mapPlane->end(); itRow++)
-            tileData.push_back(*itRow);
-    }
+    ClientMessageMapTileData(Map& map);
     
     /// Create message from map plane (tileData move constructor)
-    ClientMessageMapTileData(MapPlane&& mapPlane, uint64_t width, uint64_t height) :
-        ClientMessage(GameMessageType::MapTileData, ""),
-        tileData(mapPlane),
-        width(width),
-        height(height)
-    {}
+    ClientMessageMapTileData(MapPlane&& mapPlane, uint64_t width, uint64_t height);
     
     ~ClientMessageMapTileData() = default;
+    const std::vector<uint8_t> toBytes() const override;
+};
+
+struct ClientMessageMapObjectData : public ClientMessage {
+    /// Objects
+    std::vector<std::shared_ptr<Object>> objects;
+    
+    /// Create message from object list
+    ClientMessageMapObjectData(const std::vector<std::shared_ptr<Object>>& objects) :
+        ClientMessage(GameMessageType::MapObjectData, ""),
+        objects(objects)
+    {}
+    
+    ~ClientMessageMapObjectData() = default;
     const std::vector<uint8_t> toBytes() const override;
 };
 

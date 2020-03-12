@@ -2,6 +2,7 @@
 
 Player::Player(Socket* socket) :
     Socket(std::move(*socket)), // Call move constructor. Source invalidated
+    Object('@'),
     level(0)
 {
     dir = STOP;
@@ -15,7 +16,7 @@ Player::Player(Socket* socket) :
     playerPositionX = 10;
     playerPositionY = 15;
     
-    type = ObjectType::PLAYER;
+    m_type = ObjectType::PLAYER;
 }
 
 Player::~Player() {

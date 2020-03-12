@@ -26,6 +26,17 @@ std::pair<long, long> Object::get_position() const
 	return {static_cast<long>(m_position.first), static_cast<long>(m_position.second)};
 }
 
+Direction Object::get_direction() const
+{
+    return m_dir;
+}
+
+ObjectType Object::get_type() const
+{
+    return m_type;
+}
+
+
 void Object::move(const Direction dir)
 {
 	switch (dir)

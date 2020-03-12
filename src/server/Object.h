@@ -23,8 +23,10 @@ class Object
 public:
 	virtual ~Object() = default;
 
+	Object(const char character, Direction direction, bool visibility, std::pair<int, int> start_position, Formating formating, Texture texture, ObjectType type) :
+		m_character(character), m_dir(direction), m_visibility(visibility), m_position(std::move(start_position)), m_formating(formating), m_texture(texture), m_type(type) {}
 	Object(const char character, Direction direction, bool visibility, std::pair<int, int> start_position, Formating formating, Texture texture) :
-		m_character(character), m_dir(direction), m_visibility(visibility), m_position(std::move(start_position)), m_formating(formating), m_texture(texture) {}
+		Object(character, direction, visibility, start_position, formating, {}, ObjectType::GENERIC) {}
 	Object(const char character, Direction direction, bool visibility, std::pair<int, int> start_position, Formating formating) :
 		Object(character, direction, visibility, start_position, formating, {}) {}
 	Object(const char character, Direction direction, bool visibility, std::pair<int, int> start_position) : 
@@ -47,6 +49,10 @@ public:
 	std::pair<long, long> get_position() const;
 
 	Texture get_texture() const;
+    
+    Direction get_direction() const;
+    
+    ObjectType get_type() const;
 
 	virtual void move(const Direction dir);
 
@@ -55,10 +61,6 @@ public:
 	}
 
 	void set_position(const std::pair<int, int> new_position);
-
-	bool is_player = false;
-    
-    ObjectType type = ObjectType::GENERIC;
 	
 protected:
 	// graphical representation of object;
@@ -72,6 +74,8 @@ protected:
 	// color of the object
 	Formating m_formating;
 	Texture m_texture;
+    // Type of object
+    ObjectType m_type;
 };
 
 #endif

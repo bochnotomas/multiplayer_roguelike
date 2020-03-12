@@ -101,10 +101,8 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 if(dataSize == 0)
                     return nullptr;
                 
-                if(dataSize < 16) {
-                    buffer.erase(dataSize);
-                    return nullptr;
-                }
+                if(dataSize < 16)
+                    break;
                 
                 uint64_t width, height, tileCount;
                 buffer.pop(width);
@@ -143,6 +141,125 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 return std::unique_ptr<ClientMessage>(new ClientMessageMapTileData(std::move(tileData), width, height));
             }
             break;
+        case GameMessageType::MapObjectData:
+            {
+                // Parse object count
+                if(dataSize == 0)
+                    return nullptr;
+                
+                if(dataSize < 8)
+                    break;
+                
+                std::vector<std::shared_ptr<Object>> objects;
+                uint64_t count;
+                buffer.pop(count);
+                
+                // Parse objects
+                size_t dataLeft = dataSize - 8;
+                for(auto o = 0; o < count; o++) {
+                    // Abort if there isn't enough size for another object
+                    if(dataLeft < 28) {
+                        buffer.erase(dataLeft);
+                        return nullptr;
+                    }
+                    
+                    uint8_t character, omniByte, textColor, bgColor;
+                    int64_t posX, posY;
+                    uint64_t texHeight;
+                    
+                    // Character
+                    buffer.pop(character);
+                    
+                    // Omni-byte (visible flag | direction | type)
+                    // Will be split later
+                    buffer.pop(omniByte);
+                    
+                    // Position
+                    buffer.pop(posX);
+                    buffer.pop(posY);
+                    
+                    // Formatting colors
+                    buffer.pop(textColor);
+                    buffer.pop(bgColor);
+                    
+                    // Texture height
+                    buffer.pop(texHeight);
+                    
+                    // Texture plane
+                    dataLeft -= 28;
+                    std::vector<std::vector<TexturePoint> > texPlane;
+                    texPlane.reserve(texHeight);
+                    for(auto h = 0; h < texHeight; h++) {
+                        // Abort if not enough buffer size for width value
+                        if(dataLeft < 8) {
+                            buffer.erase(dataLeft);
+                            return nullptr;
+                        }
+                        
+                        // Texture plane row width
+                        uint64_t rowWidth;
+                        buffer.pop(rowWidth);
+                        dataLeft -= 8;
+                        
+                        // Abort if not enough buffer size for row content
+                        if(dataLeft < 3 * rowWidth) {
+                            buffer.erase(dataLeft);
+                            return nullptr;
+                        }
+                        
+                        // Row
+                        texPlane.emplace_back();
+                        auto& lastRow = texPlane[texPlane.size() - 1];
+                        lastRow.reserve(3 * rowWidth);
+                        for(auto c = 0; c < rowWidth; c++) {
+                            uint8_t pCharacter, pTextColor, pBgColor;
+                            
+                            // Texture point
+                            buffer.pop(pCharacter);
+                            buffer.pop(pTextColor);
+                            buffer.pop(pBgColor);
+                            TexturePoint tPoint = {
+                                static_cast<char>(pCharacter),
+                                {
+                                    static_cast<Color>(pTextColor),
+                                    static_cast<Color>(pBgColor)
+                                }
+                            };
+                            
+                            lastRow.emplace_back(std::move(tPoint));
+                        }
+                        
+                        dataLeft -= 3 * rowWidth;
+                    }
+                    
+                    // Done, parse omni-byte
+                    ObjectType type = static_cast<ObjectType>(omniByte       & 0b00001111);
+                    Direction dir   = static_cast<Direction>((omniByte >> 4) & 0b00000111);
+                    bool visible    = static_cast<bool>(     (omniByte >> 7) & 0b00000001);
+                    
+                    // Generate final object
+                    objects.emplace_back(new Object(
+                        static_cast<char>(character),
+                        dir,
+                        visible,
+                        std::pair<int, int>(posX, posY),
+                        {
+                            static_cast<Color>(textColor),
+                            static_cast<Color>(bgColor)
+                        },
+                        Texture(std::move(texPlane)),
+                        type
+                    ));
+                }
+                
+                return std::unique_ptr<ClientMessage>(new ClientMessageMapObjectData(objects));
+            }
+            break;
+        case GameMessageType::PlayerData:
+            {
+                // TODO
+            }
+            break;
     }
     
     // Unknown message type or action message, clear body
@@ -173,6 +290,25 @@ const std::vector<uint8_t> ClientMessageChat::toBytes() const {
     
     return toBytesHelper(data);
 }
+
+ClientMessageMapTileData::ClientMessageMapTileData(Map& map) :
+    ClientMessage(GameMessageType::MapTileData, "")
+{
+    auto mapSize = map.get_map_size();
+    width = mapSize.first;
+    height = mapSize.second;
+    
+    auto mapPlane = map.get_map_plane();
+    for(auto itRow = mapPlane->begin(); itRow != mapPlane->end(); itRow++)
+        tileData.push_back(*itRow);
+}
+
+ClientMessageMapTileData::ClientMessageMapTileData(MapPlane&& mapPlane, uint64_t width, uint64_t height) :
+    ClientMessage(GameMessageType::MapTileData, ""),
+    tileData(mapPlane),
+    width(width),
+    height(height)
+{}
 
 const std::vector<uint8_t> ClientMessageMapTileData::toBytes() const {
     // Insert map dimensions into buffer
@@ -206,6 +342,63 @@ const std::vector<uint8_t> ClientMessageMapTileData::toBytes() const {
     return toBytesHelper(data);
 }
 
+const std::vector<uint8_t> ClientMessageMapObjectData::toBytes() const {
+    std::vector<uint8_t> data;
+    
+    {
+        Buffer buffer;
+        
+        // Insert object count into buffer
+        buffer.insert(static_cast<uint64_t>(objects.size()));
+        
+        // Insert each object into buffer
+        for(const auto object : objects) {
+            // Character
+            buffer.insert(static_cast<uint8_t>(object->get_char()));
+            
+            // Direction, type and visibility as a single byte
+            // [1 bit - visible?][3 bits - direction][4 bits - type]
+            // Note that both direction and type only use 2 bits each, but
+            // since there is leftover bits for a full byte, more were used for
+            // expanding in the future
+            buffer.insert( (static_cast<uint8_t>(object->get_type())             & 0b00001111) |
+                          ((static_cast<uint8_t>(object->get_direction())  << 4) & 0b01110000) |
+                          ((static_cast<uint8_t>(object->get_visibility()) << 7) & 0b10000000));
+            
+            // Position
+            auto position = object->get_position();
+            buffer.insert(static_cast<int64_t>(position.first));
+            buffer.insert(static_cast<int64_t>(position.second));
+            
+            // Formatting
+            auto formatting = object->get_formating();
+            buffer.insert(static_cast<uint8_t>(formatting.text_color));
+            buffer.insert(static_cast<uint8_t>(formatting.background_color));
+            
+            // Texture
+            auto texturePlane = object->get_texture().get_plane();
+            // ... height
+            buffer.insert(static_cast<uint64_t>(texturePlane.size()));
+            for(const auto& row : texturePlane) {
+                // ... row width
+                buffer.insert(static_cast<uint64_t>(row.size()));
+                for(const auto& point : row) {
+                    // Texture point character
+                    buffer.insert(static_cast<uint8_t>(point.character));
+                    // Texture point formatting
+                    buffer.insert(static_cast<uint8_t>(point.formating.text_color));
+                    buffer.insert(static_cast<uint8_t>(point.formating.background_color));
+                }
+            }
+        }
+        
+        buffer.get(data, buffer.size());
+    }
+    
+    // Generate full message with header
+    return toBytesHelper(data);
+}
+
 const std::vector<uint8_t> ClientMessagePlayerData::toBytes() const {
     std::vector<uint8_t> data;
     
@@ -233,7 +426,7 @@ const std::vector<uint8_t> ClientMessagePlayerData::toBytes() const {
         for(auto level : levels)
             buffer.insert(static_cast<int64_t>(level));
         
-        buffer.pop(data, buffer.size());
+        buffer.get(data, buffer.size());
     }
     
     // Generate full message with header
