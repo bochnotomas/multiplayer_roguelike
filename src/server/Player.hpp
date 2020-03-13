@@ -24,7 +24,6 @@ struct Player : Socket, Object {
     /// Destructor
     ~Player();
 
-    int playerPositionX, playerPositionY;
     int health;
     int attack;
     int defense;

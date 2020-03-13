@@ -112,11 +112,9 @@ void GameClient::logic(Renderer* renderer) {
                     break;
                 case GameMessageType::MapObjectData:
                     {
-                        auto mapObjectDataMessage = dynamic_cast<ClientMessageMapObjectData*>(it->get());
-                        // Throw this message in the garbage can if there isn't
-                        // any map tile data yet
+                        auto mapObjectDataMessage = dynamic_cast<ClientMessageMapObjectData*>(it->get());\
                         if(!map)
-                            break;
+                            map = std::shared_ptr<Map>(new Map());
                         map->objects = mapObjectDataMessage->objects;
                     }
                     break;

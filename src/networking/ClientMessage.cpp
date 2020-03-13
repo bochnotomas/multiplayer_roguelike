@@ -379,20 +379,6 @@ ClientMessageMapTileData::ClientMessageMapTileData(MapPlane&& mapPlane, uint64_t
     height(height)
 {}
 
-ClientMessagePlayerData::ClientMessagePlayerData(std::vector<std::shared_ptr<Player> >& players) :
-    ClientMessage(GameMessageType::PlayerData, "")
-{
-    for(auto player : players) {
-        if(!player->name.empty())
-            playersSnapshots.emplace_back(player->name, player->playerPositionX, player->playerPositionY, player->level);
-    }
-}
-
-ClientMessagePlayerData::ClientMessagePlayerData(std::vector<PlayerSnapshot>&& playersSnapshots) :
-    ClientMessage(GameMessageType::PlayerData, ""),
-    playersSnapshots(playersSnapshots)
-{}
-
 const std::vector<uint8_t> ClientMessageMapTileData::toBytes() const {
     // Insert map dimensions into buffer
     // Buffers are expensive, so only use them to encode data that isn't a
@@ -481,6 +467,22 @@ const std::vector<uint8_t> ClientMessageMapObjectData::toBytes() const {
     // Generate full message with header
     return toBytesHelper(data);
 }
+
+ClientMessagePlayerData::ClientMessagePlayerData(std::vector<std::shared_ptr<Player> >& players) :
+    ClientMessage(GameMessageType::PlayerData, "")
+{
+    for(auto player : players) {
+        if(!player->name.empty()) {
+            const auto& position = player->get_position();
+            playersSnapshots.emplace_back(player->name, position.first, position.second, player->level);
+        }
+    }
+}
+
+ClientMessagePlayerData::ClientMessagePlayerData(std::vector<PlayerSnapshot>&& playersSnapshots) :
+    ClientMessage(GameMessageType::PlayerData, ""),
+    playersSnapshots(playersSnapshots)
+{}
 
 const std::vector<uint8_t> ClientMessagePlayerData::toBytes() const {
     std::vector<uint8_t> data;

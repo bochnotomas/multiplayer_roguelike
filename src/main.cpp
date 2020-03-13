@@ -102,6 +102,9 @@ std::unique_ptr<GameServer> createServer(Renderer& renderer, uint16_t port) {
 
 /// Main
 int main() {
+    // Init networking
+    Socket::initSocketApi();
+    
     // Generate default menu dimensions
     auto defaultMenuW = RENDER_WIDTH / 4;
     auto defaultMenuH = RENDER_HEIGHT / 4;
@@ -241,4 +244,7 @@ int main() {
         server->stop();
         std::cout << "OK!" << std::endl;
     }
+    
+    // Cleanup networking
+    Socket::cleanupSocketApi();
 }
