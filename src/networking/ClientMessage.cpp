@@ -436,6 +436,10 @@ const std::vector<uint8_t> ClientMessageMapObjectData::toBytes() const {
             // Note that both direction and type only use 2 bits each, but
             // since there is leftover bits for a full byte, more were used for
             // expanding in the future
+            // NOTE Stored in a variable so that the final result is cast to
+            // uint8_t, since bitwise operators implicitly cast to int, which
+            // caused the whole encoding process to fail before. Basically,
+            // DON'T TOUCH THIS
             uint8_t omniByte = (static_cast<uint8_t>(object->get_type())             & 0b00001111) |
                               ((static_cast<uint8_t>(object->get_direction())  << 4) & 0b01110000) |
                               ((static_cast<uint8_t>(object->get_visibility()) << 7) & 0b10000000);
