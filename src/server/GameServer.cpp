@@ -6,8 +6,7 @@ Map& GameServer::getLevel(int n) {
     for(auto depth = levels.size(); depth <= n; depth++) {
         // TODO call the level generator here
         Map newLevel;
-        //newLevel.create_random_map();
-        newLevel.set_preset_map();
+        newLevel.create_random_map();
         levels.emplace_back(std::move(newLevel));
     }
     
