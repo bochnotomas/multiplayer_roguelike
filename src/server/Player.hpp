@@ -36,7 +36,7 @@ struct Player : Socket, Object {
     
     int level;
 
-    void potionCheck(int axisValue1, int axisValue2, Map& map);
+    void itemCheck(int axisValue1, int axisValue2, Map& map);
 
     void playerMovementLogic(Map& map);
 

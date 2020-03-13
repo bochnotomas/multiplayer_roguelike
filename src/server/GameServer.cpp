@@ -28,7 +28,7 @@ void GameServer::doTurn() {
             
             // Object type-specific update
             if (object->get_type() == ObjectType::ENEMY)
-                dynamic_cast<Enemy*>(object)->aiTick(levelPlayers, levels[l]);
+                std::dynamic_pointer_cast<Enemy>(object)->aiTick(levelPlayers, levels[l]);
         }
     }
 }

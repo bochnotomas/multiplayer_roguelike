@@ -29,7 +29,7 @@ Player::~Player() {
     }
 }
 
-void Player::potionCheck(int axisValue1, int axisValue2, Map& map) {
+void Player::itemCheck(int axisValue1, int axisValue2, Map& map) {
 	for(auto object : map.objects)
 	{
 		//waiting....
