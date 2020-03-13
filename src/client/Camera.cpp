@@ -41,7 +41,7 @@ void Camera::move(Direction dir){
 }
 
 void Camera::get_objects_in_range(std::pair<long, long> range_y, std::pair<long, long> range_x){
-	for (Object* obj : m_map->objects){
+	for (auto obj : m_map->objects){
 		if (obj->get_visibility() && 
 			obj->get_position().second >= range_y.first && 
 			obj->get_position().second < range_y.second &&
@@ -91,7 +91,7 @@ void Camera::draw_minimap(Renderer* renderer)	{
 				// flag to check if on current cell is an object
 				bool object = false;
 				// check all objects in range if there is a one on current position
-				for (Object* obj : objects_in_range){
+				for (auto obj : objects_in_range){
                     if (obj->get_visibility() && obj->get_position().second == i && obj->get_position().first == j){
                         // Draw object to cell
 						//auto temp = obj->get_position();
@@ -140,7 +140,7 @@ void Camera::draw_3D(Renderer* renderer) {
 	get_objects_in_range({-1 * (m_minimap_size.second / 2) + m_position.second, m_minimap_size.second / 2 + m_position.second},
 	{-1 * (m_minimap_size.first / 2) + m_position.first, m_minimap_size.first / 2 + m_position.first});
 
-	using obj_to_render = std::pair<Object*, std::pair<float, size_t>>;  // <object, <distance, viewport i>>
+	using obj_to_render = std::pair<std::shared_ptr<Object>, std::pair<float, size_t>>;  // <object, <distance, viewport i>>
 	std::vector<obj_to_render> objects_to_render;
 
 	//std::cout<<objects_in_range.size()<<' ';

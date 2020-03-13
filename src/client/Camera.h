@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 #include <time.h>
+#include <memory>
 #include <mutex>
 #include <math.h>
 #include <algorithm>
@@ -45,7 +46,7 @@ private:
 	char m_blank_char; // character to put if there is nothing to render on position
 	Map* m_map; // map which camera is observing
 	std::mutex pos_mutex; // prevent changing position during rendering a frame
-	std::vector<Object*> objects_in_range;
+	std::vector<std::shared_ptr<Object>> objects_in_range;
 
 	// get objects in range of camera view and keep it in objects_in_range vecror
 	void get_objects_in_range(std::pair<long, long> range_y, std::pair<long, long> range_x);
