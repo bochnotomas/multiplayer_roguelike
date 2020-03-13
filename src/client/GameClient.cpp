@@ -112,7 +112,7 @@ void GameClient::logic(Renderer* renderer) {
                     break;
                 case GameMessageType::MapObjectData:
                     {
-                        auto mapObjectDataMessage = dynamic_cast<ClientMessageMapObjectData*>(it->get());\
+                        auto mapObjectDataMessage = dynamic_cast<ClientMessageMapObjectData*>(it->get());
                         if(!map)
                             map = std::shared_ptr<Map>(new Map());
                         map->objects = mapObjectDataMessage->objects;
