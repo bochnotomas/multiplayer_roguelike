@@ -3,9 +3,11 @@
 #include "../server/Player.hpp"
 #include "../server/Map.h"
 #include "Buffer.hpp"
+#include "PlayerSnapshot.hpp"
+#include "Action.hpp"
 #include <memory>
 
-enum GameMessageType {
+enum class GameMessageType {
     Join = 0,
     Quit = 1,
     Chat = 2,
@@ -119,35 +121,14 @@ struct ClientMessageMapObjectData : public ClientMessage {
 };
 
 struct ClientMessagePlayerData : public ClientMessage {
-    /// Player names
-    std::vector<std::string> names;
-    
-    /// Player positions
-    std::vector<std::pair<int, int> > positions;
-    
-    /// Player levels
-    std::vector<int> levels;
+    /// Bare player data ("player snapshots")
+    std::vector<PlayerSnapshot> playersSnapshots;
     
     /// Create message from players
-    ClientMessagePlayerData(std::vector<std::shared_ptr<Player> >& players) :
-        ClientMessage(GameMessageType::PlayerData, "")
-    {
-        for(auto player : players) {
-            if(!player->name.empty()) {
-                names.push_back(player->name);
-                positions.emplace_back(player->playerPositionX, player->playerPositionY);
-                levels.push_back(player->level);
-            }
-        }
-    }
+    ClientMessagePlayerData(std::vector<std::shared_ptr<Player> >& players);
     
     /// Create message
-    ClientMessagePlayerData(std::vector<std::string>&& names, std::vector<std::pair<int, int> >&& positions, std::vector<int>&& levels) :
-        ClientMessage(GameMessageType::PlayerData, ""),
-        names(names),
-        positions(positions),
-        levels(levels)
-    {}
+    ClientMessagePlayerData(std::vector<PlayerSnapshot>&& playersSnapshots);
     
     ~ClientMessagePlayerData() = default;
     const std::vector<uint8_t> toBytes() const override;

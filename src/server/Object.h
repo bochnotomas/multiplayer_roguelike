@@ -11,7 +11,7 @@ enum class Direction {
 	WEST
 };
 
-enum ObjectType {
+enum class ObjectType {
     GENERIC = 0,
     ENEMY = 1,
     PLAYER = 2,

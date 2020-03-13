@@ -51,7 +51,7 @@ void startServer(unsigned short port) {
                     }
                     break;
                 default:
-                    std::cout << "Ignored unexpected message of type " << (*it)->type << std::endl;
+                    std::cout << "Ignored unexpected message of type " << static_cast<int>((*it)->type) << std::endl;
             }
             
             std::unique_ptr<ClientMessage> clientMessage = (*it)->toClient();
@@ -93,7 +93,7 @@ void clientThreadLoop(std::shared_ptr<Client> client, std::shared_ptr<std::atomi
                         }
                         break;
                     default:
-                        std::cout << "Ignored unexpected message of type " << (*it)->type << std::endl;
+                        std::cout << "Ignored unexpected message of type " << static_cast<int>((*it)->type) << std::endl;
                 }
             }
         

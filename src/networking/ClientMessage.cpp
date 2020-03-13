@@ -48,7 +48,7 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
     
     // Create ClientMessage
     switch(type) {
-        case GameMessageType::Join:
+        case static_cast<int>(GameMessageType::Join):
             {
                 // Body is a player name for Join messages
                 std::string senderName;
@@ -56,7 +56,7 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 return std::unique_ptr<ClientMessage>(new ClientMessageJoin(senderName));
             }
             break;
-        case GameMessageType::Quit:
+        case static_cast<int>(GameMessageType::Quit):
             {
                 // Body is a player name for Quit messages
                 std::string senderName;
@@ -64,7 +64,7 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 return std::unique_ptr<ClientMessage>(new ClientMessageQuit(senderName));
             }
             break;
-        case GameMessageType::Chat:
+        case static_cast<int>(GameMessageType::Chat):
             {
                 // Body is a player name length, a player name and a chat
                 // message for Chat messages.
@@ -95,7 +95,7 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 return std::unique_ptr<ClientMessage>(new ClientMessageChat(senderName, message));
             }
             break;
-        case GameMessageType::MapTileData:
+        case static_cast<int>(GameMessageType::MapTileData):
             {
                 // Parse map dimensions
                 if(dataSize == 0)
@@ -141,7 +141,7 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 return std::unique_ptr<ClientMessage>(new ClientMessageMapTileData(std::move(tileData), width, height));
             }
             break;
-        case GameMessageType::MapObjectData:
+        case static_cast<int>(GameMessageType::MapObjectData):
             {
                 // Parse object count
                 if(dataSize == 0)
@@ -255,7 +255,7 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 return std::unique_ptr<ClientMessage>(new ClientMessageMapObjectData(objects));
             }
             break;
-        case GameMessageType::PlayerData:
+        case static_cast<int>(GameMessageType::PlayerData):
             {
                 // Parse player count
                 if(dataSize == 0)
@@ -301,7 +301,8 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                     return nullptr;
                 }
                 
-                std::vector<std::pair<int, int> > positions;
+                std::vector<int> xPositions;
+                std::vector<int> yPositions;
                 std::vector<int> levels;
                 
                 // Parse positions
@@ -309,7 +310,8 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                     int64_t posX, posY;
                     buffer.pop(posX);
                     buffer.pop(posY);
-                    positions.emplace_back(posX, posY);
+                    xPositions.emplace_back(posX);
+                    yPositions.emplace_back(posY);
                 }
                 
                 // Parse levels
@@ -319,7 +321,12 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                     levels.push_back(level);
                 }
                 
-                return std::unique_ptr<ClientMessage>(new ClientMessagePlayerData(std::move(names), std::move(positions), std::move(levels)));
+                // Create list of player snapshots
+                std::vector<PlayerSnapshot> playerSnapshots;
+                for(auto p = 0; p < count; p++)
+                    playerSnapshots.emplace_back(names[p], xPositions[p], yPositions[p], levels[p]);
+                
+                return std::unique_ptr<ClientMessage>(new ClientMessagePlayerData(std::move(playerSnapshots)));
             }
             break;
     }
@@ -370,6 +377,20 @@ ClientMessageMapTileData::ClientMessageMapTileData(MapPlane&& mapPlane, uint64_t
     tileData(mapPlane),
     width(width),
     height(height)
+{}
+
+ClientMessagePlayerData::ClientMessagePlayerData(std::vector<std::shared_ptr<Player> >& players) :
+    ClientMessage(GameMessageType::PlayerData, "")
+{
+    for(auto player : players) {
+        if(!player->name.empty())
+            playersSnapshots.emplace_back(player->name, player->playerPositionX, player->playerPositionY, player->level);
+    }
+}
+
+ClientMessagePlayerData::ClientMessagePlayerData(std::vector<PlayerSnapshot>&& playersSnapshots) :
+    ClientMessage(GameMessageType::PlayerData, ""),
+    playersSnapshots(playersSnapshots)
 {}
 
 const std::vector<uint8_t> ClientMessageMapTileData::toBytes() const {
@@ -468,10 +489,12 @@ const std::vector<uint8_t> ClientMessagePlayerData::toBytes() const {
         Buffer buffer;
         
         // Insert player count into buffer
-        buffer.insert(static_cast<uint64_t>(names.size()));
+        auto count = playersSnapshots.size();
+        buffer.insert(static_cast<uint64_t>(count));
         
         // Insert player names into buffer
-        for(auto name : names) {
+        for(auto n = 0; n < count; n++) {
+            auto name = playersSnapshots[n].name;
             // Add name size; names are limited to 256 bytes
             buffer.insert(static_cast<uint8_t>(name.size()));
             // Add name bytes
@@ -479,14 +502,14 @@ const std::vector<uint8_t> ClientMessagePlayerData::toBytes() const {
         }
         
         // Insert positions into buffer
-        for(auto position : positions) {
-            buffer.insert(static_cast<int64_t>(position.first));
-            buffer.insert(static_cast<int64_t>(position.second));
+        for(auto p = 0; p < count; p++) {
+            buffer.insert(static_cast<int64_t>(playersSnapshots[p].x));
+            buffer.insert(static_cast<int64_t>(playersSnapshots[p].y));
         }
         
         // Insert levels into buffer
-        for(auto level : levels)
-            buffer.insert(static_cast<int64_t>(level));
+        for(auto l = 0; l < count; l++)
+            buffer.insert(static_cast<int64_t>(playersSnapshots[l].level));
         
         buffer.get(data, buffer.size());
     }

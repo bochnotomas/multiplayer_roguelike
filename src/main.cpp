@@ -175,6 +175,7 @@ int main() {
                 break;
             case ' ':
             case '\n':
+            case '\r':
                 // Select an option
                 auto chosenMenu = currentMenu->selectCursor();
                 switch((MenuOption)chosenMenu->getKey()) {

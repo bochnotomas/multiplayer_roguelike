@@ -1,3 +1,4 @@
+#include "../networking/Direction.hpp"
 #include "Player.hpp"
 
 Player::Player(Socket* socket) :
@@ -5,7 +6,7 @@ Player::Player(Socket* socket) :
     Object('@'),
     level(0)
 {
-    dir = STOP;
+    dir = eDirection::STOP;
     speed = 1;
     health = 100;
     attack = 1;
@@ -38,7 +39,7 @@ void Player::potionCheck(int axisValue1, int axisValue2, std::vector<std::vector
 void Player::playerMovementLogic(std::vector<std::vector<char>>& map) {
     bool ifBreak = false;
     switch (dir) {
-    case LEFT:
+    case eDirection::LEFT:
         for (int i = playerPositionX; i >= (playerPositionX - speed); i--) {
             if (map[playerPositionY][i] == '#') {
                 playerPositionX = (i + 1);
@@ -51,9 +52,9 @@ void Player::playerMovementLogic(std::vector<std::vector<char>>& map) {
         if (ifBreak == false) {
             playerPositionX = playerPositionX - speed;
         }
-        dir = STOP;
+        dir = eDirection::STOP;
         break;
-    case RIGHT:
+    case eDirection::RIGHT:
         for (int i = playerPositionX; i <= (playerPositionX + speed); i++) {
             if (map[playerPositionY][i] == '#') {
 
@@ -67,9 +68,9 @@ void Player::playerMovementLogic(std::vector<std::vector<char>>& map) {
         if (ifBreak == false) {
             playerPositionX = playerPositionX + speed;
         }
-        dir = STOP;
+        dir = eDirection::STOP;
         break;
-    case UP:
+    case eDirection::UP:
         for (int i = playerPositionY; i >= (playerPositionY - speed); i--) {
             if (map[i][playerPositionX] == '#') {
                 playerPositionY = (i + 1);
@@ -82,9 +83,9 @@ void Player::playerMovementLogic(std::vector<std::vector<char>>& map) {
 
             playerPositionY = playerPositionY - speed;
         }
-        dir = STOP;
+        dir = eDirection::STOP;
         break;
-    case DOWN:
+    case eDirection::DOWN:
         for (int i = playerPositionY; i <= (playerPositionY + speed); i++) {
             if (map[i][playerPositionX] == '#') {
                 playerPositionY = (i - 1);
@@ -96,7 +97,7 @@ void Player::playerMovementLogic(std::vector<std::vector<char>>& map) {
         if (ifBreak == false) {
             playerPositionY = playerPositionY + speed;
         }
-        dir = STOP;
+        dir = eDirection::STOP;
         break;
     }
 
@@ -123,16 +124,16 @@ void Player::inputHandling(char newDir)
 {
     switch (newDir) {
     case 'a':
-        dir = LEFT;
+        dir = eDirection::LEFT;
         break;
     case 's':
-        dir = DOWN;
+        dir = eDirection::DOWN;
         break;
     case 'd':
-        dir = RIGHT;
+        dir = eDirection::RIGHT;
         break;
     case 'w':
-        dir = UP;
+        dir = eDirection::UP;
         break;
     case '-':
         speed--;

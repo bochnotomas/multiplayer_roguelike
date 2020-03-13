@@ -3,7 +3,6 @@
 #include "Menu.hpp"
 #include "Camera.h"
 #include "../server/Map.h"
-#include "PlayerSnapshot.hpp"
 
 enum ClientMenuItem {
     TextItem,
@@ -124,19 +123,7 @@ void GameClient::logic(Renderer* renderer) {
                 case GameMessageType::PlayerData:
                     {
                         auto playerDataMessage = dynamic_cast<ClientMessagePlayerData*>(it->get());
-                        players.clear();
-                        for(auto i = 0; i < playerDataMessage->names.size(); i++) {
-                            players.emplace_back(
-                                playerDataMessage->names[i],
-                                playerDataMessage->positions[i].first,
-                                playerDataMessage->positions[i].second,
-                                playerDataMessage->levels[i]
-                            );
-                            // XXX just for testing, scream at the standard error that new player data is coming
-                            /*const auto& newP = players[players.size() - 1];
-                            std::cerr << "!!! New player:name=" << newP.name << ";pos=" << newP.x << ',' << newP.y << ";level=" << newP.level << std::endl;
-                            */
-                        }
+                        players = playerDataMessage->playersSnapshots;
                     }
                     break;
             }
@@ -177,6 +164,7 @@ void GameClient::logic(Renderer* renderer) {
                     break;
                 case ' ':
                 case '\n':
+                case '\r':
                     if(focus) {
                         auto selection = focus->selectCursor();
                         if(!selection)
