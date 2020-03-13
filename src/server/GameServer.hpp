@@ -18,6 +18,9 @@ class GameServer : private Server {
     /// Get the n-th level. Generate levels if needed
     Map& getLevel(int n);
     
+    /// Do a turn
+    void doTurn();
+    
     /// Game logic goes here... Yup...
     void logic();
 public:

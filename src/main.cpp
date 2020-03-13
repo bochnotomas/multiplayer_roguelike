@@ -5,7 +5,7 @@
 #include "client/ClearScreenDrawable.hpp"
 
 // num of columns rendered on the screen
-constexpr unsigned short RENDER_WIDTH = 120;
+constexpr unsigned short RENDER_WIDTH = 100;
 // num of rows rendered on the screen
 constexpr unsigned short RENDER_HEIGHT = 30;
 
@@ -175,6 +175,7 @@ int main() {
                 break;
             case ' ':
             case '\n':
+            case '\r':
                 // Select an option
                 auto chosenMenu = currentMenu->selectCursor();
                 switch((MenuOption)chosenMenu->getKey()) {
@@ -230,7 +231,7 @@ int main() {
                 break;
         }
     }
-    
+
     // Wait for render thread to stop
     renderThread.join();
     

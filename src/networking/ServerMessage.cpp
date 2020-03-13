@@ -26,7 +26,7 @@ std::unique_ptr<ServerMessage> ServerMessage::fromBuffer(Buffer& buffer, std::sh
     
     // Create ServerMessage
     switch(type) {
-        case GameMessageType::DoJoin:
+        case static_cast<int>(GameMessageType::DoJoin):
             {
                 // Body is a player name for Join messages
                 std::string name;
@@ -34,7 +34,7 @@ std::unique_ptr<ServerMessage> ServerMessage::fromBuffer(Buffer& buffer, std::sh
                 return std::unique_ptr<ServerMessage>(new ServerMessageDoJoin(sender, name));
             }
             break;
-        case GameMessageType::DoQuit:
+        case static_cast<int>(GameMessageType::DoQuit):
             {
                 // Body should be empty for DoQuit messages. Clear it if not
                 if(dataSize > 0)
@@ -43,12 +43,25 @@ std::unique_ptr<ServerMessage> ServerMessage::fromBuffer(Buffer& buffer, std::sh
                 return std::unique_ptr<ServerMessage>(new ServerMessageDoQuit(sender));
             }
             break;
-        case GameMessageType::DoChat:
+        case static_cast<int>(GameMessageType::DoChat):
             {
                 // Body is a message name for DoChat messages
                 std::string message;
                 buffer.pop(message, dataSize);
                 return std::unique_ptr<ServerMessage>(new ServerMessageDoChat(sender, message));
+            }
+            break;
+        case static_cast<int>(GameMessageType::DoAction):
+            {
+                // Body is an action
+                std::vector<uint8_t> body;
+                buffer.pop(body, dataSize);
+                try {
+                    return std::unique_ptr<ServerMessage>(new ServerMessageDoAction(sender, Action::fromBytes(body)));
+                }
+                catch(std::invalid_argument e) {
+                    return nullptr; // Will throw on invalid body
+                }
             }
             break;
     }

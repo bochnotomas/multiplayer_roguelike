@@ -1,10 +1,13 @@
 #ifndef ROGUELIKE_CLIENT_MESSAGE_HPP_INCLUDED
 #define ROGUELIKE_CLIENT_MESSAGE_HPP_INCLUDED
+#include "../server/Player.hpp"
 #include "../server/Map.h"
 #include "Buffer.hpp"
+#include "PlayerSnapshot.hpp"
+#include "Action.hpp"
 #include <memory>
 
-enum GameMessageType {
+enum class GameMessageType {
     Join = 0,
     Quit = 1,
     Chat = 2,
@@ -13,7 +16,8 @@ enum GameMessageType {
     PlayerData = 5,
     DoJoin = 100,
     DoQuit = 101,
-    DoChat = 102
+    DoChat = 102,
+    DoAction = 103
 };
 
 /// A message sent to a client or by a client
@@ -94,27 +98,40 @@ struct ClientMessageMapTileData : public ClientMessage {
     uint64_t height;
     
     /// Create message from map
-    ClientMessageMapTileData(Map& map) :
-        ClientMessage(GameMessageType::MapTileData, "")
-    {
-        auto mapSize = map.get_map_size();
-        width = mapSize.first;
-        height = mapSize.second;
-        
-        auto mapPlane = map.get_map_plane();
-        for(auto itRow = mapPlane->begin(); itRow != mapPlane->end(); itRow++)
-            tileData.push_back(*itRow);
-    }
+    ClientMessageMapTileData(Map& map);
     
     /// Create message from map plane (tileData move constructor)
-    ClientMessageMapTileData(MapPlane&& mapPlane, uint64_t width, uint64_t height) :
-        ClientMessage(GameMessageType::MapTileData, ""),
-        tileData(mapPlane),
-        width(width),
-        height(height)
-    {}
+    ClientMessageMapTileData(MapPlane&& mapPlane, uint64_t width, uint64_t height);
     
     ~ClientMessageMapTileData() = default;
+    const std::vector<uint8_t> toBytes() const override;
+};
+
+struct ClientMessageMapObjectData : public ClientMessage {
+    /// Objects
+    std::vector<std::shared_ptr<Object>> objects;
+    
+    /// Create message from object list
+    ClientMessageMapObjectData(const std::vector<std::shared_ptr<Object>>& objects) :
+        ClientMessage(GameMessageType::MapObjectData, ""),
+        objects(objects)
+    {}
+    
+    ~ClientMessageMapObjectData() = default;
+    const std::vector<uint8_t> toBytes() const override;
+};
+
+struct ClientMessagePlayerData : public ClientMessage {
+    /// Bare player data ("player snapshots")
+    std::vector<PlayerSnapshot> playersSnapshots;
+    
+    /// Create message from players
+    ClientMessagePlayerData(std::vector<std::shared_ptr<Player> >& players);
+    
+    /// Create message
+    ClientMessagePlayerData(std::vector<PlayerSnapshot>&& playersSnapshots);
+    
+    ~ClientMessagePlayerData() = default;
     const std::vector<uint8_t> toBytes() const override;
 };
 
@@ -148,6 +165,19 @@ struct ClientMessageDoChat : public ClientMessage {
     {};
     
     ~ClientMessageDoChat() = default;
+    const std::vector<uint8_t> toBytes() const override;
+};
+
+struct ClientMessageDoAction : public ClientMessage {
+    /// Sent by the client if the client wants to do an action this turn
+    const Action action;
+    
+    ClientMessageDoAction(Action action) :
+        ClientMessage(GameMessageType::DoChat, ""),
+        action(action)
+    {}
+    
+    ~ClientMessageDoAction() = default;
     const std::vector<uint8_t> toBytes() const override;
 };
 

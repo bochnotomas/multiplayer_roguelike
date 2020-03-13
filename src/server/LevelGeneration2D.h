@@ -14,6 +14,8 @@ public:
 
 	void setGrid();
 
+	std::vector<std::vector<char>> getGrid();
+
 	void generation();
 
 	void refine();
