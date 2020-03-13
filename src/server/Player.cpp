@@ -14,8 +14,7 @@ Player::Player(Socket* socket) :
     strength = 1;
     speedPotionCooldown = 0;
     healthPotionCooldown = 0;
-    playerPositionX = 10;
-    playerPositionY = 15;
+  
     
     m_type = ObjectType::PLAYER;
 }
@@ -30,88 +29,78 @@ Player::~Player() {
     }
 }
 
-void Player::potionCheck(int axisValue1, int axisValue2, std::vector<std::vector<char>>& map) {
-    if (map[axisValue1][axisValue2] == 'P') {
-        speed++;
-    }
+void Player::potionCheck(int axisValue1, int axisValue2, Map& map) {
+	for(auto object : map.objects)
+	{
+		//waiting....
+		//for NIck...
+	}
+    
 }
 
-void Player::playerMovementLogic(std::vector<std::vector<char>>& map) {
+void Player::playerMovementLogic(Map& map) {
     bool ifBreak = false;
     switch (dir) {
     case eDirection::LEFT:
-        for (int i = playerPositionX; i >= (playerPositionX - speed); i--) {
-            if (map[playerPositionY][i] == '#') {
-                playerPositionX = (i + 1);
+        for (int i = m_position.first; i >= (m_position.first - speed); i--) {
+            if (!(*map.get_map_plane())[m_position.second][i].accesible) {
+                m_position.first = (i + 1);
                 ifBreak = true;
                 break;
             }
-            potionCheck(playerPositionY, i, map);
+            potionCheck(m_position.second, i, map);
 
         }
         if (ifBreak == false) {
-            playerPositionX = playerPositionX - speed;
+            m_position.first = m_position.first - speed;
         }
         dir = eDirection::STOP;
         break;
     case eDirection::RIGHT:
-        for (int i = playerPositionX; i <= (playerPositionX + speed); i++) {
-            if (map[playerPositionY][i] == '#') {
+        for (int i = m_position.first; i <= (m_position.first + speed); i++) {
+            if (!(*map.get_map_plane())[m_position.second][i].accesible) {
 
-                playerPositionX = (i - 1);
+                m_position.first = (i - 1);
                 ifBreak = true;
                 break;
             }
-            potionCheck(playerPositionY, i, map);
+            potionCheck(m_position.second, i, map);
 
         }
         if (ifBreak == false) {
-            playerPositionX = playerPositionX + speed;
+            m_position.first = m_position.first + speed;
         }
         dir = eDirection::STOP;
         break;
     case eDirection::UP:
-        for (int i = playerPositionY; i >= (playerPositionY - speed); i--) {
-            if (map[i][playerPositionX] == '#') {
-                playerPositionY = (i + 1);
+        for (int i = m_position.second; i >= (m_position.second - speed); i--) {
+            if (!(*map.get_map_plane())[i][m_position.first].accesible) {
+                m_position.second = (i + 1);
                 ifBreak = true;
                 break;
             }
-            potionCheck(i, playerPositionX, map);
+            potionCheck(i, m_position.first, map);
         }
         if (ifBreak == false) {
 
-            playerPositionY = playerPositionY - speed;
+            m_position.second = m_position.second - speed;
         }
         dir = eDirection::STOP;
         break;
     case eDirection::DOWN:
-        for (int i = playerPositionY; i <= (playerPositionY + speed); i++) {
-            if (map[i][playerPositionX] == '#') {
-                playerPositionY = (i - 1);
+        for (int i = m_position.second; i <= (m_position.second + speed); i++) {
+            if (!(*map.get_map_plane())[i][m_position.first].accesible) {
+                m_position.second = (i - 1);
                 ifBreak = true;
                 break;
             }
-            potionCheck(i, playerPositionX, map);
+            potionCheck(i, m_position.first, map);
         }
         if (ifBreak == false) {
-            playerPositionY = playerPositionY + speed;
+            m_position.second = m_position.second + speed;
         }
         dir = eDirection::STOP;
         break;
-    }
-
-    if (playerPositionX > 38) {
-        playerPositionX = 38;
-    }
-    if (playerPositionX < 1) {
-        playerPositionX = 1;
-    }
-    if (playerPositionY > 18) {
-        playerPositionY = 18;
-    }
-    if (playerPositionY < 1) {
-        playerPositionY = 1;
     }
 
     if (speed < 1) {
