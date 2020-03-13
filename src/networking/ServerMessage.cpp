@@ -51,6 +51,19 @@ std::unique_ptr<ServerMessage> ServerMessage::fromBuffer(Buffer& buffer, std::sh
                 return std::unique_ptr<ServerMessage>(new ServerMessageDoChat(sender, message));
             }
             break;
+        case static_cast<int>(GameMessageType::DoAction):
+            {
+                // Body is an action
+                std::vector<uint8_t> body;
+                buffer.pop(body, dataSize);
+                try {
+                    return std::unique_ptr<ServerMessage>(new ServerMessageDoAction(sender, Action::fromBytes(body)));
+                }
+                catch(std::invalid_argument e) {
+                    return nullptr; // Will throw on invalid body
+                }
+            }
+            break;
     }
     
     // Unknown message type or non-action message, clear body

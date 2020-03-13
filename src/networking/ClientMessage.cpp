@@ -529,3 +529,7 @@ const std::vector<uint8_t> ClientMessageDoChat::toBytes() const {
         std::vector<uint8_t>(message.begin(), message.end())
     );
 }
+
+const std::vector<uint8_t> ClientMessageDoAction::toBytes() const {
+    return toBytesHelper(action.toBytes());
+}

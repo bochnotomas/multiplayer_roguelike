@@ -29,7 +29,7 @@ public:
     static Action fromBytes(const std::vector<uint8_t>& data);
     
     // Get bytes from action
-    std::vector<uint8_t> toBytes();
+    std::vector<uint8_t> toBytes() const;
 };
 
 class MoveAction : public Action {

@@ -20,7 +20,7 @@ Action Action::fromBytes(const std::vector<uint8_t>& data) {
     }
 }
 
-std::vector<uint8_t> Action::toBytes() {
+std::vector<uint8_t> Action::toBytes() const {
     std::vector<uint8_t> bytes;
     bytes.reserve(1 + data.size());
     bytes.push_back(static_cast<uint8_t>(type));

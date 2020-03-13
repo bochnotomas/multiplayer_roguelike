@@ -16,7 +16,8 @@ enum class GameMessageType {
     PlayerData = 5,
     DoJoin = 100,
     DoQuit = 101,
-    DoChat = 102
+    DoChat = 102,
+    DoAction = 103
 };
 
 /// A message sent to a client or by a client
@@ -164,6 +165,19 @@ struct ClientMessageDoChat : public ClientMessage {
     {};
     
     ~ClientMessageDoChat() = default;
+    const std::vector<uint8_t> toBytes() const override;
+};
+
+struct ClientMessageDoAction : public ClientMessage {
+    /// Sent by the client if the client wants to do an action this turn
+    const Action action;
+    
+    ClientMessageDoAction(Action action) :
+        ClientMessage(GameMessageType::DoChat, ""),
+        action(action)
+    {}
+    
+    ~ClientMessageDoAction() = default;
     const std::vector<uint8_t> toBytes() const override;
 };
 
