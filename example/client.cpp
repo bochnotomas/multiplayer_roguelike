@@ -30,11 +30,11 @@ int main(int argc, char* argv[]) {
 	map.create_random_map();
 
 	// sample object
-	Object* player = new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
+	std::shared_ptr<Object> player(new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED}));
 	//Object* object = new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
 
 	// add player into main map
-	map.objects.push_back(std::move(player));
+	map.objects.push_back(player);
 	//map.objects.push_back(std::move(object));
 
 	// create camera
