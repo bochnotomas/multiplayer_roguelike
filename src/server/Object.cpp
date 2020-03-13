@@ -48,7 +48,7 @@ void Object::move(const Direction dir)
 	}
 }
 
-void Object::set_position(const std::pair<float, float> new_position)
+void Object::set_position(const std::pair<int, int> new_position)
 {
 	m_position = new_position;
 }

@@ -33,7 +33,7 @@ public:
 		m_angle+=angle;
 	}
 
-	void move(const Direction dir);
+	void move(Direction dir);
 
 private:
     // Minimap size (width x height)

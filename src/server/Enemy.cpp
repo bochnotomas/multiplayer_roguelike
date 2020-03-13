@@ -2,10 +2,6 @@
 #include <algorithm>
 #include <cmath>
 
-
-
-
-
 Enemy::Enemy(int positionX_, int positionY_)
 {	
 	PositionX = positionX_;

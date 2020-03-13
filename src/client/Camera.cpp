@@ -5,19 +5,36 @@ Camera::Camera(char blank_char, Map* map, std::pair<long, long> start_position, 
 	Object('\0', Direction::NORTH, false, start_position), m_minimap_size(minimap_size), m_blank_char(blank_char), m_map(map)
 {}
 
-void Camera::move(const Direction dir){
+void Camera::move(Direction dir){
 	std::lock_guard<std::mutex> lock (pos_mutex);
 
+	int degrees = static_cast<int>(m_angle * (180.0/3.141592653589793238463));
+	degrees = degrees%360;
+	if(degrees<0)
+		degrees=-1*degrees;
+	//std::cout<<degrees<<std::endl;
 	switch (dir)
 	{
 	case Direction::NORTH:
-		m_position.first += sinf(m_angle);
-		m_position.second += cosf(m_angle);
-		if(m_position.first)
+		if(degrees>=315 || degrees <= 45)
+			m_position.second++;
+		else if (degrees>=45 && degrees<=135)
+			m_position.first++;
+		else if (degrees>=135 && degrees<=225)
+			m_position.second--;
+		else 
+			m_position.first--;
 		break;
 	case Direction::SOUTH:
-		m_position.first -= sinf(m_angle);
-		m_position.second -= cosf(m_angle);
+		if(degrees>=315 || degrees <= 45)
+			m_position.second--;
+		else if (degrees>=45 && degrees<=135)
+			m_position.first--;
+		else if (degrees>=135 && degrees<=225)
+			m_position.second++;
+		else 
+			m_position.first++;
+		break;
 	default:
 		break;
 	}
@@ -52,7 +69,7 @@ void Camera::draw_minimap(Renderer* renderer)	{
 	// lock camera position to avoid changing position during rendering
 	std::lock_guard<std::mutex> lock (pos_mutex);
 
-    int y_offset = viewportHeight - m_minimap_size.second;
+    int y_offset =0;
     int start_i = -1 * (m_minimap_size.second / 2) + m_position.second;
     int start_j = -1 * (m_minimap_size.first / 2) + m_position.first;
     int end_i = m_minimap_size.second / 2 + m_position.second;
@@ -236,7 +253,6 @@ void Camera::draw_3D(Renderer* renderer) {
 	std::vector<obj_to_render>::iterator it; 
     it = std::unique(objects_to_render.begin(), objects_to_render.end(), Pred); 
     objects_to_render.resize(std::distance(objects_to_render.begin(), it)); 
-	std::cout<<objects_to_render.size()<<" ";
 	for(obj_to_render obj : objects_to_render){
 		float scaling;
 		if (obj.second.first <= RENDER_DEPTH / 4.0f){
