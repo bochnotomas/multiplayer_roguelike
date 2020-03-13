@@ -7,6 +7,8 @@ Map& GameServer::getLevel(int n) {
         // TODO call the level generator here
         Map newLevel;
         newLevel.create_random_map();
+        newLevel.objects.emplace_back(new Object('P', Direction::NORTH, true, {3, 2})); // bogus object (POLEN)
+        newLevel.objects.emplace_back(new Object('P', Direction::NORTH, true, {1, 5})); // yet another bogus object
         levels.emplace_back(std::move(newLevel));
     }
     
@@ -106,7 +108,10 @@ void GameServer::logic() {
         doTurn();
         
         // Send buffered messages
-        sendMessages(250);
+        try {
+            sendMessages(250);
+        }
+        catch(SocketException e) {}; // Ignore socket exceptions, broken pipe
         
         // Kill server if the socket is closed
         if(!isSocketOpen()) {

@@ -81,19 +81,22 @@ std::deque<std::shared_ptr<ServerMessage> > Server::receive(int timeoutMs) {
 }
 
 void Server::addMessage(const ClientMessage& message, std::shared_ptr<Player> player) {
-    player->wBuffer.insert(message.toBytes());
+    auto bytes = message.toBytes();
+    player->wBuffer.insert(bytes);
 }
 
 void Server::addMessageAllExcept(const ClientMessage& message, std::shared_ptr<Player> player) {
+    auto bytes = message.toBytes();
     for(auto it = players.begin(); it != players.end(); it++) {
         if(*it != player) // TODO is the socket comparison operator called here?
-            (*it)->wBuffer.insert(message.toBytes());
+            (*it)->wBuffer.insert(bytes);
     }
 }
 
 void Server::addMessageAll(const ClientMessage& message) {
+    auto bytes = message.toBytes();
     for(auto it = players.begin(); it != players.end(); it++)
-        (*it)->wBuffer.insert(message.toBytes());
+        (*it)->wBuffer.insert(bytes);
 }
 
 bool Server::sendMessages(int timeoutMs) {

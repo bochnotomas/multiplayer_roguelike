@@ -1,0 +1,63 @@
+#include "../src/networking/Buffer.hpp"
+#include <iostream>
+
+using namespace std;
+int main() {
+    uint8_t a = 67;
+    uint16_t b = 1337;
+    uint32_t c = 999999;
+    uint64_t d = 123123123123;
+    int8_t e = -67;
+    int16_t f = -1337;
+    int32_t g = -999999;
+    int64_t h = -123123123123;
+    int8_t i = 67;
+    int16_t j = 1337;
+    int32_t k = 999999;
+    int64_t l = 123123123123;
+    Buffer buffer;
+    buffer.insert(a);
+    buffer.insert(b);
+    buffer.insert(c);
+    buffer.insert(d);
+    buffer.insert(e);
+    buffer.insert(f);
+    buffer.insert(g);
+    buffer.insert(h);
+    buffer.insert(i);
+    buffer.insert(j);
+    buffer.insert(k);
+    buffer.insert(l);
+    uint8_t A;
+    uint16_t B;
+    uint32_t C;
+    uint64_t D;
+    int8_t E, I;
+    int16_t F, J;
+    int32_t G, K;
+    int64_t H, L;
+    buffer.pop(A);
+    buffer.pop(B);
+    buffer.pop(C);
+    buffer.pop(D);
+    buffer.pop(E);
+    buffer.pop(F);
+    buffer.pop(G);
+    buffer.pop(H);
+    buffer.pop(I);
+    buffer.pop(J);
+    buffer.pop(K);
+    buffer.pop(L);
+    cout << (uintmax_t)a << " -> " << (uintmax_t)A << endl;
+    cout << (uintmax_t)b << " -> " << (uintmax_t)B << endl;
+    cout << (uintmax_t)c << " -> " << (uintmax_t)C << endl;
+    cout << (uintmax_t)d << " -> " << (uintmax_t)D << endl;
+    cout << (intmax_t)e << " -> " << (intmax_t)E << endl;
+    cout << (intmax_t)f << " -> " << (intmax_t)F << endl;
+    cout << (intmax_t)g << " -> " << (intmax_t)G << endl;
+    cout << (intmax_t)h << " -> " << (intmax_t)H << endl;
+    cout << (intmax_t)i << " -> " << (intmax_t)I << endl;
+    cout << (intmax_t)j << " -> " << (intmax_t)J << endl;
+    cout << (intmax_t)k << " -> " << (intmax_t)K << endl;
+    cout << (intmax_t)l << " -> " << (intmax_t)L << endl;
+}

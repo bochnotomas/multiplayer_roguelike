@@ -252,6 +252,12 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                     ));
                 }
                 
+                // Abort if there is remainder data
+                if(dataLeft > 0) {
+                    buffer.erase(dataLeft);
+                    return nullptr;
+                }
+                
                 return std::unique_ptr<ClientMessage>(new ClientMessageMapObjectData(objects));
             }
             break;
@@ -296,7 +302,7 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 }
                 
                 // Rest of needed size is known, abort if too little
-                if(dataLeft < 24 * count) {
+                if(dataLeft != 24 * count) {
                     buffer.erase(dataLeft);
                     return nullptr;
                 }
@@ -402,7 +408,7 @@ const std::vector<uint8_t> ClientMessageMapTileData::toBytes() const {
             
             // Encode accessible flag and text color into a byte
             // [1 byte - empty][1 byte - accessible][6 bytes - text_color]
-            uint8_t mixedByte = (uint16_t)tile.formating.text_color | ((uint16_t)tile.accesible << 6);
+            uint8_t mixedByte = (uint8_t)tile.formating.text_color | ((uint8_t)tile.accesible << 6);
             data.push_back(mixedByte);
         }
     }
@@ -430,9 +436,10 @@ const std::vector<uint8_t> ClientMessageMapObjectData::toBytes() const {
             // Note that both direction and type only use 2 bits each, but
             // since there is leftover bits for a full byte, more were used for
             // expanding in the future
-            buffer.insert( (static_cast<uint8_t>(object->get_type())             & 0b00001111) |
-                          ((static_cast<uint8_t>(object->get_direction())  << 4) & 0b01110000) |
-                          ((static_cast<uint8_t>(object->get_visibility()) << 7) & 0b10000000));
+            uint8_t omniByte = (static_cast<uint8_t>(object->get_type())             & 0b00001111) |
+                              ((static_cast<uint8_t>(object->get_direction())  << 4) & 0b01110000) |
+                              ((static_cast<uint8_t>(object->get_visibility()) << 7) & 0b10000000);
+            buffer.insert(omniByte);
             
             // Position
             auto position = object->get_position();
