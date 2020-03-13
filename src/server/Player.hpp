@@ -4,6 +4,7 @@
 #include "../networking/Socket.hpp"
 #include "../networking/Buffer.hpp"
 #include "Object.h"
+#include "Map.h"
 #include <vector>
 
 /// A player that is connected to a server. A player _IS_ a socket, since it
@@ -35,9 +36,9 @@ struct Player : Socket, Object {
     
     int level;
 
-    void potionCheck(int axisValue1, int axisValue2, std::vector<std::vector<char> >& map);
+    void itemCheck(int axisValue1, int axisValue2, Map& map);
 
-    void playerMovementLogic(std::vector<std::vector<char> >& map);
+    void playerMovementLogic(Map& map);
 
     void inputHandling(char newDir);
 };
