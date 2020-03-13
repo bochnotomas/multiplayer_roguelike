@@ -1,15 +1,36 @@
 #include "GameServer.hpp"
+#include "Enemy.hpp"
 
 Map& GameServer::getLevel(int n) {
     // Generate missing levels
     for(auto depth = levels.size(); depth <= n; depth++) {
         // TODO call the level generator here
         Map newLevel;
-        newLevel.set_preset_map();
+        newLevel.create_random_map();
         levels.emplace_back(std::move(newLevel));
     }
     
     return levels[n];
+}
+
+void GameServer::doTurn() {
+    for(auto l = 0; l < levels.size(); l++) {
+        // Get players in this level
+        std::vector<std::shared_ptr<Player> > levelPlayers;
+        for(auto player : players) {
+            if(player->level == l)
+                levelPlayers.emplace_back(player);
+        }
+        
+        for(auto object : levels[l].objects) {
+            // Generic object update
+            object->update();
+            
+            // Object type-specific update
+            if(object->get_type() == ObjectType::ENEMY)
+                dynamic_cast<Enemy*>(object)->aiTick(levelPlayers, levels[l]);
+        }
+    }
 }
 
 void GameServer::logic() {
@@ -46,8 +67,11 @@ void GameServer::logic() {
                             propagateAll = true;
                         }
                         
-                        // Send level data to newly joined player
-                        addMessage(ClientMessageMapTileData(getLevel(0)), joinEvent->sender);
+                        // Send level data and player data to newly joined player
+                        auto thisLevel = getLevel(0);
+                        addMessage(ClientMessageMapTileData(thisLevel), joinEvent->sender);
+                        // TODO level objects
+                        addMessage(ClientMessagePlayerData(players), joinEvent->sender);
                     }
                     break;
                 case GameMessageType::DoQuit:
@@ -67,6 +91,11 @@ void GameServer::logic() {
                     addMessageAllExcept(*clientMessage, (*it)->sender);
             }
         }
+        
+        // Simulate turn
+        // TODO only do this when all players sent their actions
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        doTurn();
         
         // Send buffered messages
         sendMessages(250);

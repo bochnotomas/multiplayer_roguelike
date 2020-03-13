@@ -4,6 +4,10 @@ void LevelGeneration2D::setCell(int xCoordinate, int yCoordinate, char setValue)
 	grid[yCoordinate][xCoordinate] = setValue;
 }
 
+std::vector<std::vector<char>> LevelGeneration2D::getGrid() {
+	return grid;
+}
+
 void LevelGeneration2D::setGrid() {
 	std::vector<std::vector<char>> firstGeneration;
 	for (int y = 0; y <= 99; y++) {
@@ -31,7 +35,7 @@ void LevelGeneration2D::generation() {
 	std::array<int, 8> neighbourState = { 0, 0, 0, 0, 0, 0, 0, 0 };
 	for (int y = 0; y <= 99; y++) {
 		for (int x = 0; x <= 99; x++) {
-			if (y == 0 or y == 99 or x == 0 or x == 99) {
+			if (y == 0 || y == 99 || x == 0 || x == 99) {
 				secondGeneration[y][x] = '#';
 				continue;
 			}
@@ -47,7 +51,7 @@ void LevelGeneration2D::generation() {
 			if (liveNeighbours < 2) {
 				secondGeneration[y][x] = ' ';
 			}
-			else if (liveNeighbours == 2 or liveNeighbours == 3) {
+			else if (liveNeighbours == 2 || liveNeighbours == 3) {
 				secondGeneration[y][x] = 'W';
 			}
 			else if (liveNeighbours > 3) {
@@ -69,7 +73,7 @@ void LevelGeneration2D::refine() {
 	std::array<int, 8> neighbourState = { 0, 0, 0, 0, 0, 0, 0, 0 };
 	for (int y = 0; y <= 99; y++) {
 		for (int x = 0; x <= 99; x++) {
-			if (y == 0 or y == 99 or x == 0 or x == 99) {
+			if (y == 0 || y == 99 || x == 0 || x == 99) {
 				secondGeneration[y][x] = '#';
 				continue;
 			}

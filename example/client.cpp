@@ -27,18 +27,15 @@ int main(int argc, char* argv[]) {
 	Map map;
 	// generate sample map
 	//map.generate_square_map(40, 40);
-	map.set_preset_map();
+	map.create_random_map();
 
 	// sample object
-	Object* player = new Object('P', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
-	player->is_player = true;
-	Object* object = new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
-	Object* object2 = new Object('x', Direction::NORTH, true, { 5.f,5.f }, {Color::BLACK, Color::BLUE});
+	Object* player = new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
+	//Object* object = new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED});
 
 	// add player into main map
 	map.objects.push_back(std::move(player));
-	map.objects.push_back(std::move(object));
-	map.objects.push_back(std::move(object2));
+	//map.objects.push_back(std::move(object));
 
 	// create camera
 	std::shared_ptr<Camera> main_cam(new Camera('.', &map, { 2.f,2.f }, { 20, 10 }));

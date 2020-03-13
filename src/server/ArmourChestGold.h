@@ -1,13 +1,13 @@
-#ifndef ARMOUR_CHEST_H
-#define ARMOUR_CHEST_H
+#ifndef ARMOUR_CHEST_GOLD_H
+#define ARMOUR_CHEST_GOLD_H
 #include "ItemArmour.h"
 #include <string>
 
 using namespace std;
 
-class ArmourChest : public ItemArmour {
+class ArmourChestGold : public ItemArmour {
 	public:
-	ArmourChest() : ItemArmour("Armour Chestplate", "CHEST_ARMOUR", "Moulded from the toughest metals found on earth, this will protect the wearer from a lot of things.");
+	ArmourChestGold() : ItemArmour("Gold Chestplate", "CHEST_ARMOUR", "Not only protects the wearer but makes them look good at the same time.");
     {
 	    
     }
@@ -19,6 +19,6 @@ class ArmourChest : public ItemArmour {
 	
 	void unequipArmour(Player*player) {
 		std::cout << "You have taken off the armour" << std::endl;
-		player->health = health * 0.5;
+		player->health = health / 2;
 };
 #endif

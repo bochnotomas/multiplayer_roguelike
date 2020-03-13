@@ -1,11 +1,10 @@
 #ifndef ROGUELIKE_PLAYER_HPP_INCLUDED
 #define ROGUELIKE_PLAYER_HPP_INCLUDED
+#include "../networking/Direction.hpp"
 #include "../networking/Socket.hpp"
 #include "../networking/Buffer.hpp"
 #include "Object.h"
 #include <vector>
-
-enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
 
 /// A player that is connected to a server. A player _IS_ a socket, since it
 /// cannot exist without a connection

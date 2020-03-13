@@ -72,4 +72,16 @@ struct ServerMessageDoChat : public ServerMessage {
     ~ServerMessageDoChat() = default;
 };
 
+struct ServerMessageDoAction : public ServerMessage {
+    /// Sent by the client if the client wants to do an action this turn
+    const Action action;
+    
+    ServerMessageDoAction(std::shared_ptr<Player> sender, const Action& action) :
+        ServerMessage(GameMessageType::DoAction, sender),
+        action(action)
+    {};
+    
+    ~ServerMessageDoAction() = default;
+};
+
 #endif

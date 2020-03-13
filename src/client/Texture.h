@@ -1,3 +1,5 @@
+#ifndef ROGUELIKE_TEXTURE_H_INCLUDED
+#define ROGUELIKE_TEXTURE_H_INCLUDED
 #include <vector>
 
 struct TexturePoint{
@@ -18,9 +20,11 @@ public:
     };
     }
     Texture(std::vector<std::vector<TexturePoint>> &texture) : m_plane(texture){};
+    Texture(std::vector<std::vector<TexturePoint>> &&texture) : m_plane(texture){};
     std::vector<std::vector<TexturePoint>> get_plane() const {
         return m_plane;
     }
 private:
     std::vector<std::vector<TexturePoint>> m_plane;
 };
+#endif

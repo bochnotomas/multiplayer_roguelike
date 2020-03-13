@@ -1,34 +1,33 @@
 #include "Enemy.hpp"
 #include <algorithm>
 #include <cmath>
-
-Enemy::Enemy(int positionX_, int positionY_)
-{	
-	PositionX = positionX_;
-	PositionY = positionY_;
+Enemy::Enemy(int positionX_, int positionY_) : Object('X', Direction::NORTH, true, {positionX_, positionY_})
+{
+    m_type = ObjectType::ENEMY;
 }
+
 void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& map)
 {
 	std::shared_ptr<Player> chasing = nullptr;
 
 	if (chasing != nullptr)
 	{
-		float distance = sqrt(pow((PositionX - chasing->playerPositionX), 2) + pow((PositionY - chasing->playerPositionY), 2));
+		float distance = sqrt(pow((m_position.first - chasing->playerPositionX), 2) + pow((m_position.second - chasing->playerPositionY), 2));
 		if(distance > 5)
 		{
 			chasing = nullptr;
 			return;
 		}
-		currentPath = findTheWay(PositionY, PositionX, chasing->playerPositionY, chasing->playerPositionX, map);
-		PositionX = currentPath[0].first;
-		PositionY = currentPath[0].second;
+		currentPath = findTheWay(m_position.second, m_position.first, chasing->playerPositionY, chasing->playerPositionX, map);
+		m_position.first = currentPath[0].first;
+		m_position.second = currentPath[0].second;
 		currentPath.erase(currentPath.begin());
 	}
 	else {
 		float closestDistance = 5;
 		for(int i = 0 ; i < players.size(); i++)
 		{
-			float distance = sqrt(pow((PositionX - players[i]->playerPositionX), 2) + pow((PositionY - players[i]->playerPositionY), 2));
+			float distance = sqrt(pow((m_position.first - players[i]->playerPositionX), 2) + pow((m_position.second - players[i]->playerPositionY), 2));
 			if(distance <= closestDistance)
 			{
 				closestDistance = distance;
@@ -38,9 +37,9 @@ void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& ma
 
 		if(chasing != nullptr)
 		{
-			currentPath = findTheWay(PositionY, PositionX, chasing->playerPositionY, chasing->playerPositionX, map);
-			PositionX = currentPath[0].first;
-			PositionY = currentPath[0].second;
+			currentPath = findTheWay(m_position.second, m_position.first, chasing->playerPositionY, chasing->playerPositionX, map);
+			m_position.first = currentPath[0].first;
+			m_position.second = currentPath[0].second;
 			currentPath.erase(currentPath.begin());
 		}else
 		{
@@ -56,29 +55,29 @@ void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& ma
 						break;
 
 				}
-				currentPath=findTheWay(PositionY, PositionX, randomFinalPositionY, randomFinalPositionX, map);
+				currentPath=findTheWay(m_position.second, m_position.first, randomFinalPositionY, randomFinalPositionX, map);
 			}
 
 			if (!currentPath.empty()) {
-				PositionX = currentPath[0].first;
-				PositionY = currentPath[0].second;
+				m_position.first = currentPath[0].first;
+				m_position.second = currentPath[0].second;
 				currentPath.erase(currentPath.begin());
 			}
 		}
 	}
 }
-
+/*
 void Enemy::moveAiByPath(std::vector<std::pair<int, int> > pathToWalkBy)
 {
 	for (int i = 0; i < pathToWalkBy.size(); i++)
 	{
 		std::cout << pathToWalkBy[i].first << ", " << pathToWalkBy[i].second << std::endl;
-		PositionY = pathToWalkBy[i].first;
-		PositionX = pathToWalkBy[i].second;
+		m_position.second = pathToWalkBy[i].first;
+		m_position.first = pathToWalkBy[i].second;
 	}
 
 }
-
+*/
 std::vector<std::pair<int, int> > Enemy::trackThePath(int startingPositionY, int startingPositionX, int finalPositionY, int finalPositionX, std::vector<std::vector<std::pair<int, int>>>& parentNodes)
 {
 	std::vector<std::pair<int, int>> path;
@@ -93,7 +92,7 @@ std::vector<std::pair<int, int> > Enemy::trackThePath(int startingPositionY, int
 	}
 
 	std::reverse(path.begin(), path.end());
-	moveAiByPath(path);
+	//moveAiByPath(path);
 	return path;
 }
 

@@ -60,6 +60,9 @@ void GameClient::logic(Renderer* renderer) {
         focus = joiningMenu;
     }
     
+    // Player data this turn
+    std::vector<PlayerSnapshot> players;
+    
     // Client logic loop
     bool joined = false;
     while(playing) {
@@ -101,9 +104,26 @@ void GameClient::logic(Renderer* renderer) {
                 case GameMessageType::MapTileData:
                     {
                         auto mapTileDataMessage = dynamic_cast<ClientMessageMapTileData*>(it->get());
-                        map = std::shared_ptr<Map>(new Map());
+                        if(!map)
+                            map = std::shared_ptr<Map>(new Map());
                         map->generate_square_map(mapTileDataMessage->width, mapTileDataMessage->height); // TODO better api
                         *map->get_map_plane() = mapTileDataMessage->tileData;
+                    }
+                    break;
+                case GameMessageType::MapObjectData:
+                    {
+                        auto mapObjectDataMessage = dynamic_cast<ClientMessageMapObjectData*>(it->get());
+                        // Throw this message in the garbage can if there isn't
+                        // any map tile data yet
+                        if(!map)
+                            break;
+                        // TODO put objects in map _I NEED SHARED PTR VECTOR INSTEAD FOR THIS TO WORK IN MAP::OBJECTS_
+                    }
+                    break;
+                case GameMessageType::PlayerData:
+                    {
+                        auto playerDataMessage = dynamic_cast<ClientMessagePlayerData*>(it->get());
+                        players = playerDataMessage->playersSnapshots;
                     }
                     break;
             }
@@ -144,6 +164,7 @@ void GameClient::logic(Renderer* renderer) {
                     break;
                 case ' ':
                 case '\n':
+                case '\r':
                     if(focus) {
                         auto selection = focus->selectCursor();
                         if(!selection)
