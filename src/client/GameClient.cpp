@@ -117,7 +117,7 @@ void GameClient::logic(Renderer* renderer) {
                         // any map tile data yet
                         if(!map)
                             break;
-                        // TODO put objects in map _I NEED SHARED PTR VECTOR INSTEAD FOR THIS TO WORK IN MAP::OBJECTS_
+                        map->objects = mapObjectDataMessage->objects;
                     }
                     break;
                 case GameMessageType::PlayerData:

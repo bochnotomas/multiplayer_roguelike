@@ -30,7 +30,15 @@ void GameServer::doTurn() {
             if (object->get_type() == ObjectType::ENEMY)
                 std::dynamic_pointer_cast<Enemy>(object)->aiTick(levelPlayers, levels[l]);
         }
+        
+        ClientMessageMapObjectData objectUpdateMessage(levels[l].objects);
+        for(auto player : players) {
+            if(player->level == l)
+                addMessage(objectUpdateMessage, player);
+        }
     }
+    
+    addMessageAll(ClientMessagePlayerData(players));
 }
 
 void GameServer::logic() {
@@ -70,7 +78,7 @@ void GameServer::logic() {
                         // Send level data and player data to newly joined player
                         auto thisLevel = getLevel(0);
                         addMessage(ClientMessageMapTileData(thisLevel), joinEvent->sender);
-                        // TODO level objects
+                        addMessage(ClientMessageMapObjectData(thisLevel.objects), joinEvent->sender);
                         addMessage(ClientMessagePlayerData(players), joinEvent->sender);
                     }
                     break;
