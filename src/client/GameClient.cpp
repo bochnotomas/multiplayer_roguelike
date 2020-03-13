@@ -132,6 +132,10 @@ void GameClient::logic(Renderer* renderer) {
                                 playerDataMessage->positions[i].second,
                                 playerDataMessage->levels[i]
                             );
+                            // XXX just for testing, scream at the standard error that new player data is coming
+                            /*const auto& newP = players[players.size() - 1];
+                            std::cerr << "!!! New player:name=" << newP.name << ";pos=" << newP.x << ',' << newP.y << ";level=" << newP.level << std::endl;
+                            */
                         }
                     }
                     break;

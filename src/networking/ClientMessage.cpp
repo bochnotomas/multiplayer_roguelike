@@ -257,7 +257,69 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
             break;
         case GameMessageType::PlayerData:
             {
-                // TODO
+                // Parse player count
+                if(dataSize == 0)
+                    return nullptr;
+                
+                if(dataSize < 8)
+                    break;
+                
+                std::vector<std::string> names;
+                uint64_t count;
+                buffer.pop(count);
+                
+                // Parse names
+                size_t dataLeft = dataSize - 8;
+                for(auto n = 0; n < count; n++) {
+                    // Get name size
+                    if(dataLeft < 1) {
+                        buffer.erase(dataLeft);
+                        return nullptr;
+                    }
+                    
+                    uint8_t nameSize;
+                    buffer.pop(nameSize);
+                    dataLeft--;
+                    
+                    // Get name
+                    if(dataLeft < nameSize) {
+                        buffer.erase(dataLeft);
+                        return nullptr;
+                    }
+                    
+                    std::string name;
+                    buffer.pop(name, nameSize);
+                    dataLeft -= nameSize;
+                    
+                    // Add to name list
+                    names.push_back(std::move(name));
+                }
+                
+                // Rest of needed size is known, abort if too little
+                if(dataLeft < 24 * count) {
+                    buffer.erase(dataLeft);
+                    return nullptr;
+                }
+                
+                std::vector<std::pair<int, int> > positions;
+                std::vector<int> levels;
+                
+                // Parse positions
+                for(auto p = 0; p < count; p++) {
+                    int64_t posX, posY;
+                    buffer.pop(posX);
+                    buffer.pop(posY);
+                    positions.emplace_back(posX, posY);
+                }
+                
+                // Parse levels
+                for(auto l = 0; l < count; l++) {
+                    int64_t level;
+                    buffer.pop(level);
+                    levels.push_back(level);
+                }
+                
+                return std::unique_ptr<ClientMessage>(new ClientMessagePlayerData(std::move(names), std::move(positions), std::move(levels)));
             }
             break;
     }
