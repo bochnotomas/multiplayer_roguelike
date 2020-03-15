@@ -335,6 +335,20 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 return std::unique_ptr<ClientMessage>(new ClientMessagePlayerData(std::move(playerSnapshots)));
             }
             break;
+        case static_cast<int>(GameMessageType::ActionAck):
+            {
+                // Parse accepted flag
+                if(dataSize == 0)
+                    return nullptr;
+                
+                if(dataSize != 1)
+                    break;
+                
+                uint8_t accepted;
+                buffer.pop(accepted);
+                return std::unique_ptr<ClientMessage>(new ClientMessageActionAck(accepted));
+            }
+            break;
     }
     
     // Unknown message type or action message, clear body
@@ -531,6 +545,10 @@ const std::vector<uint8_t> ClientMessagePlayerData::toBytes() const {
     return toBytesHelper(data);
 }
 
+const std::vector<uint8_t> ClientMessageActionAck::toBytes() const {
+    return toBytesHelper({accepted});
+}
+    
 const std::vector<uint8_t> ClientMessageDoJoin::toBytes() const {
     return toBytesHelper(
         std::vector<uint8_t>(senderName.begin(), senderName.end())

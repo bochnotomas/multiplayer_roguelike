@@ -92,7 +92,7 @@ void GameClient::logic(Renderer* renderer) {
                                 renderer->clear_drawables();
                                 renderer->add_drawable(clearDrawable);
                                 if(map) {
-                                    cam = std::shared_ptr<Camera>(new Camera(' ', map.get(), { 5, 5 }, { 20, 10 }));
+                                    cam = std::shared_ptr<Camera>(new Camera(' ', map.get(), { 0, 0 }, { 20, 10 }));
                                     renderer->add_drawable(cam);
                                 }
                                 renderer->add_drawable(actionMenu);
@@ -122,6 +122,13 @@ void GameClient::logic(Renderer* renderer) {
                     {
                         auto playerDataMessage = dynamic_cast<ClientMessagePlayerData*>(it->get());
                         players = playerDataMessage->playersSnapshots;
+                        for(auto player : players) {
+                            if(player.name == playerName) {
+                                if(cam)
+                                    cam->set_position({player.x, player.y});
+                                break;
+                            }
+                        }
                     }
                     break;
             }
@@ -133,12 +140,12 @@ void GameClient::logic(Renderer* renderer) {
                 case 'w':
                 case 'W':
                     if(cam)
-                        cam->move(Direction::NORTH);
+                        addMessage(ClientMessageDoAction(MoveAction(cam->getMapDirection(Direction::NORTH))));
                     break;
                 case 's':
                 case 'S':
                     if(cam)
-                        cam->move(Direction::SOUTH);
+                        addMessage(ClientMessageDoAction(MoveAction(cam->getMapDirection(Direction::SOUTH))));
                     break;
                 case 'a':
                 case 'A':
