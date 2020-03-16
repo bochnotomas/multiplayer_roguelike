@@ -221,6 +221,9 @@ std::vector<std::pair<int, int>> LevelGeneration2D::enemyGeneration(std::vector<
 }
 
 void LevelGeneration2D::enemyPlacement() {
+	if (rooms.empty()) {
+		return;
+	}
 	std::vector<std::pair<int, int>> enemyLocations = enemyGeneration(rooms[0], rooms[0].size() / 100);
 	for (int i = 0; i < enemyLocations.size(); i++) {
 		grid[enemyLocations[i].first][enemyLocations[i].second] = 'E';
@@ -263,6 +266,8 @@ Map LevelGeneration2D::create_random_map() {
 	for (int i = 0; i <= 3; i++) {
 		one.refine();
 	}
+
+	one.floodFill();
 
 	one.enemyPlacement();
 
