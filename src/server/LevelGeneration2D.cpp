@@ -238,7 +238,7 @@ void LevelGeneration2D::floodFillCaverns(int y, int x, char fillNumber) {
 }
 
 void LevelGeneration2D::create_random_map() {
-/**	LevelGeneration2D one;
+	LevelGeneration2D one;
 
 
 
@@ -251,9 +251,13 @@ void LevelGeneration2D::create_random_map() {
 	for (int i = 0; i <= 3; i++) {
 		one.refine();
 	}
+
+	//one.enemyGeneration;
+
+	Map level1 = one.to_map();
 	//end of levelgeneration2D code
 
-	m_size = { 100, 100 };
+	/*m_size = { 100, 100 };
 	m_plane = MapPlane(100, std::vector<MapPoint>(100, { ' ', true, {Color::BLACK, Color::GREEN} }));
 
 	std::vector<std::vector<char>> grid = one.getGrid();
@@ -271,5 +275,5 @@ void LevelGeneration2D::create_random_map() {
 				m_plane[x][y] = { '#', false, {Color::WHITE, Color::GREEN} };
 			}
 		}
-	}**/
+	}*/
 }
