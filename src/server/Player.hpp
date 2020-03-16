@@ -38,7 +38,7 @@ struct Player : Socket, Object {
     
     int level;
 
-    void itemCheck(int axisValue1, int axisValue2, Map& map);
+    void itemCheck(Map& map);
 
     void playerMovementLogic(Map& map);
 
