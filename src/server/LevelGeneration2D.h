@@ -41,6 +41,6 @@ public:
 
 	void enemyPlacement();
 
-	void create_random_map();
+	Map create_random_map();
 };
 

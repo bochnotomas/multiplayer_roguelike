@@ -237,7 +237,7 @@ void LevelGeneration2D::floodFillCaverns(int y, int x, char fillNumber) {
 	}
 }
 
-void LevelGeneration2D::create_random_map() {
+Map LevelGeneration2D::create_random_map() {
 	LevelGeneration2D one;
 
 
@@ -254,7 +254,8 @@ void LevelGeneration2D::create_random_map() {
 
 	//one.enemyGeneration;
 
-	Map level1 = one.to_map();
+	return one.to_map();
+
 	//end of levelgeneration2D code
 
 	/*m_size = { 100, 100 };
