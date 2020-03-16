@@ -32,7 +32,7 @@ public:
 	Object(const char character, Direction direction, bool visibility, std::pair<int, int> start_position) : 
 		Object(character, direction, visibility, start_position, {Color::WHITE, Color::BLACK}) {}
 	Object(const char character, Direction direction, bool visibility) : 
-		Object(character, direction, visibility, { 0,0 }) {}
+		Object(character, direction, visibility, { 5,5 }) {}
 	Object(const char character, Direction direction) : 
 		Object(character, direction, true) {}
 	Object(const char character) : 

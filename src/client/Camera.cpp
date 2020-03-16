@@ -52,14 +52,18 @@ eDirection Camera::getMapDirection(Direction dir) {
     switch (dir)
     {
     case Direction::NORTH:
-        if(degrees>=315 || degrees <= 45)
+        if(degrees>=315 || degrees <= 45){
             return eDirection::DOWN;
-        else if (degrees>=45 && degrees<=135)
+			}
+        else if (degrees>=45 && degrees<=135){
             return eDirection::LEFT;
-        else if (degrees>=135 && degrees<=225)
+		}
+        else if (degrees>=135 && degrees<=225){
             return eDirection::UP;
-        else 
+		}
+        else {
             return eDirection::RIGHT;
+		}
         break;
     case Direction::SOUTH:
         if(degrees>=315 || degrees <= 45)
@@ -106,7 +110,7 @@ void Camera::draw_minimap(Renderer* renderer)	{
 	// lock camera position to avoid changing position during rendering
 	std::lock_guard<std::mutex> lock (pos_mutex);
 
-    int y_offset =0;
+    int y_offset = viewportHeight-m_minimap_size.second;
     int start_i = -1 * (m_minimap_size.second / 2) + m_position.second;
     int start_j = -1 * (m_minimap_size.first / 2) + m_position.first;
     int end_i = m_minimap_size.second / 2 + m_position.second;

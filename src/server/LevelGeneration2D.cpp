@@ -178,11 +178,13 @@ void LevelGeneration2D::floodFill() {
 
 Map LevelGeneration2D::to_map()
 {
-		unsigned int height, width;
+	unsigned int height, width;
 	width = height = 100;
 	MapPlane m_plane = MapPlane(height, std::vector<MapPoint>(width, { ' ', true, {Color::BLACK, Color::GREEN} }));
 	m_plane[0] = std::vector<MapPoint>(width, { '#', false, {Color::WHITE, Color::MAGENTA} });
 	m_plane[height - 1] = std::vector<MapPoint>(width, { '#', false, {Color::WHITE, Color::MAGENTA} });
+
+	std::vector<std::shared_ptr<Object>> objects;
 
 	for (int y = 0; y <= 99; y++) {
 		for (int x = 0; x <= 99; x++) {
@@ -190,12 +192,11 @@ Map LevelGeneration2D::to_map()
 				m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
 			else if (grid[y][x] == '#') {
 				m_plane[x][y] = {'#', false, {Color::WHITE, Color::MAGENTA} };
-				std::cout<<"XDDDD EUAN GAAYYYYYY"<<std::endl;
 			}
-			//else if (grid[y][x] == 'E') {
-			//	m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
-			//	objects.emplace_back(new Enemy(x,y) );
-		//	}
+			else if (grid[y][x] == 'E') {
+				m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
+				objects.emplace_back(new Enemy(x,y) );
+			}
 		}
 	}
 	for (size_t i = 1; i < height; i++) {
@@ -203,6 +204,7 @@ Map LevelGeneration2D::to_map()
 		m_plane[i][width - 1] = { '#', false, {Color::WHITE, Color::MAGENTA} };
 	}
 	Map map = Map(m_plane);
+	map.objects = std::move(objects);
 	return map;
 }
 
