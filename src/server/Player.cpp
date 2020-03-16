@@ -30,14 +30,14 @@ Player::~Player() {
     }
 }
 
-void Player::itemCheck(Map& map) {
+void Player::itemCheck(int x, int y, Map& map) {
 	for(auto it = map.objects.begin(); it != map.objects.end();)
 	{
-		std::pair<int, int> positionOfObject = get_position(*it);
-		std::pair<int, int> positionOfPlayer = m_position;
-		if( positionOfObject == positionOfPlayer && (*it).get_type() == ObjectType::ITEM) {
-			pickUp(*it);
-			it = map.objects.erase(it)
+		std::pair<int, int> positionOfObject = (*it)->get_position();
+		std::pair<int, int> positionOfPlayer = {x, y};
+		if( positionOfObject == positionOfPlayer && (*it)->get_type() == ObjectType::ITEM) {
+			inventory.pickUp(std::move(*std::dynamic_pointer_cast<Item>(*it)));
+			it = map.objects.erase(it);
 		}
 		else
 			it++;

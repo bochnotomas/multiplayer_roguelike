@@ -6,12 +6,12 @@ using namespace std;
 
 class WeaponSword : public ItemWeapon {
     public:
-    WeaponSword() :
-        ItemWeapon("Sword", "SWORD_WEAPON", "A noble blade, created by the ancient blacksmiths many years ago.", '!')
+    WeaponSword(std::pair<int, int> start_position) :
+        ItemWeapon("Sword", "SWORD_WEAPON", "A noble blade, created by the ancient blacksmiths many years ago.", '!', start_position)
     {}
 
     void attack() {
-        cout << "You swing your sword." << endl;
+        // TODO
     }
 };
 #endif

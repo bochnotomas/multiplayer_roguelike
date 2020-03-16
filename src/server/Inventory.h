@@ -2,8 +2,7 @@
 #define INVENTORY_H
 #include <vector>
 #include <string>
-#include "ItemArmour.h"
-#include "ItemWeapon.h"
+#include "ItemClasses.h"
 
 using namespace std;
 
@@ -11,8 +10,6 @@ class Inventory
 {
 	public:
 	vector<Item>inventory;
-	ItemArmour armourSlot;
-	ItemWeapon weaponSlot;
 	
 	void pickUp(Item itemFromMap){
 		inventory.push_back(itemFromMap);

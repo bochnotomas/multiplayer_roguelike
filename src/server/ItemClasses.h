@@ -1,3 +1,5 @@
+#ifndef ROGUELIKE_ITEM_CLASSES_H_INCLUDED
+#define ROGUELIKE_ITEM_CLASSES_H_INCLUDED
 #include <string>
 #include "Object.h"
 
@@ -17,7 +19,7 @@ class Item : public Object
     itemType(m_itemType),
     itemDesc(m_itemDesc),
     //itemChar(m_itemChar),
-	Object(m_itemChar, Direction::NORTH, true, start_position, <colour::WHITE, colour::GREEN>, <>, ObjectType::ITEM)
+	Object(m_itemChar, Direction::NORTH, true, start_position, {Color::WHITE, Color::GREEN}, {}, ObjectType::ITEM)
   {}
 };
 /*
@@ -32,3 +34,5 @@ int objectCreation()
 
   return 0;
 }*/
+
+#endif

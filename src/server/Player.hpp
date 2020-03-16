@@ -3,6 +3,7 @@
 #include "../networking/Socket.hpp"
 #include "../networking/Buffer.hpp"
 #include "../networking/Action.hpp"
+#include "Inventory.h"
 #include "Object.h"
 #include "Map.h"
 #include <vector>
@@ -37,8 +38,10 @@ struct Player : Socket, Object {
     eDirection dir;
     
     int level;
+    
+    Inventory inventory;
 
-    void itemCheck(Map& map);
+    void itemCheck(int x, int y, Map& map);
 
     void playerMovementLogic(Map& map);
 

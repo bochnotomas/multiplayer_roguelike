@@ -7,18 +7,16 @@ using namespace std;
 
 class ArmourChestLeather : public ItemArmour {
 	public:
-	ArmourChestLeather() : ItemArmour("Leather Chestplate", "CHEST_ARMOUR", "Made from the local cow.");
-    {
-	    
-    }
+	ArmourChestLeather(std::pair<int, int> start_position) :
+        ItemArmour("Leather Chestplate", "CHEST_ARMOUR", "Made from the local cow.", start_position)
+    {}
 
-    void equipArmour(Player*player) {
-        std::cout << "You don the armour and become more resilient." << std::endl;
-		player->health = health * 1.2;
+    void equipArmour(Player* player) {
+		player->health = player->health * 1.2;
     }
 	
-	void unequipArmour(Player*player) {
-		std::cout << "You have taken off the armour" << std::endl;
-		player->health = health / 1.2;
+	void unequipArmour(Player* player) {
+		player->health = player->health / 1.2;
+    }
 };
 #endif
