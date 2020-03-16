@@ -31,12 +31,16 @@ Player::~Player() {
 }
 
 void Player::itemCheck(Map& map) {
-	for(auto object : map.objects)
+	for(auto it = map.objects.begin(); it != map.objects.end();)
 	{
-		std::pair<int, int> positionOfObject = get_position(object);
+		std::pair<int, int> positionOfObject = get_position(*it);
 		std::pair<int, int> positionOfPlayer = m_position;
-		if( positionOfObject == positionOfPlayer && object.get_type() == ObjectType::ITEM)
-			pickUp(object);
+		if( positionOfObject == positionOfPlayer && (*it).get_type() == ObjectType::ITEM) {
+			pickUp(*it);
+			it = map.objects.erase(it)
+		}
+		else
+			it++;
 	}
     
 }
