@@ -14,8 +14,12 @@ class Inventory
 	ItemArmour armourSlot;
 	ItemWeapon weaponSlot;
 	
-	void pickUp(itemFromMap){
+	void pickUp(Item itemFromMap){
 		inventory.push_back(itemFromMap);
 	}
+	
+	//void dropItem(itemFromMap){
+	//
+	//}
 };
 #endif
