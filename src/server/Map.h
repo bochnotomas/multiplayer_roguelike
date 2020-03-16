@@ -2,6 +2,7 @@
 #define ROGUELIKE_MAP_H_INCLUDED
 #include <vector>
 #include <utility>
+#include <memory>
 #include "Object.h"
 #include "../client/Formatting.hpp"
 
@@ -21,7 +22,7 @@ public:
 	~Map();
 
 	// holds objects related with map
-	std::vector<Object*> objects;
+	std::vector<std::shared_ptr<Object>> objects;
 
 	// updates each object related with the map
 	void update_objects();
