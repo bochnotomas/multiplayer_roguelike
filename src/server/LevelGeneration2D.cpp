@@ -180,15 +180,22 @@ Map LevelGeneration2D::to_map()
 		m_plane[i][width - 1] = { '#', false, {Color::WHITE, Color::MAGENTA} };
 	}
 
+	std::vector<std::shared_ptr<Object> > objects;
 	for (int y = 0; y <= 99; y++) {
 		for (int x = 0; x <= 99; x++) {
 			if (grid[y][x] == ' ') 
 				m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
 			else if (grid[y][x] == '#') 
 				m_plane[x][y] = { '#', false, {Color::WHITE, Color::GREEN} };
+			else if (grid[y][x] == 'E') {
+				m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
+				objects.emplace_back(new Enemy(x,y) );
+			}
 		}
 	}
-	return Map(m_plane);
+	Map map = Map(m_plane);
+	map.objects = std::move(objects);
+	return map;
 }
 
 
@@ -252,29 +259,7 @@ Map LevelGeneration2D::create_random_map() {
 		one.refine();
 	}
 
-	//one.enemyGeneration;
+	one.enemyGeneration(one.rooms[0], 200);
 
 	return one.to_map();
-
-	//end of levelgeneration2D code
-
-	/*m_size = { 100, 100 };
-	m_plane = MapPlane(100, std::vector<MapPoint>(100, { ' ', true, {Color::BLACK, Color::GREEN} }));
-
-	std::vector<std::vector<char>> grid = one.getGrid();
-
-	for (int y = 0; y <= 99; y++) {
-		for (int x = 0; x <= 99; x++) {
-			if (grid[y][x] == ' ') {
-				m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
-			}
-			else if (grid[y][x] == 'E') {
-				objects.emplace_back(new Enemy());
-				m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
-			}
-			else if (grid[y][x] == '#') {
-				m_plane[x][y] = { '#', false, {Color::WHITE, Color::GREEN} };
-			}
-		}
-	}*/
 }

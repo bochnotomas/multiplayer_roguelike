@@ -13,8 +13,6 @@
 class Enemy : public Object
 {
 	std::vector<std::pair<int, int>> currentPath;
-
-	Enemy(int positionX_, int positionY_);
 	
 	//void moveAiByPath(std::vector<std::pair<int, int> > pathToWalkBy);
 	
@@ -25,6 +23,8 @@ class Enemy : public Object
 	std::vector<std::pair<int, int> > findTheWay(int startingPositionY, int startingPositionX,int finalPositionY, int finalPositionX , Map& map);
 
 public:
+	Enemy(int positionX_, int positionY_);
+
 	void aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& map);
 };
 

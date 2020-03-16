@@ -1,5 +1,6 @@
 #include "Action.hpp"
 #include <stdexcept>
+#include <string>
 
 Action Action::fromBytes(const std::vector<uint8_t>& data) {
     if(data.size() == 0)
