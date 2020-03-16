@@ -1,5 +1,6 @@
 #include "LevelGeneration2D.h"
 #include "Enemy.hpp"
+#include <algorithm>
 #include <time.h>
 
 void LevelGeneration2D::setCell(int xCoordinate, int yCoordinate, char setValue) {
@@ -170,6 +171,9 @@ void LevelGeneration2D::floodFill() {
 			}
 		}
 	}
+	std::sort(rooms.begin(), rooms.end(), [](std::vector<std::pair<int, int>> a, std::vector<std::pair<int, int>> b) {
+		return a.size() > b.size();
+		});
 }
 
 Map LevelGeneration2D::to_map()
