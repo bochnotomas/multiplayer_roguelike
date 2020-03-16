@@ -24,7 +24,7 @@ void LevelGeneration2D::setGrid() {
 	for (int y = 0; y <= 99; y++) {
 		for (int x = 0; x <= 99; x++) {
 			if (rand() % 3 == 0) {
-				firstGeneration[y][x] = 'W';
+				firstGeneration[y][x] = '#';
 			}
 		}
 	}
@@ -60,7 +60,7 @@ void LevelGeneration2D::generation() {
 				secondGeneration[y][x] = ' ';
 			}
 			else if (liveNeighbours == 2 || liveNeighbours == 3) {
-				secondGeneration[y][x] = 'W';
+				secondGeneration[y][x] = '#';
 			}
 			else if (liveNeighbours > 3) {
 				secondGeneration[y][x] = ' ';
@@ -94,17 +94,17 @@ void LevelGeneration2D::refine() {
 			neighbourState[6] = grid[y + 1][x];
 			neighbourState[7] = grid[y + 1][x + 1];
 			liveNeighbours = lifeCheck(neighbourState);
-			if ((liveNeighbours < 3) && (grid[y][x] == 'W')) {
+			if ((liveNeighbours < 3) && (grid[y][x] == '#')) {
 				secondGeneration[y][x] = ' ';
 			}
 			else if ((liveNeighbours > 4) && (grid[y][x] == ' ')) {
-				secondGeneration[y][x] = 'W';
+				secondGeneration[y][x] = '#';
 			}
 			else if (grid[y][x] == ' ') {
 				secondGeneration[y][x] = ' ';
 			}
-			else if (grid[y][x] == 'W') {
-				secondGeneration[y][x] = 'W';
+			else if (grid[y][x] == '#') {
+				secondGeneration[y][x] = '#';
 			}
 		}
 	}
@@ -114,7 +114,7 @@ void LevelGeneration2D::refine() {
 int LevelGeneration2D::lifeCheck(const std::array<int, 8>& neighbourState) {
 	int count = 0;
 	for (int i = 0; i <= 7; i++) {
-		if (neighbourState[i] == 'W') {
+		if (neighbourState[i] == '#') {
 			count++;
 		}
 	}
@@ -133,7 +133,7 @@ void LevelGeneration2D::coutGrid() {
 void LevelGeneration2D::coutGridNoWalls() {
 	for (int y = 0; y <= 99; y++) {
 		for (int x = 0; x <= 99; x++) {
-			if (grid[y][x] == 'W') {
+			if (grid[y][x] == '#') {
 				std::cout << ' ';
 				continue;
 			}
@@ -184,26 +184,25 @@ Map LevelGeneration2D::to_map()
 	m_plane[0] = std::vector<MapPoint>(width, { '#', false, {Color::WHITE, Color::MAGENTA} });
 	m_plane[height - 1] = std::vector<MapPoint>(width, { '#', false, {Color::WHITE, Color::MAGENTA} });
 
-	for (size_t i = 1; i < height; i++) {
-		m_plane[i][0] = { '#', false, {Color::WHITE, Color::MAGENTA} };
-		m_plane[i][width - 1] = { '#', false, {Color::WHITE, Color::MAGENTA} };
-	}
-
-	std::vector<std::shared_ptr<Object> > objects;
 	for (int y = 0; y <= 99; y++) {
 		for (int x = 0; x <= 99; x++) {
 			if (grid[y][x] == ' ') 
 				m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
-			else if (grid[y][x] == '#') 
-				m_plane[x][y] = { '#', false, {Color::WHITE, Color::GREEN} };
-			else if (grid[y][x] == 'E') {
-				m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
-				objects.emplace_back(new Enemy(x,y) );
+			else if (grid[y][x] == '#') {
+				m_plane[x][y] = {'#', false, {Color::WHITE, Color::MAGENTA} };
+				std::cout<<"XDDDD EUAN GAAYYYYYY"<<std::endl;
 			}
+			//else if (grid[y][x] == 'E') {
+			//	m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
+			//	objects.emplace_back(new Enemy(x,y) );
+		//	}
 		}
 	}
+	for (size_t i = 1; i < height; i++) {
+		m_plane[i][0] = { '#', false, {Color::WHITE, Color::MAGENTA} };
+		m_plane[i][width - 1] = { '#', false, {Color::WHITE, Color::MAGENTA} };
+	}
 	Map map = Map(m_plane);
-	map.objects = std::move(objects);
 	return map;
 }
 

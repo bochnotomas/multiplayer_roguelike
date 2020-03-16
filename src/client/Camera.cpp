@@ -95,7 +95,7 @@ void Camera::draw(Renderer* renderer) {
 }
 
 void Camera::draw_minimap(Renderer* renderer)	{
-    unsigned int viewportWidth = renderer->getWidth();
+  unsigned int viewportWidth = renderer->getWidth();
     unsigned int viewportHeight = renderer->getHeight();
     
 	// plane of the map
