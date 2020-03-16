@@ -61,6 +61,8 @@ public:
 	}
 
 	void set_position(const std::pair<int, int> new_position);
+
+	bool is_player = false;
 	
 protected:
 	// graphical representation of object;

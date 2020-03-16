@@ -14,6 +14,7 @@ enum class GameMessageType {
     MapTileData = 3,
     MapObjectData = 4,
     PlayerData = 5,
+    ActionAck = 6,
     DoJoin = 100,
     DoQuit = 101,
     DoChat = 102,
@@ -135,6 +136,21 @@ struct ClientMessagePlayerData : public ClientMessage {
     const std::vector<uint8_t> toBytes() const override;
 };
 
+struct ClientMessageActionAck : public ClientMessage {
+    /// Whether the action was accepted or not
+    bool accepted;
+    
+    /// Sent by the server to a client if the server has accepted or rejected
+    /// their chosen action for this turn
+    ClientMessageActionAck(bool accepted) :
+        ClientMessage(GameMessageType::ActionAck, ""),
+        accepted(accepted)
+    {};
+    
+    ~ClientMessageActionAck() = default;
+    const std::vector<uint8_t> toBytes() const override;
+};
+
 struct ClientMessageDoJoin : public ClientMessage {
     /// Sent by the client if the client wants to join the game with a certain
     /// player name
@@ -173,7 +189,7 @@ struct ClientMessageDoAction : public ClientMessage {
     const Action action;
     
     ClientMessageDoAction(Action action) :
-        ClientMessage(GameMessageType::DoChat, ""),
+        ClientMessage(GameMessageType::DoAction, ""),
         action(action)
     {}
     

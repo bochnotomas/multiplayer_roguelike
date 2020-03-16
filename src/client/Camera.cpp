@@ -5,26 +5,80 @@ Camera::Camera(char blank_char, Map* map, std::pair<long, long> start_position, 
 	Object('\0', Direction::NORTH, false, start_position), m_minimap_size(minimap_size), m_blank_char(blank_char), m_map(map)
 {}
 
-void Camera::move(const Direction dir){
+void Camera::move(Direction dir){
 	std::lock_guard<std::mutex> lock (pos_mutex);
 
+	int degrees = static_cast<int>(m_angle * (180.0/3.141592653589793238463));
+	degrees = degrees%360;
+	if(degrees<0)
+		degrees=-1*degrees;
+	//std::cout<<degrees<<std::endl;
 	switch (dir)
 	{
 	case Direction::NORTH:
-		m_position.first += sinf(m_angle);
-		m_position.second += cosf(m_angle);
-		if(m_position.first)
+		if(degrees>=315 || degrees <= 45)
+			m_position.second++;
+		else if (degrees>=45 && degrees<=135)
+			m_position.first++;
+		else if (degrees>=135 && degrees<=225)
+			m_position.second--;
+		else 
+			m_position.first--;
 		break;
 	case Direction::SOUTH:
-		m_position.first -= sinf(m_angle);
-		m_position.second -= cosf(m_angle);
+		if(degrees>=315 || degrees <= 45)
+			m_position.second--;
+		else if (degrees>=45 && degrees<=135)
+			m_position.first--;
+		else if (degrees>=135 && degrees<=225)
+			m_position.second++;
+		else 
+			m_position.first++;
+		break;
 	default:
 		break;
 	}
 }
 
+eDirection Camera::getMapDirection(Direction dir) {
+    // Copy-paste from Camera::move above, slightly modified
+    std::lock_guard<std::mutex> lock (pos_mutex);
+
+    int degrees = static_cast<int>(m_angle * (180.0/3.141592653589793238463));
+    degrees = degrees%360;
+    if(degrees<0)
+        degrees=-1*degrees;
+    //std::cout<<degrees<<std::endl;
+    switch (dir)
+    {
+    case Direction::NORTH:
+        if(degrees>=315 || degrees <= 45)
+            return eDirection::DOWN;
+        else if (degrees>=45 && degrees<=135)
+            return eDirection::LEFT;
+        else if (degrees>=135 && degrees<=225)
+            return eDirection::UP;
+        else 
+            return eDirection::RIGHT;
+        break;
+    case Direction::SOUTH:
+        if(degrees>=315 || degrees <= 45)
+            return eDirection::UP;
+        else if (degrees>=45 && degrees<=135)
+            return eDirection::RIGHT;
+        else if (degrees>=135 && degrees<=225)
+            return eDirection::DOWN;
+        else 
+            return eDirection::LEFT;
+        break;
+    default:
+        break;
+    }
+    return eDirection::STOP;
+}
+
 void Camera::get_objects_in_range(std::pair<long, long> range_y, std::pair<long, long> range_x){
-	for (Object* obj : m_map->objects){
+	for (auto obj : m_map->objects){
 		if (obj->get_visibility() && 
 			obj->get_position().second >= range_y.first && 
 			obj->get_position().second < range_y.second &&
@@ -52,7 +106,7 @@ void Camera::draw_minimap(Renderer* renderer)	{
 	// lock camera position to avoid changing position during rendering
 	std::lock_guard<std::mutex> lock (pos_mutex);
 
-    int y_offset = viewportHeight - m_minimap_size.second;
+    int y_offset =0;
     int start_i = -1 * (m_minimap_size.second / 2) + m_position.second;
     int start_j = -1 * (m_minimap_size.first / 2) + m_position.first;
     int end_i = m_minimap_size.second / 2 + m_position.second;
@@ -74,7 +128,7 @@ void Camera::draw_minimap(Renderer* renderer)	{
 				// flag to check if on current cell is an object
 				bool object = false;
 				// check all objects in range if there is a one on current position
-				for (Object* obj : objects_in_range){
+				for (auto obj : objects_in_range){
                     if (obj->get_visibility() && obj->get_position().second == i && obj->get_position().first == j){
                         // Draw object to cell
 						//auto temp = obj->get_position();
@@ -123,7 +177,7 @@ void Camera::draw_3D(Renderer* renderer) {
 	get_objects_in_range({-1 * (m_minimap_size.second / 2) + m_position.second, m_minimap_size.second / 2 + m_position.second},
 	{-1 * (m_minimap_size.first / 2) + m_position.first, m_minimap_size.first / 2 + m_position.first});
 
-	using obj_to_render = std::pair<Object*, std::pair<float, size_t>>;  // <object, <distance, viewport i>>
+	using obj_to_render = std::pair<std::shared_ptr<Object>, std::pair<float, size_t>>;  // <object, <distance, viewport i>>
 	std::vector<obj_to_render> objects_to_render;
 
 	//std::cout<<objects_in_range.size()<<' ';
@@ -240,7 +294,6 @@ void Camera::draw_3D(Renderer* renderer) {
 	std::vector<obj_to_render>::iterator it; 
     it = std::unique(objects_to_render.begin(), objects_to_render.end(), Pred); 
     objects_to_render.resize(std::distance(objects_to_render.begin(), it)); 
-	std::cout<<objects_to_render.size()<<" ";
 	for(obj_to_render obj : objects_to_render){
 		float scaling;
 		if (obj.second.first <= RENDER_DEPTH / 4.0f){

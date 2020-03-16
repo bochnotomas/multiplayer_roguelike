@@ -1,16 +1,10 @@
 #include "Enemy.hpp"
 #include <algorithm>
 #include <cmath>
-
-
-
-
-
 Enemy::Enemy(int positionX_, int positionY_) : Object('X', Direction::NORTH, true, {positionX_, positionY_})
 {
     m_type = ObjectType::ENEMY;
 }
-
 
 void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& map)
 {
@@ -18,13 +12,14 @@ void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& ma
 
 	if (chasing != nullptr)
 	{
-		float distance = sqrt(pow((m_position.first - chasing->playerPositionX), 2) + pow((m_position.second - chasing->playerPositionY), 2));
+        const auto& chasingPos = chasing->get_position();
+		float distance = sqrt(pow((m_position.first - chasingPos.first), 2) + pow((m_position.second - chasingPos.second), 2));
 		if(distance > 5)
 		{
 			chasing = nullptr;
 			return;
 		}
-		currentPath = findTheWay(m_position.second, m_position.first, chasing->playerPositionY, chasing->playerPositionX, map);
+		currentPath = findTheWay(m_position.second, m_position.first, chasingPos.second, chasingPos.first, map);
 		m_position.first = currentPath[0].first;
 		m_position.second = currentPath[0].second;
 		currentPath.erase(currentPath.begin());
@@ -33,7 +28,8 @@ void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& ma
 		float closestDistance = 5;
 		for(int i = 0 ; i < players.size(); i++)
 		{
-			float distance = sqrt(pow((m_position.first - players[i]->playerPositionX), 2) + pow((m_position.second - players[i]->playerPositionY), 2));
+            const auto& playerPos = players[i]->get_position();
+			float distance = sqrt(pow((m_position.first - playerPos.first), 2) + pow((m_position.second - playerPos.second), 2));
 			if(distance <= closestDistance)
 			{
 				closestDistance = distance;
@@ -43,7 +39,8 @@ void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& ma
 
 		if(chasing != nullptr)
 		{
-			currentPath = findTheWay(m_position.second, m_position.first, chasing->playerPositionY, chasing->playerPositionX, map);
+            const auto& chasingPos = chasing->get_position();
+			currentPath = findTheWay(m_position.second, m_position.first, chasingPos.second, chasingPos.first, map);
 			m_position.first = currentPath[0].first;
 			m_position.second = currentPath[0].second;
 			currentPath.erase(currentPath.begin());

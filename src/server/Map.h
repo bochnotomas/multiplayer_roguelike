@@ -2,6 +2,7 @@
 #define ROGUELIKE_MAP_H_INCLUDED
 #include <vector>
 #include <utility>
+#include <memory>
 #include "LevelGeneration2D.h"
 #include "Object.h"
 #include "Enemy.hpp"
@@ -18,12 +19,11 @@ using MapPlane = std::vector<std::vector<MapPoint>>;
 class Map
 {
 public:
-	Map();
-
-	~Map();
+    Map();
+	Map(unsigned int size_, MapPlane plane) : m_size({size_, size_}), m_plane(plane){};
 
 	// holds objects related with map
-	std::vector<Object*> objects;
+	std::vector<std::shared_ptr<Object>> objects;
 
 	// updates each object related with the map
 	void update_objects();

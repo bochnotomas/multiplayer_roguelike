@@ -139,19 +139,19 @@ uintmax_t Buffer::cBufferToUInt(size_t n, uint8_t* cBuffer) {
 intmax_t Buffer::cBufferToInt(size_t n, uint8_t* cBuffer) {
     intmax_t integer = 0;
     
+    // Decode most significant byte
+    uint8_t msByte = cBuffer[n - 1];
+    
+    // Negative bit
+    if(msByte & 0b10000000)
+        integer = -(static_cast<uintmax_t>(1) << (n * 8 - 1));
+    
+    // Positive bits
+    integer += static_cast<uintmax_t>(msByte & 0b01111111) << ((n - 1) * 8);
+    
     // Decode positive bits of integer
     for(auto i = 0; i < n - 1; i++)
         integer += static_cast<uintmax_t>(cBuffer[i]) << (i * 8);
-    
-    // Decode most significant byte
-    // Positive bits
-    uint8_t msByte = cBuffer[n - 1];
-    integer += static_cast<int8_t>(msByte & 0b01111111) << ((n - 1) * 8);
-    
-    // Negative bit
-    if(msByte & 0b10000000) {
-        integer -= 1 << (n * 8 - 1);
-    }
     
     return integer;
 }
@@ -290,7 +290,7 @@ void Buffer::pop(uint64_t& uint64) {
 }
 
 void Buffer::pop(int8_t& int8) {
-    int8 = popUInt<int8_t>();
+    int8 = popInt<int8_t>();
 }
 
 void Buffer::pop(int16_t& int16) {

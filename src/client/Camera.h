@@ -4,10 +4,12 @@
 #include <utility>
 #include <vector>
 #include <time.h>
+#include <memory>
 #include <mutex>
 #include <math.h>
 #include <algorithm>
 
+#include "../networking/Direction.hpp"
 #include "../server/Map.h"
 #include "Renderer.h"
 #include <chrono>
@@ -33,19 +35,21 @@ public:
 		m_angle+=angle;
 	}
 
-	void move(const Direction dir);
+	void move(Direction dir);
+    
+    eDirection getMapDirection(Direction dir);
 
 private:
     // Minimap size (width x height)
 	std::pair<float, float> m_minimap_size;
 // 2.5D rendering
-	float m_angle = 9.f; // angle for ray_casting
+	float m_angle = 0.f; // angle for ray_casting
 	float m_fov =  3.14159f / 4.0f; // field of view
 // 2.5D rendering
 	char m_blank_char; // character to put if there is nothing to render on position
 	Map* m_map; // map which camera is observing
 	std::mutex pos_mutex; // prevent changing position during rendering a frame
-	std::vector<Object*> objects_in_range;
+	std::vector<std::shared_ptr<Object>> objects_in_range;
 
 	// get objects in range of camera view and keep it in objects_in_range vecror
 	void get_objects_in_range(std::pair<long, long> range_y, std::pair<long, long> range_x);

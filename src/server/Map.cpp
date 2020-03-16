@@ -7,18 +7,9 @@ Map::Map()
 	m_size = {0, 0};
 }
 
-Map::~Map()
-{
-	for (Object* obj : objects)
-	{
-		delete obj;
-		obj = nullptr;
-	}
-}
-
 void Map::update_objects()
 {
-	for (Object* obj : objects)
+	for (auto obj : objects)
 	{
 		obj->update();
 	}
