@@ -18,6 +18,9 @@ void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& ma
 		{
 			chasing = nullptr;
 			return;
+		}else if (distance <= 1)
+		{
+			chasing->health -= 1;
 		}
 		currentPath = findTheWay(m_position.second, m_position.first, chasingPos.second, chasingPos.first, map);
 		m_position.first = currentPath[0].first;
@@ -34,6 +37,7 @@ void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& ma
 			{
 				closestDistance = distance;
 				chasing = players[i];
+				
 			}
 		}
 
