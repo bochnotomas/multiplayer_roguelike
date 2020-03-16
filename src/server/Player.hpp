@@ -1,8 +1,8 @@
 #ifndef ROGUELIKE_PLAYER_HPP_INCLUDED
 #define ROGUELIKE_PLAYER_HPP_INCLUDED
-#include "../networking/Direction.hpp"
 #include "../networking/Socket.hpp"
 #include "../networking/Buffer.hpp"
+#include "../networking/Action.hpp"
 #include "Object.h"
 #include "Map.h"
 #include <vector>
@@ -23,8 +23,10 @@ struct Player : Socket, Object {
     
     /// Destructor
     ~Player();
+    
+    /// Action the player will take this turn
+    std::unique_ptr<Action> action = nullptr;
 
-    int playerPositionX, playerPositionY;
     int health;
     int attack;
     int defense;
@@ -36,7 +38,7 @@ struct Player : Socket, Object {
     
     int level;
 
-    void potionCheck(int axisValue1, int axisValue2, Map& map);
+    void itemCheck(int axisValue1, int axisValue2, Map& map);
 
     void playerMovementLogic(Map& map);
 

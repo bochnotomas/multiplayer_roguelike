@@ -6,6 +6,7 @@
     #include <unistd.h> // close
     #include <netdb.h> // getaddrinfo
     #include <fcntl.h> // fcntl, F_SETFL, O_NONBLOCK
+    #include <signal.h> // signal, SIGPIPE, SIG_IGN
 #endif
 
 void Socket::initSocketApi() {
@@ -14,6 +15,9 @@ void Socket::initSocketApi() {
     int startupRes = WSAStartup(MAKEWORD(2,2), &wsaData);
     if(startupRes != 0)
         throw SocketException::fromErrno("Socket::initSocketApi: WSAStartup failed with code " + std::to_string(startupRes));
+    #else
+    // Ignore SIGPIPE (in case something tries to write to a closed socket)
+    signal(SIGPIPE, SIG_IGN);
     #endif
 }
     

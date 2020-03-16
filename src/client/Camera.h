@@ -9,6 +9,7 @@
 #include <math.h>
 #include <algorithm>
 
+#include "../networking/Direction.hpp"
 #include "../server/Map.h"
 #include "Renderer.h"
 #include <chrono>
@@ -35,6 +36,8 @@ public:
 	}
 
 	void move(Direction dir);
+    
+    eDirection getMapDirection(Direction dir);
 
 private:
     // Minimap size (width x height)

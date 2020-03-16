@@ -29,7 +29,7 @@ Player::~Player() {
     }
 }
 
-void Player::potionCheck(int axisValue1, int axisValue2, Map& map) {
+void Player::itemCheck(int axisValue1, int axisValue2, Map& map) {
 	for(auto object : map.objects)
 	{
 		//waiting....
@@ -48,7 +48,7 @@ void Player::playerMovementLogic(Map& map) {
                 ifBreak = true;
                 break;
             }
-            potionCheck(m_position.second, i, map);
+            itemCheck(m_position.second, i, map);
 
         }
         if (ifBreak == false) {
@@ -64,7 +64,7 @@ void Player::playerMovementLogic(Map& map) {
                 ifBreak = true;
                 break;
             }
-            potionCheck(m_position.second, i, map);
+            itemCheck(m_position.second, i, map);
 
         }
         if (ifBreak == false) {
@@ -79,7 +79,7 @@ void Player::playerMovementLogic(Map& map) {
                 ifBreak = true;
                 break;
             }
-            potionCheck(i, m_position.first, map);
+            itemCheck(i, m_position.first, map);
         }
         if (ifBreak == false) {
 
@@ -94,7 +94,7 @@ void Player::playerMovementLogic(Map& map) {
                 ifBreak = true;
                 break;
             }
-            potionCheck(i, m_position.first, map);
+            itemCheck(i, m_position.first, map);
         }
         if (ifBreak == false) {
             m_position.second = m_position.second + speed;

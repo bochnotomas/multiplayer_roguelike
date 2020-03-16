@@ -40,6 +40,43 @@ void Camera::move(Direction dir){
 	}
 }
 
+eDirection Camera::getMapDirection(Direction dir) {
+    // Copy-paste from Camera::move above, slightly modified
+    std::lock_guard<std::mutex> lock (pos_mutex);
+
+    int degrees = static_cast<int>(m_angle * (180.0/3.141592653589793238463));
+    degrees = degrees%360;
+    if(degrees<0)
+        degrees=-1*degrees;
+    //std::cout<<degrees<<std::endl;
+    switch (dir)
+    {
+    case Direction::NORTH:
+        if(degrees>=315 || degrees <= 45)
+            return eDirection::DOWN;
+        else if (degrees>=45 && degrees<=135)
+            return eDirection::LEFT;
+        else if (degrees>=135 && degrees<=225)
+            return eDirection::UP;
+        else 
+            return eDirection::RIGHT;
+        break;
+    case Direction::SOUTH:
+        if(degrees>=315 || degrees <= 45)
+            return eDirection::UP;
+        else if (degrees>=45 && degrees<=135)
+            return eDirection::RIGHT;
+        else if (degrees>=135 && degrees<=225)
+            return eDirection::DOWN;
+        else 
+            return eDirection::LEFT;
+        break;
+    default:
+        break;
+    }
+    return eDirection::STOP;
+}
+
 void Camera::get_objects_in_range(std::pair<long, long> range_y, std::pair<long, long> range_x){
 	for (auto obj : m_map->objects){
 		if (obj->get_visibility() && 

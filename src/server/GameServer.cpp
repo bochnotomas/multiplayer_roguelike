@@ -7,6 +7,8 @@ Map& GameServer::getLevel(int n) {
         // TODO call the level generator here
         Map newLevel;
         newLevel.create_random_map();
+        newLevel.objects.emplace_back(new Object('P', Direction::NORTH, true, {3, 2})); // bogus object (POLEN)
+        newLevel.objects.emplace_back(new Object('P', Direction::NORTH, true, {1, 5})); // yet another bogus object
         levels.emplace_back(std::move(newLevel));
     }
     
@@ -14,12 +16,41 @@ Map& GameServer::getLevel(int n) {
 }
 
 void GameServer::doTurn() {
+    //std::cerr << "Turn!" << std::endl;
     for(auto l = 0; l < levels.size(); l++) {
-        // Get players in this level
+        //std::cerr << " * Level " << l << std::endl;
+        // Get players in this level and do their action
         std::vector<std::shared_ptr<Player> > levelPlayers;
         for(auto player : players) {
-            if(player->level == l)
+            //std::cerr << "   - Player " << player->name << std::endl;
+            if(!player->name.empty() && player->level == l) {
                 levelPlayers.emplace_back(player);
+                if(player->action) {
+                    //std::cerr << "     | Has action" << std::endl;
+                    switch(player->action->type) {
+                        case ActionType::Move:
+                            {
+                                const auto& moveAction = static_cast<MoveAction*>(player->action.get());
+                                //std::cerr << "     | MoveAction with direction " << (int)moveAction->getDirection() << std::endl;
+                                auto dir = moveAction->getDirection();
+                                if(dir != eDirection::INVALID && dir != eDirection::STOP) {
+                                    player->dir = dir;
+                                    player->playerMovementLogic(levels[l]);
+                                }
+                            }
+                            break;
+                        case ActionType::UseItem:
+                            //std::cerr << "     | UseItemAction (TODO)" << std::endl;
+                            // TODO
+                            break;
+                        default:
+                            //std::cerr << "     | Unknown action" << std::endl;
+                            break;
+                    }
+                    
+                    player->action = nullptr;
+                }
+            }
         }
         
         for(auto object : levels[l].objects) {
@@ -28,13 +59,24 @@ void GameServer::doTurn() {
             
             // Object type-specific update
             if (object->get_type() == ObjectType::ENEMY)
-                dynamic_cast<Enemy*>(object)->aiTick(levelPlayers, levels[l]);
+                std::dynamic_pointer_cast<Enemy>(object)->aiTick(levelPlayers, levels[l]);
+        }
+        
+        ClientMessageMapTileData tileDataMessage(levels[l]);
+        ClientMessageMapObjectData objectUpdateMessage(levels[l].objects);
+        for(auto player : levelPlayers) {
+            if(player->level != l)
+                addMessage(tileDataMessage, player);
+            addMessage(objectUpdateMessage, player);
         }
     }
+    
+    addMessageAll(ClientMessagePlayerData(players));
 }
 
 void GameServer::logic() {
     int killCounter = 0;
+    auto lastTurnTime = std::chrono::high_resolution_clock::now();
     while(running) {
         // Get messages
         std::deque<std::shared_ptr<ServerMessage> > messages = receive(250);
@@ -63,6 +105,9 @@ void GameServer::logic() {
                         // Players with no name haven't joined yet
                         if(joinEvent->sender->name.empty() && !joinEvent->name.empty()) {
                             joinEvent->sender->name = joinEvent->name;
+                            // Set initial position
+                            // TODO pick a place with no wall
+                            joinEvent->sender->set_position({2, 2});
                             propagate = true;
                             propagateAll = true;
                         }
@@ -70,12 +115,26 @@ void GameServer::logic() {
                         // Send level data and player data to newly joined player
                         auto thisLevel = getLevel(0);
                         addMessage(ClientMessageMapTileData(thisLevel), joinEvent->sender);
-                        // TODO level objects
+                        addMessage(ClientMessageMapObjectData(thisLevel.objects), joinEvent->sender);
                         addMessage(ClientMessagePlayerData(players), joinEvent->sender);
                     }
                     break;
                 case GameMessageType::DoQuit:
                     propagate = true;
+                    break;
+                case GameMessageType::DoAction:
+                    {
+                        auto doActionEvent = std::dynamic_pointer_cast<ServerMessageDoAction>(*it);
+                        // Ignore when the player hasn't joined
+                        if(doActionEvent->sender->name.empty())
+                            break;
+                        
+                        // TODO check if action can be done
+                        
+                        // Set player action
+                        doActionEvent->sender->action = std::unique_ptr<Action>(new Action(std::move(doActionEvent->action)));
+                        addMessage(ClientMessageActionAck(true), doActionEvent->sender);
+                    }
                     break;
                 // TODO parse message types
             }
@@ -92,13 +151,40 @@ void GameServer::logic() {
             }
         }
         
-        // Simulate turn
-        // TODO only do this when all players sent their actions
-        std::this_thread::sleep_for(std::chrono::milliseconds(250));
-        doTurn();
+        // Simulate turn if all actions done
+        size_t connectedCount = 0;
+        size_t withActionCount = 0;
+        for(auto& player : players) {
+            if(!player->name.empty()) {
+                connectedCount++;
+                if(player->action)
+                    withActionCount++;
+            }
+        }
+        
+        auto thisTurnStart = std::chrono::high_resolution_clock::now();
+        if(connectedCount > 0) {
+            // Do turn if everyone sent their action or more than 10 seconds
+            // have passed
+            if(connectedCount == withActionCount || std::chrono::duration_cast<std::chrono::seconds>(thisTurnStart - lastTurnTime).count() >= 10) {
+                lastTurnTime = thisTurnStart;
+                doTurn();
+                //std::cerr << "Accepted; connected = " << connectedCount << "; actions = " << withActionCount << std::endl;
+            }
+            else {
+                //std::cerr << "Rejected; connected = " << connectedCount << "; actions = " << withActionCount << "; duration = " << std::chrono::duration_cast<std::chrono::seconds>(thisTurnStart - lastTurnTime).count() << std::endl;
+            }
+        }
+        else {
+            //std::cerr << "Rejected; connected == 0" << std::endl;
+            lastTurnTime = thisTurnStart;
+        }
         
         // Send buffered messages
-        sendMessages(250);
+        try {
+            sendMessages(250);
+        }
+        catch(SocketException e) {}; // Ignore socket exceptions, broken pipe
         
         // Kill server if the socket is closed
         if(!isSocketOpen()) {

@@ -18,7 +18,8 @@ using MapPlane = std::vector<std::vector<MapPoint>>;
 class Map
 {
 public:
-	Map();
+    Map();
+	Map(unsigned int size_, MapPlane plane) : m_size({size_, size_}), m_plane(plane){};
 
 	// holds objects related with map
 	std::vector<std::shared_ptr<Object>> objects;
