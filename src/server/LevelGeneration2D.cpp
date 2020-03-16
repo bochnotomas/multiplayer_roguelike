@@ -19,9 +19,14 @@ void LevelGeneration2D::setGrid() {
 		}
 		firstGeneration.push_back(temp);
 	}
-	firstGeneration[49][50] = 'W';
-	firstGeneration[51][50] = 'W';
-	firstGeneration[52][51] = 'W';
+	
+	for (int y = 0; y <= 99; y++) {
+		for (int x = 0; x <= 99; x++) {
+			if (rand() % 3 == 0) {
+				firstGeneration[y][x] = 'W';
+			}
+		}
+	}
 
 	grid = firstGeneration;
 }
@@ -216,7 +221,7 @@ std::vector<std::pair<int, int>> LevelGeneration2D::enemyGeneration(std::vector<
 }
 
 void LevelGeneration2D::enemyPlacement() {
-	std::vector<std::pair<int, int>> enemyLocations = enemyGeneration(rooms[0], rooms[0].size() / 200);
+	std::vector<std::pair<int, int>> enemyLocations = enemyGeneration(rooms[0], rooms[0].size() / 100);
 	for (int i = 0; i < enemyLocations.size(); i++) {
 		grid[enemyLocations[i].first][enemyLocations[i].second] = 'E';
 	}
@@ -259,7 +264,7 @@ Map LevelGeneration2D::create_random_map() {
 		one.refine();
 	}
 
-	one.enemyGeneration(one.rooms[0], 200);
+	one.enemyPlacement();
 
 	return one.to_map();
 }

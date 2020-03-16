@@ -2,6 +2,7 @@
 #include <array>
 #include <vector>
 #include <iostream>
+#include <time.h>
 #include "Map.h"
 class LevelGeneration2D
 {
@@ -10,6 +11,9 @@ private:
 	std::vector<std::vector<char>> gridCopy;
 	std::vector< std::vector<std::pair<int, int>>> rooms;
 public:
+	LevelGeneration2D() {
+		srand(time(NULL));
+	}
 
 	void setCell(int xCoordinate, int yCoordinate, char setValue);
 
