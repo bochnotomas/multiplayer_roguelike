@@ -1,3 +1,4 @@
+#include "LevelGeneration2D.h"
 #include "GameServer.hpp"
 #include "Enemy.hpp"
 
@@ -5,10 +6,8 @@ Map& GameServer::getLevel(int n) {
     // Generate missing levels
     for(auto depth = levels.size(); depth <= n; depth++) {
         // TODO call the level generator here
-        Map newLevel;
-        newLevel.create_random_map();
-        newLevel.objects.emplace_back(new Object('P', Direction::NORTH, true, {3, 2})); // bogus object (POLEN)
-        newLevel.objects.emplace_back(new Object('P', Direction::NORTH, true, {1, 5})); // yet another bogus object
+        LevelGeneration2D generator;
+        Map newLevel = generator.create_random_map();
         levels.emplace_back(std::move(newLevel));
     }
     

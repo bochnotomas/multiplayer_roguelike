@@ -19,7 +19,7 @@ class Map
 public:
 	Map();
 	Map(MapPlane& plane_) : m_plane(plane_), m_size({ plane_.size(), plane_.size() }) {}
-	~Map();
+	~Map() = default;
 
 	// holds objects related with map
 	std::vector<std::shared_ptr<Object>> objects;

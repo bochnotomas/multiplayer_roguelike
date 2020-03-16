@@ -10,7 +10,7 @@
 #include "../src/client/Camera.h"
 #include "../src/client/Menu.hpp"
 #include "../src/server/Object.h"
-#include "../src/server/Map.h"
+#include "../src/server/LevelGeneration2D.h"
 
 constexpr unsigned short RENDER_WIDTH = 120;
 constexpr unsigned short RENDER_HEIGHT = 30;
@@ -24,10 +24,11 @@ enum MenuItemKey {
 
 int main(int argc, char* argv[]) {
 	// Main game map
-	Map map;
 	// generate sample map
 	//map.generate_square_map(40, 40);
-	map.create_random_map();
+	//map.create_random_map();
+    LevelGeneration2D generator;
+	Map map = generator.create_random_map();
 
 	// sample object
 	std::shared_ptr<Object> player(new Object('x', Direction::NORTH, true, { 2.f,2.f }, {Color::BLACK, Color::RED}));
