@@ -2,6 +2,7 @@
 #include <array>
 #include <vector>
 #include <iostream>
+#include "Map.h"
 class LevelGeneration2D
 {
 private:
@@ -32,10 +33,14 @@ public:
 
 	void floodFill();
 
+	Map to_map();
+
 	void floodFillCaverns(int y, int x, char fillNumber);
 
 	std::vector<std::pair<int, int>> enemyGeneration(std::vector<std::pair<int, int>>, int);
 
 	void enemyPlacement();
+
+	void create_random_map();
 };
 

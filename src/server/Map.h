@@ -2,10 +2,7 @@
 #define ROGUELIKE_MAP_H_INCLUDED
 #include <vector>
 #include <utility>
-#include <memory>
-#include "LevelGeneration2D.h"
 #include "Object.h"
-#include "Enemy.hpp"
 #include "../client/Formatting.hpp"
 
 struct MapPoint {
@@ -19,11 +16,12 @@ using MapPlane = std::vector<std::vector<MapPoint>>;
 class Map
 {
 public:
-    Map();
-	Map(unsigned int size_, MapPlane plane) : m_size({size_, size_}), m_plane(plane){};
+	Map();
+	Map(MapPlane& plane_) : m_plane(plane_), m_size({ plane_.size(), plane_.size() }) {}
+	~Map();
 
 	// holds objects related with map
-	std::vector<std::shared_ptr<Object>> objects;
+	std::vector<Object*> objects;
 
 	// updates each object related with the map
 	void update_objects();
@@ -50,40 +48,7 @@ public:
 		int x=0;
 	}
 
-	void create_random_map() {
-		LevelGeneration2D one;
 
-		one.setGrid();
-
-		for (int i = 0; i <= 100; i++) {
-			one.generation();
-		}
-
-		for (int i = 0; i <= 3; i++) {
-			one.refine();
-		}
-		//end of levelgeneration2D code
-
-		m_size = { 100, 100 };
-		m_plane = MapPlane(100, std::vector<MapPoint>(100, { ' ', true, {Color::BLACK, Color::GREEN} }));
-
-		std::vector<std::vector<char>> grid = one.getGrid();
-
-		for (int y = 0; y <= 99; y++) {
-			for (int x = 0; x <= 99; x++) {
-				if (grid[y][x] == ' ') {
-					m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
-				}
-				else if (grid[y][x] == 'E') {
-					objects.emplace_back(new Enemy());
-					m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
-				}
-				else if (grid[y][x] == '#') {
-					m_plane[x][y] = { '#', false, {Color::WHITE, Color::GREEN} };
-				}
-			}
-		}
-	}
 	void set_preset_map(){
 		m_size = {16, 16};
 		m_plane = MapPlane(16, std::vector<MapPoint>(16, { ' ', true, {Color::BLACK, Color::GREEN} }));
