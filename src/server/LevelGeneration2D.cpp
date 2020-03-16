@@ -1,4 +1,5 @@
 #include "LevelGeneration2D.h"
+#include <time.h>
 
 void LevelGeneration2D::setCell(int xCoordinate, int yCoordinate, char setValue) {
 	grid[yCoordinate][xCoordinate] = setValue;
@@ -162,6 +163,30 @@ void LevelGeneration2D::floodFill() {
 				fillNumberInt++;
 			}
 		}
+	}
+}
+
+
+std::vector<std::pair<int, int>> LevelGeneration2D::enemyGeneration(std::vector<std::pair<int, int>> room, int enemyCount) {
+	srand(time(NULL));
+	std::vector<std::pair<int, int>> enemyLocations;
+	for (int i = 1; i <= enemyCount; i++) {
+		int x = rand() % room.size();
+		enemyLocations.push_back(room[x]);
+	}
+
+	for (int i = 0; i < enemyLocations.size(); i++) {
+		std::cout << enemyLocations[i].first << "," << enemyLocations[i].second << std::endl;
+	}
+
+	return enemyLocations;
+
+}
+
+void LevelGeneration2D::enemyPlacement() {
+	std::vector<std::pair<int, int>> enemyLocations = enemyGeneration(rooms[0], rooms[0].size() / 200);
+	for (int i = 0; i < enemyLocations.size(); i++) {
+		grid[enemyLocations[i].first][enemyLocations[i].second] = 'E';
 	}
 }
 

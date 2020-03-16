@@ -33,5 +33,9 @@ public:
 	void floodFill();
 
 	void floodFillCaverns(int y, int x, char fillNumber);
+
+	std::vector<std::pair<int, int>> enemyGeneration(std::vector<std::pair<int, int>>, int);
+
+	void enemyPlacement();
 };
 

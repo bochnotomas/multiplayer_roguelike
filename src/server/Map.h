@@ -4,6 +4,7 @@
 #include <utility>
 #include "LevelGeneration2D.h"
 #include "Object.h"
+#include "Enemy.hpp"
 #include "../client/Formatting.hpp"
 
 struct MapPoint {
@@ -71,6 +72,10 @@ public:
 		for (int y = 0; y <= 99; y++) {
 			for (int x = 0; x <= 99; x++) {
 				if (grid[y][x] == ' ') {
+					m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
+				}
+				else if (grid[y][x] == 'E') {
+					objects.emplace_back(new Enemy());
 					m_plane[x][y] = { ' ', true, {Color::BLACK, Color::BLACK} };
 				}
 				else if (grid[y][x] == '#') {
