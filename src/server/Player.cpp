@@ -1,5 +1,6 @@
 #include "../networking/Direction.hpp"
 #include "Player.hpp"
+#include "Inventory.h"
 
 Player::Player(Socket* socket) :
     Socket(std::move(*socket)), // Call move constructor. Source invalidated
@@ -29,11 +30,17 @@ Player::~Player() {
     }
 }
 
-void Player::itemCheck(int axisValue1, int axisValue2, Map& map) {
-	for(auto object : map.objects)
+void Player::itemCheck(Map& map) {
+	for(auto it = map.objects.begin(); it != map.objects.end();)
 	{
-		//waiting....
-		//for NIck...
+		std::pair<int, int> positionOfObject = get_position(*it);
+		std::pair<int, int> positionOfPlayer = m_position;
+		if( positionOfObject == positionOfPlayer && (*it).get_type() == ObjectType::ITEM) {
+			pickUp(*it);
+			it = map.objects.erase(it)
+		}
+		else
+			it++;
 	}
     
 }

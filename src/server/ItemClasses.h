@@ -1,6 +1,7 @@
 #include <string>
+#include "Object.h"
 
-class Item
+class Item : public Object
 {
   //making it public (i think????)
   public:
@@ -11,11 +12,12 @@ class Item
   std::string itemDesc; //small description of the item the player can pull up
   char itemChar; //the character that will represent the item on the map
 
-  Item(std::string m_itemName, std::string m_itemType, std::string m_itemDesc, char m_itemChar) :
+  Item(std::string m_itemName, std::string m_itemType, std::string m_itemDesc, char m_itemChar, std::pair<int, int> start_position) :
     itemName(m_itemName), // initializer list
     itemType(m_itemType),
     itemDesc(m_itemDesc),
-    itemChar(m_itemChar)
+    //itemChar(m_itemChar),
+	Object(m_itemChar, Direction::NORTH, true, start_position, <colour::WHITE, colour::GREEN>, <>, ObjectType::ITEM)
   {}
 };
 /*
