@@ -50,6 +50,12 @@ void Player::playerMovementLogic(Map& map) {
     switch (dir) {
     case eDirection::LEFT:
         for (int i = m_position.first; i >= (m_position.first - speed); i--) {
+        	if(i<0)
+        	{
+                m_position.first = (i + 1);
+                ifBreak = true;
+                break;
+        	}
             if (!(*map.get_map_plane())[m_position.second][i].accesible) {
                 m_position.first = (i + 1);
                 ifBreak = true;
@@ -64,7 +70,14 @@ void Player::playerMovementLogic(Map& map) {
         dir = eDirection::STOP;
         break;
     case eDirection::RIGHT:
+    	
         for (int i = m_position.first; i <= (m_position.first + speed); i++) {
+        	if(i >= map.get_map_size().first)
+        	{
+                m_position.first = (i - 1);
+                ifBreak = true;
+                break;
+        	}
             if (!(*map.get_map_plane())[m_position.second][i].accesible) {
 
                 m_position.first = (i - 1);
@@ -80,7 +93,14 @@ void Player::playerMovementLogic(Map& map) {
         dir = eDirection::STOP;
         break;
     case eDirection::UP:
+    	
         for (int i = m_position.second; i >= (m_position.second - speed); i--) {
+        	if(i < 0)
+        	{
+                m_position.second = (i + 1);
+                ifBreak = true;
+                break;
+        	}
             if (!(*map.get_map_plane())[i][m_position.first].accesible) {
                 m_position.second = (i + 1);
                 ifBreak = true;
@@ -96,6 +116,12 @@ void Player::playerMovementLogic(Map& map) {
         break;
     case eDirection::DOWN:
         for (int i = m_position.second; i <= (m_position.second + speed); i++) {
+        	if(i >= map.get_map_size().second)
+        	{
+                m_position.second = (i - 1);
+                ifBreak = true;
+                break;
+        	}
             if (!(*map.get_map_plane())[i][m_position.first].accesible) {
                 m_position.second = (i - 1);
                 ifBreak = true;
@@ -116,25 +142,5 @@ void Player::playerMovementLogic(Map& map) {
 }
 
 
-void Player::inputHandling(char newDir)
-{
-    switch (newDir) {
-    case 'a':
-        dir = eDirection::LEFT;
-        break;
-    case 's':
-        dir = eDirection::DOWN;
-        break;
-    case 'd':
-        dir = eDirection::RIGHT;
-        break;
-    case 'w':
-        dir = eDirection::UP;
-        break;
-    case '-':
-        speed--;
-        break;
-    }
-}
 
 
