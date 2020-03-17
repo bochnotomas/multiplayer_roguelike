@@ -143,4 +143,23 @@ void Player::playerMovementLogic(Map& map) {
 
 
 
+void Player::playerAttack(Map& map) {
+    std::vector<std::shared_ptr<Object>> objects = map.objects;
+    int x = m_position.first;
+    int y = m_position.second;
+
+    for (std::shared_ptr<Object> object : objects) {
+        if (object->get_type() == ObjectType::ENEMY) {
+            std::pair<long, long> objectPosition = object->get_position();
+            if (x == objectPosition.first && y == objectPosition.second) {
+                //rocked
+                //reduce enemy health
+            }
+            else {
+                //u missed
+            }
+        }
+    }
+}
+
 
