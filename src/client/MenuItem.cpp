@@ -1,19 +1,23 @@
 #include "MenuItem.hpp"
 
-MenuItem::MenuItem(int key, std::string text, const Formating& formatting, const Formating& selectedFormatting) :
+MenuItem::MenuItem(int key, std::string text, bool selectable, const Formating& formatting, const Formating& selectedFormatting) :
     key(key),
     text(text),
     formatting(formatting),
-    selectedFormatting(selectedFormatting)
+    selectedFormatting(selectedFormatting),
+    selectable(selectable)
 {}
 
 int MenuItem::getKey() const {
     return key;
 }
 
-
 unsigned int MenuItem::getLength() const {
     return text.size();
+}
+
+bool MenuItem::isSelectable() const {
+    return selectable;
 }
 
 void MenuItem::drawAt(Renderer* renderer, int left, int right, int y, bool selected) const {
@@ -25,7 +29,8 @@ void MenuItem::drawAt(Renderer* renderer, int left, int right, int y, bool selec
         return;
     
     // Get formatting
-    const Formating& thisFormatting = selected ? selectedFormatting : formatting;
+    bool useSelectedFormatting = selected && selectable;
+    const Formating& thisFormatting = useSelectedFormatting ? selectedFormatting : formatting;
     
     // Handle overflowing items
     bool overflow = false;
@@ -69,4 +74,9 @@ void MenuItem::drawAt(Renderer* renderer, int left, int right, int y, bool selec
         else
             renderer->draw_cell(x, y, ' ', thisFormatting);
     }
+}
+
+bool MenuItem::onInput(char input) {
+    (void)input;
+    return false;
 }

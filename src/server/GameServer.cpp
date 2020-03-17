@@ -5,7 +5,6 @@
 Map& GameServer::getLevel(int n) {
     // Generate missing levels
     for(auto depth = levels.size(); depth <= n; depth++) {
-        // TODO call the level generator here
         LevelGeneration2D generator;
         Map newLevel = generator.create_random_map();
         levels.emplace_back(std::move(newLevel));
@@ -15,17 +14,13 @@ Map& GameServer::getLevel(int n) {
 }
 
 void GameServer::doTurn() {
-    //std::cerr << "Turn!" << std::endl;
     for(auto l = 0; l < levels.size(); l++) {
-        //std::cerr << " * Level " << l << std::endl;
         // Get players in this level and do their action
         std::vector<std::shared_ptr<Player> > levelPlayers;
         for(auto player : players) {
-            //std::cerr << "   - Player " << player->name << std::endl;
             if(!player->name.empty() && player->level == l) {
                 levelPlayers.emplace_back(player);
                 if(player->action) {
-                    //std::cerr << "     | Has action" << std::endl;
                     switch(player->action->type) {
                         case ActionType::Move:
                             {
@@ -39,11 +34,7 @@ void GameServer::doTurn() {
                             }
                             break;
                         case ActionType::UseItem:
-                            //std::cerr << "     | UseItemAction (TODO)" << std::endl;
                             // TODO
-                            break;
-                        default:
-                            //std::cerr << "     | Unknown action" << std::endl;
                             break;
                     }
                     
@@ -168,14 +159,9 @@ void GameServer::logic() {
             if(connectedCount == withActionCount || std::chrono::duration_cast<std::chrono::seconds>(thisTurnStart - lastTurnTime).count() >= 10) {
                 lastTurnTime = thisTurnStart;
                 doTurn();
-                //std::cerr << "Accepted; connected = " << connectedCount << "; actions = " << withActionCount << std::endl;
-            }
-            else {
-                //std::cerr << "Rejected; connected = " << connectedCount << "; actions = " << withActionCount << "; duration = " << std::chrono::duration_cast<std::chrono::seconds>(thisTurnStart - lastTurnTime).count() << std::endl;
             }
         }
         else {
-            //std::cerr << "Rejected; connected == 0" << std::endl;
             lastTurnTime = thisTurnStart;
         }
         

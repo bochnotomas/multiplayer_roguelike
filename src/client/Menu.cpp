@@ -50,6 +50,8 @@ void Menu::addItem(const std::shared_ptr<MenuItem>& item) {
     
     if(item->getLength() > longestLength)
         longestLength = item->getLength();
+    
+    fixSelection();
 }
 
 void Menu::clearItems() {
@@ -57,6 +59,7 @@ void Menu::clearItems() {
     std::lock_guard<std::mutex> selectionGuard(selectionLock);
     
     items.clear();
+    selection = 0;
     longestLength = 0;
 }
 
@@ -67,17 +70,32 @@ void Menu::moveCursor(int delta) {
     if(items.empty())
         return;
     
-    if(delta > 0) {
-        selection += delta;
-        if(selection >= items.size())
-            selection = items.size() - 1;
+    int lastSelectable = selection;
+    int focus = selection;
+    while(delta != 0) {
+        if(delta > 0) {
+            focus++;
+            if(focus >= items.size())
+                break;
+            
+            if(items[focus]->isSelectable()) {
+                delta--;
+                lastSelectable = focus;
+            }
+        }
+        else {
+            focus--;
+            if(focus < 0)
+                break;
+            
+            if(items[focus]->isSelectable()) {
+                delta++;
+                lastSelectable = focus;
+            }
+        }
     }
-    else {
-        if(-delta >= selection)
-            selection = 0;
-        else
-            selection += delta;
-    }
+    
+    selection = lastSelectable;
 }
 
 void Menu::setCursor(int pos) {
@@ -94,6 +112,8 @@ void Menu::setCursor(int pos) {
         selection = items.size() - 1;
     else if(selection < 0)
         selection = 0;
+    
+    fixSelection();
 }
 
 std::shared_ptr<MenuItem> Menu::selectCursor() {
@@ -106,6 +126,27 @@ std::shared_ptr<MenuItem> Menu::selectCursor() {
     
     return items[selection];
 }
+
+void Menu::fixSelection() {
+    // Loop backwards if needed
+    for(int selectionCandidate = selection; selectionCandidate >= 0; selectionCandidate--) {
+        if(items[selectionCandidate]->isSelectable()) {
+            selection = selectionCandidate;
+            return;
+        }
+    }
+    
+    // Loop forwards if needed
+    for(; selection < items.size(); selection++) {
+        if(items[selection]->isSelectable()) {
+            return;
+        }
+    }
+    
+    // If all looping fails, default to 0
+    selection = 0;
+}
+
 
 void Menu::drawRows(Renderer* renderer, int left, int top, int right, int bottom, int scroll) {
     const unsigned int viewportWidth = renderer->getWidth();
@@ -144,6 +185,17 @@ void Menu::drawRows(Renderer* renderer, int left, int top, int right, int bottom
         }
     }
 }
+
+bool Menu::input(char input) {
+    if(items.empty())
+        return false;
+    
+    auto& selected = items[selection];
+    if(selected->isSelectable())
+        return selected->onInput(input);
+    return false;
+}
+
 
 void Menu::draw(Renderer* renderer) {
     const unsigned int viewportWidth = renderer->getWidth();

@@ -105,8 +105,8 @@ void Renderer::render() {
             string_buffer += '\n';
         }
         
-        // Print buffer and reset colors
-        std::cout << string_buffer << "\033[0m" << std::flush;
+        // Print buffer and reset colors and cursor
+        std::cout << string_buffer << "\033[0m\033[0;0f" << std::flush;
         
         // Wait for next frame
         auto thisFrameTime(clock.now());
@@ -114,13 +114,10 @@ void Renderer::render() {
         lastFrameTime = thisFrameTime;
         
         // Don't wait if falling behind on expected frame-rate
-        if(frameDuration > expectedFrameTime) {
-            std::cout << "\33[J\r" << frameDuration.count() << "us passed, running behind schedule" << std::endl;
+        if(frameDuration > expectedFrameTime)
             continue;
-        }
         
         auto waitTime = expectedFrameTime - frameDuration;
-        std::cout << "\33[J\r" << frameDuration.count() << "us passed, waiting " << waitTime.count() << "us" << std::endl;
         std::this_thread::sleep_for(waitTime);
     }
     

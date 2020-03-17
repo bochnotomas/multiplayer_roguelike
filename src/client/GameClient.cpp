@@ -2,12 +2,15 @@
 #include "GameClient.hpp"
 #include "Menu.hpp"
 #include "Camera.h"
+#include "InputMenuItem.hpp"
 #include "../server/Map.h"
 
 enum ClientMenuItem {
     TextItem,
     JoinCancel,
     ActionQuit,
+    NameOk,
+    NameCancel
 };
 
 void GameClient::netLoop() {
@@ -37,27 +40,31 @@ void GameClient::logic(Renderer* renderer) {
     const auto midY = renderer->getHeight() / 2;
     std::shared_ptr<ClearScreenDrawable> clearDrawable(new ClearScreenDrawable());
     
-    // Join with a bogus name TODO change name with menu (needs InputMenuItem)
-    std::string playerName = "test_user_" + std::to_string(time(NULL));
-    addMessage(ClientMessageDoJoin(playerName));
-    
-    // Setup renderer with joining message
+    // Setup renderer with name menu
+    std::string playerName;
     std::shared_ptr<Map> map = nullptr;
     std::shared_ptr<Camera> cam = nullptr;
     std::shared_ptr<Menu> focus = nullptr;
+    
+    std::shared_ptr<InputMenuItem> nameInput(new InputMenuItem(ClientMenuItem::TextItem, "My name is", "Riley"));
     {
-        std::shared_ptr<MenuItem> joiningText(new MenuItem(ClientMenuItem::TextItem, "Joining as " + playerName + "..."));
-        std::shared_ptr<MenuItem> joiningCancel(new MenuItem(ClientMenuItem::JoinCancel, "Cancel"));
-        std::shared_ptr<Menu> joiningMenu(new Menu(4, 3, midX, midY));
-        joiningMenu->addItem(joiningText);
-        joiningMenu->addItem(joiningCancel);
-        joiningMenu->toggleCenter(true);
+        std::shared_ptr<MenuItem> nameText(new MenuItem(ClientMenuItem::TextItem, "What is your name?", false));
+        std::shared_ptr<MenuItem> nameBlank(new MenuItem(ClientMenuItem::TextItem, "", false));
+        std::shared_ptr<MenuItem> nameOk(new MenuItem(ClientMenuItem::NameOk, "Start playing"));
+        std::shared_ptr<MenuItem> nameCancel(new MenuItem(ClientMenuItem::NameCancel, "Cancel"));
+        std::shared_ptr<Menu> nameMenu(new Menu(4, 3, midX, midY));
+        nameMenu->addItem(nameText);
+        nameMenu->addItem(nameInput);
+        nameMenu->addItem(nameBlank);
+        nameMenu->addItem(nameOk);
+        nameMenu->addItem(nameCancel);
+        nameMenu->toggleCenter(true);
         
         std::lock_guard<std::mutex> rLockGuard(renderer->r_lock);
         renderer->clear_drawables();
         renderer->add_drawable(clearDrawable);
-        renderer->add_drawable(joiningMenu);
-        focus = joiningMenu;
+        renderer->add_drawable(nameMenu);
+        focus = nameMenu;
     }
     
     // Player data this turn
@@ -136,54 +143,88 @@ void GameClient::logic(Renderer* renderer) {
         
         // Parse input
         if(renderer->kbhit()) {
-            switch(renderer->getch()) {
-                case 'w':
-                case 'W':
-                    if(cam)
-                        addMessage(ClientMessageDoAction(MoveAction(cam->getMapDirection(Direction::NORTH))));
-                    break;
-                case 's':
-                case 'S':
-                    if(cam)
-                        addMessage(ClientMessageDoAction(MoveAction(cam->getMapDirection(Direction::SOUTH))));
-                    break;
-                case 'a':
-                case 'A':
-                    if(cam)
-                        cam->rotate(-0.1f);
-                    break;
-                case 'd':
-                case 'D':
-                    if(cam)
-                        cam->rotate(0.1f);
-                    break;
-                case 'r':
-                case 'R':
-                    if(focus)
-                        focus->moveCursor(-1);
-                    break;
-                case 'f':
-                case 'F':
-                    if(focus)
-                        focus->moveCursor(1);
-                    break;
-                case ' ':
-                case '\n':
-                case '\r':
-                    if(focus) {
-                        auto selection = focus->selectCursor();
-                        if(!selection)
-                            break;
-                        
-                        switch(selection->getKey()) {
-                            case ClientMenuItem::JoinCancel:
-                            case ClientMenuItem::ActionQuit:
-                                addMessage(ClientMessageDoQuit());
-                                playing = false;
-                                break;
+            char input = renderer->getch();
+            if(!focus || !focus->input(input)) {
+                switch(input) {
+                    case 'w':
+                    case 'W':
+                        if(!joined) {
+                            if(focus)
+                                focus->moveCursor(-1);
                         }
-                    }
-                    break;
+                        else if(cam)
+                            addMessage(ClientMessageDoAction(MoveAction(cam->getMapDirection(Direction::NORTH))));
+                        break;
+                    case 's':
+                    case 'S':
+                        if(!joined) {
+                            if(focus)
+                                focus->moveCursor(1);
+                        }
+                        else if(cam)
+                            addMessage(ClientMessageDoAction(MoveAction(cam->getMapDirection(Direction::SOUTH))));
+                        break;
+                    case 'a':
+                    case 'A':
+                        if(joined && cam)
+                            cam->rotate(-0.1f);
+                        break;
+                    case 'd':
+                    case 'D':
+                        if(joined && cam)
+                            cam->rotate(0.1f);
+                        break;
+                    case 'r':
+                    case 'R':
+                        if(focus)
+                            focus->moveCursor(-1);
+                        break;
+                    case 'f':
+                    case 'F':
+                        if(focus)
+                            focus->moveCursor(1);
+                        break;
+                    case ' ':
+                    case '\n':
+                    case '\r':
+                        if(focus) {
+                            auto selection = focus->selectCursor();
+                            if(!selection)
+                                break;
+                            
+                            switch(selection->getKey()) {
+                                case ClientMenuItem::NameCancel:
+                                case ClientMenuItem::JoinCancel:
+                                case ClientMenuItem::ActionQuit:
+                                    addMessage(ClientMessageDoQuit());
+                                    playing = false;
+                                    break;
+                                case ClientMenuItem::NameOk:
+                                    {
+                                        auto inputName = nameInput->get();
+                                        if(inputName.empty())
+                                            break;
+                                        
+                                        playerName = inputName;
+                                        addMessage(ClientMessageDoJoin(playerName));
+                                        std::shared_ptr<MenuItem> joiningText(new MenuItem(ClientMenuItem::TextItem, "Joining as " + playerName + "...", false));
+                                        std::shared_ptr<MenuItem> joiningCancel(new MenuItem(ClientMenuItem::JoinCancel, "Cancel"));
+                                        std::shared_ptr<Menu> joiningMenu(new Menu(4, 3, midX, midY));
+                                        joiningMenu->addItem(joiningText);
+                                        joiningMenu->addItem(joiningCancel);
+                                        joiningMenu->toggleCenter(true);
+                                        
+                                        std::lock_guard<std::mutex> rLockGuard(renderer->r_lock);
+                                        renderer->clear_drawables();
+                                        renderer->add_drawable(clearDrawable);
+                                        renderer->add_drawable(joiningMenu);
+                                        focus = joiningMenu;
+                                    }
+                                    break;
+                            }
+                        }
+                        break;
+                }
             }
         }
         else // Wait if there is no input. Logic should run at most at 60 FPS

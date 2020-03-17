@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Normal, "Item 2")));
     sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Overflowing, "Overflowing 1")));
     sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Overflowing, "Overflowing 2")));
-    sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Quit, "Quit", {Color::WHITE, Color::RED}, {Color::BLACK, Color::MAGENTA})));
+    sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Quit, "Quit", true, {Color::WHITE, Color::RED}, {Color::BLACK, Color::MAGENTA})));
     for(char c = '0'; c <= '9'; c++)
         sampleMenu->addItem(std::shared_ptr<MenuItem>(new MenuItem(MenuItemKey::Filler, std::string("Filler ") + c)));
     sampleMenu->toggleCenter(true);
