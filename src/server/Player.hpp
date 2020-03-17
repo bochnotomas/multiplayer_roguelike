@@ -46,6 +46,8 @@ struct Player : Socket, Object {
     void playerMovementLogic(Map& map);
 
     void inputHandling(char newDir);
+
+    void playerAttack(Map&);
 };
 
 
