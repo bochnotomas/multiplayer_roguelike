@@ -35,7 +35,17 @@ void GameServer::doTurn() {
                             }
                             break;
                         case ActionType::UseItem:
-                            // TODO
+                            {
+                                const auto& useItemAction = static_cast<UseItemAction*>(player->action.get());
+                                auto itemPos = useItemAction->getItem();
+                                if(itemPos < 0 || itemPos >= player->inventory.inventory.size())
+                                    break;
+                                
+                                // TODO drink or something -> nick's job
+                                const auto& item = player->inventory.inventory[itemPos];
+                                if(item.itemType == "SWORD_WEAPON")
+                                    player->playerAttack(levels[l]);
+                            }
                             break;
                     }
                     
@@ -44,14 +54,26 @@ void GameServer::doTurn() {
             }
         }
         
-        for(auto object : levels[l].objects) {
+        for(auto it = levels[l].objects.begin(); it != levels[l].objects.end();) {
+            // Remove if object is a player
+            if((*it)->get_type() == ObjectType::PLAYER) {
+                it = levels[l].objects.erase(it);
+                continue;
+            }
+            
             // Generic object update
-            object->update();
+            (*it)->update();
             
             // Object type-specific update
-            if (object->get_type() == ObjectType::ENEMY)
-                std::dynamic_pointer_cast<Enemy>(object)->aiTick(levelPlayers, levels[l]);
+            if ((*it)->get_type() == ObjectType::ENEMY)
+                std::dynamic_pointer_cast<Enemy>(*it)->aiTick(levelPlayers, levels[l]);
+            
+            it++;
         }
+        
+        // Add players to level
+        for(auto player : levelPlayers)
+            levels[l].objects.push_back(player);
         
         ClientMessageMapTileData tileDataMessage(levels[l]);
         ClientMessageMapObjectData objectUpdateMessage(levels[l].objects);

@@ -78,6 +78,10 @@ public:
     // the menu has no items
     std::shared_ptr<MenuItem> selectCursor();
     
+    // Get the current item selection numerically. Can be an invalid position
+    // if empty or no selectable items in menu
+    unsigned int getSelection();
+    
     // Send input to selected menu item. Returns true when the input was
     // trapped, false otherwise
     bool input(char input);

@@ -13,8 +13,16 @@ Action Action::fromBytes(const std::vector<uint8_t>& data) {
             
             return MoveAction(data[1]);
         case static_cast<uint8_t>(ActionType::UseItem):
-            // TODO
-            throw "Action::fromBytes: NIY - ActionType::UseItem constructor";
+            {
+                if(data.size() != 8)
+                    throw std::invalid_argument("Action::fromBytes: Failed to create UseItemAction. Expected 8 bytes, got " + std::to_string(data.size()));
+                
+                Buffer buffer;
+                buffer.insert(data);
+                int64_t itemPos;
+                buffer.get(itemPos);
+                return UseItemAction(itemPos);
+            }
             break;
         default:
             throw std::invalid_argument("Action::fromBytes: Invalid ActionType byte with value " + std::to_string(data[0]));
@@ -44,4 +52,15 @@ eDirection MoveAction::getDirection() {
         default:
             return eDirection::INVALID;
     }
+}
+
+int UseItemAction::getItem() {
+    if(data.size() != 8)
+        return -1;
+    
+    Buffer buffer;
+    buffer.insert(data);
+    int64_t itemPos;
+    buffer.get(itemPos);
+    return itemPos;
 }

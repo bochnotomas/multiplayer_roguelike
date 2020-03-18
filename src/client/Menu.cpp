@@ -127,6 +127,10 @@ std::shared_ptr<MenuItem> Menu::selectCursor() {
     return items[selection];
 }
 
+unsigned int Menu::getSelection() {
+    return selection;
+}
+
 void Menu::fixSelection() {
     // Loop backwards if needed
     for(int selectionCandidate = selection; selectionCandidate >= 0; selectionCandidate--) {

@@ -123,6 +123,7 @@ bool validatePort(Renderer& renderer, std::string input, int& output) {
         invalidInputScreen(renderer, "Port number must be a valid number between 0 and 65535");
         return false;
     }
+    output = chosenPort;
     
     return true;
 }

@@ -47,8 +47,8 @@ void GameClient::logic(Renderer* renderer) {
     std::shared_ptr<Camera> cam = nullptr;
     std::shared_ptr<Menu> focus = nullptr;
     
-    std::shared_ptr<MenuItem> quitAction(new MenuItem(ClientMenuItem::ActionQuit, "Quit"));
-    std::shared_ptr<Menu> actionMenu(new Menu(renderer->getWidth() - minimapW, 4, minimapW, renderer->getHeight() - 4));
+    std::shared_ptr<MenuItem> quitAction(new MenuItem(ClientMenuItem::ActionQuit, "Quit", true, { Color::RED, Color::NO_COLOR }, { Color::WHITE, Color::RED }));
+    std::shared_ptr<Menu> actionMenu(new Menu(renderer->getWidth() - minimapW, 2, minimapW, renderer->getHeight() - 2));
     actionMenu->addItem(quitAction);
     actionMenu->toggleExpand(false);
     actionMenu->setSplit(10);
@@ -234,6 +234,9 @@ void GameClient::logic(Renderer* renderer) {
                                         renderer->add_drawable(joiningMenu);
                                         focus = joiningMenu;
                                     }
+                                    break;
+                                case ClientMenuItem::InventoryItem:
+                                    addMessage(ClientMessageDoAction(UseItemAction(actionMenu->getSelection() - 1)));
                                     break;
                             }
                         }

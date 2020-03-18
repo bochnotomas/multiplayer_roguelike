@@ -49,7 +49,7 @@ public:
 
 class UseItemAction : public Action {
 public:
-    // Get inventory position. -1 when invalid
+    // Get inventory position. Negative when invalid
     int getItem();
     
     UseItemAction(int64_t itemPos) :
