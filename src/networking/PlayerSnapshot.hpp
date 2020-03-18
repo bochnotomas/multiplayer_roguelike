@@ -7,12 +7,14 @@ struct PlayerSnapshot {
     int x;
     int y;
     int level;
+    std::vector<std::string> items;
     
-    PlayerSnapshot(std::string name, int x, int y, int level) :
+    PlayerSnapshot(std::string name, int x, int y, int level, std::vector<std::string> items) :
         name(name),
         x(x),
         y(y),
-        level(level)
+        level(level),
+        items(items)
     {}
 };
 

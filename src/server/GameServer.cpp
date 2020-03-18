@@ -1,6 +1,7 @@
 #include "LevelGeneration2D.h"
 #include "GameServer.hpp"
 #include "Enemy.hpp"
+#include "WeaponSword.h"
 
 Map& GameServer::getLevel(int n) {
     // Generate missing levels
@@ -100,13 +101,16 @@ void GameServer::logic() {
                             joinEvent->sender->set_position({2, 2});
                             propagate = true;
                             propagateAll = true;
+                            
+                            // Give player a sword
+                            joinEvent->sender->inventory.inventory.push_back(WeaponSword({0,0}));
+                            
+                            // Send level data and player data to newly joined player
+                            auto thisLevel = getLevel(0);
+                            addMessage(ClientMessageMapTileData(thisLevel), joinEvent->sender);
+                            addMessage(ClientMessageMapObjectData(thisLevel.objects), joinEvent->sender);
+                            addMessage(ClientMessagePlayerData(players), joinEvent->sender);
                         }
-                        
-                        // Send level data and player data to newly joined player
-                        auto thisLevel = getLevel(0);
-                        addMessage(ClientMessageMapTileData(thisLevel), joinEvent->sender);
-                        addMessage(ClientMessageMapObjectData(thisLevel.objects), joinEvent->sender);
-                        addMessage(ClientMessagePlayerData(players), joinEvent->sender);
                     }
                     break;
                 case GameMessageType::DoQuit:

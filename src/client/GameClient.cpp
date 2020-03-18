@@ -10,7 +10,8 @@ enum ClientMenuItem {
     JoinCancel,
     ActionQuit,
     NameOk,
-    NameCancel
+    NameCancel,
+    InventoryItem
 };
 
 void GameClient::netLoop() {
@@ -46,6 +47,12 @@ void GameClient::logic(Renderer* renderer) {
     std::shared_ptr<Camera> cam = nullptr;
     std::shared_ptr<Menu> focus = nullptr;
     
+    std::shared_ptr<MenuItem> quitAction(new MenuItem(ClientMenuItem::ActionQuit, "Quit"));
+    std::shared_ptr<Menu> actionMenu(new Menu(renderer->getWidth() - minimapW, 4, minimapW, renderer->getHeight() - 4));
+    actionMenu->addItem(quitAction);
+    actionMenu->toggleExpand(false);
+    actionMenu->setSplit(10);
+                            
     std::shared_ptr<InputMenuItem> nameInput(new InputMenuItem(ClientMenuItem::TextItem, "My name is", "Riley"));
     {
         std::shared_ptr<MenuItem> nameText(new MenuItem(ClientMenuItem::TextItem, "What is your name?", false));
@@ -89,12 +96,6 @@ void GameClient::logic(Renderer* renderer) {
                                 focus = nullptr;
                                 
                                 // Setup action menu
-                                std::shared_ptr<MenuItem> quitAction(new MenuItem(ClientMenuItem::ActionQuit, "Quit"));
-                                std::shared_ptr<Menu> actionMenu(new Menu(renderer->getWidth() - minimapW, 4, minimapW, renderer->getHeight() - 4));
-                                actionMenu->addItem(quitAction);
-                                actionMenu->toggleExpand(false);
-                                actionMenu->setSplit(10);
-            
                                 std::lock_guard<std::mutex> rLockGuard(renderer->r_lock);
                                 renderer->clear_drawables();
                                 renderer->add_drawable(clearDrawable);
@@ -133,6 +134,19 @@ void GameClient::logic(Renderer* renderer) {
                             if(player.name == playerName) {
                                 if(cam)
                                     cam->set_position({player.x, player.y});
+                                
+                                std::lock_guard<std::mutex> rLockGuard(renderer->r_lock);
+                                actionMenu->clearItems();
+                                actionMenu->addItem(quitAction);
+                                for(auto item : player.items) {
+                                    std::shared_ptr<MenuItem> inventoryItem(new MenuItem(ClientMenuItem::InventoryItem, item));
+                                    actionMenu->addItem(inventoryItem);
+                                }
+                                
+                                if(player.items.empty())
+                                    actionMenu->setCursor(0);
+                                else
+                                    actionMenu->setCursor(1);
                                 break;
                             }
                         }

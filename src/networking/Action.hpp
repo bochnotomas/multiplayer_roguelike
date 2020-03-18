@@ -1,6 +1,7 @@
 #ifndef ROGUELIKE_ACTION_HPP_INCLUDED
 #define ROGUELIKE_ACTION_HPP_INCLUDED
 #include "Direction.hpp"
+#include "Buffer.hpp"
 #include <cstdint>
 #include <vector>
 
@@ -44,6 +45,20 @@ public:
     MoveAction(uint8_t rawDirection) :
         Action(ActionType::Move, {rawDirection})
     {}
+};
+
+class UseItemAction : public Action {
+public:
+    // Get inventory position. -1 when invalid
+    int getItem();
+    
+    UseItemAction(int64_t itemPos) :
+        Action(ActionType::UseItem, {})
+    {
+        Buffer buffer;
+        buffer.insert(itemPos);
+        buffer.get(data, buffer.size());
+    }
 };
 
 #endif

@@ -302,10 +302,11 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                 }
                 
                 // Rest of needed size is known, abort if too little
-                if(dataLeft != 24 * count) {
+                if(dataLeft < 24 * count) {
                     buffer.erase(dataLeft);
                     return nullptr;
                 }
+                dataLeft -= 24 * count;
                 
                 std::vector<int> xPositions;
                 std::vector<int> yPositions;
@@ -327,10 +328,53 @@ std::unique_ptr<ClientMessage> ClientMessage::fromBuffer(Buffer& buffer) {
                     levels.push_back(level);
                 }
                 
+                // Parse item names
+                std::vector<std::vector<std::string>> itemNames;
+                for(auto i = 0; i < count; i++) {
+                    // Item count
+                    uint64_t itemCount;
+                    if(dataLeft < 8) {
+                        buffer.erase(dataLeft);
+                        return nullptr;
+                    }
+                    buffer.pop(itemCount);
+                    dataLeft -= 8;
+                    
+                    // Item names
+                    std::vector<std::string> theseItemNames;
+                    for(auto n = 0; n < itemCount; n++) {
+                        // Name size
+                        uint64_t itemNameSize;
+                        if(dataLeft < 8) {
+                            buffer.erase(dataLeft);
+                            return nullptr;
+                        }
+                        buffer.pop(itemNameSize);
+                        dataLeft -= 8;
+                        
+                        // Name content
+                        if(dataLeft < itemNameSize) {
+                            buffer.erase(dataLeft);
+                            return nullptr;
+                        }
+                        std::string itemName;
+                        buffer.pop(itemName, itemNameSize);
+                        dataLeft -= itemNameSize;
+                        theseItemNames.emplace_back(std::move(itemName));
+                    }
+                    itemNames.emplace_back(std::move(theseItemNames));
+                }
+                
+                // Abort if there is data left
+                if(dataLeft != 0) {
+                    buffer.erase(dataLeft);
+                    return nullptr;
+                }
+                
                 // Create list of player snapshots
                 std::vector<PlayerSnapshot> playerSnapshots;
                 for(auto p = 0; p < count; p++)
-                    playerSnapshots.emplace_back(names[p], xPositions[p], yPositions[p], levels[p]);
+                    playerSnapshots.emplace_back(names[p], xPositions[p], yPositions[p], levels[p], std::move(itemNames[p]));
                 
                 return std::unique_ptr<ClientMessage>(new ClientMessagePlayerData(std::move(playerSnapshots)));
             }
@@ -499,7 +543,10 @@ ClientMessagePlayerData::ClientMessagePlayerData(std::vector<std::shared_ptr<Pla
     for(auto player : players) {
         if(!player->name.empty()) {
             const auto& position = player->get_position();
-            playersSnapshots.emplace_back(player->name, position.first, position.second, player->level);
+            std::vector<std::string> itemNames;
+            for(auto item : player->inventory.inventory)
+                itemNames.push_back(item.itemName);
+            playersSnapshots.emplace_back(player->name, position.first, position.second, player->level, itemNames);
         }
     }
 }
@@ -537,6 +584,18 @@ const std::vector<uint8_t> ClientMessagePlayerData::toBytes() const {
         // Insert levels into buffer
         for(auto l = 0; l < count; l++)
             buffer.insert(static_cast<int64_t>(playersSnapshots[l].level));
+        
+        // Insert inventories into buffer
+        for(auto i = 0; i < count; i++) {
+            // Count
+            buffer.insert(static_cast<uint64_t>(playersSnapshots[i].items.size()));
+            
+            // Names
+            for(auto item : playersSnapshots[i].items) {
+                buffer.insert(static_cast<uint64_t>(item.size()));
+                buffer.insert(item);
+            }
+        }
         
         buffer.get(data, buffer.size());
     }
