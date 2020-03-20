@@ -28,6 +28,7 @@ struct Player : Socket, Object {
     /// Action the player will take this turn
     std::unique_ptr<Action> action = nullptr;
 
+	
     int health;
     int attack;
     int defense;
@@ -42,10 +43,12 @@ struct Player : Socket, Object {
     Inventory inventory;
 
     void itemCheck(int x, int y, Map& map);
-
+	
+    //movemen logic of player
+	//collision detection
+	//item picking
     void playerMovementLogic(Map& map);
 
-    void inputHandling(char newDir);
 
     void playerAttack(Map&);
 };

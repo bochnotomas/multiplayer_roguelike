@@ -47,6 +47,7 @@ void Player::itemCheck(int x, int y, Map& map) {
 }
 //movemen logic of player
 //collision detection
+//item picking
 
 void Player::playerMovementLogic(Map& map) {
     bool ifBreak = false;
