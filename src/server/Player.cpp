@@ -7,6 +7,7 @@ Player::Player(Socket* socket) :
     Object('@'),
     level(0)
 {
+	
     dir = eDirection::STOP;
     speed = 1;
     health = 100;
@@ -44,6 +45,8 @@ void Player::itemCheck(int x, int y, Map& map) {
 	}
     
 }
+//movemen logic of player
+//collision detection
 
 void Player::playerMovementLogic(Map& map) {
     bool ifBreak = false;

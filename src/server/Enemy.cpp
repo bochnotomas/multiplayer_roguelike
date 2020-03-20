@@ -5,7 +5,8 @@ Enemy::Enemy(int positionX_, int positionY_) : Object('X', Direction::NORTH, tru
 {
     m_type = ObjectType::ENEMY;
 }
-
+//function that makes enemy move by one step every turn
+//it either chase an player, or randomise a position and go there
 void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& map)
 {
 	std::shared_ptr<Player> chasing = nullptr;
@@ -73,6 +74,7 @@ void Enemy::aiTick(const std::vector<std::shared_ptr<Player> >& players, Map& ma
 		}
 	}
 }
+// old function which made enemy to teleport to final destination, wrong
 /*
 void Enemy::moveAiByPath(std::vector<std::pair<int, int> > pathToWalkBy)
 {
@@ -85,6 +87,8 @@ void Enemy::moveAiByPath(std::vector<std::pair<int, int> > pathToWalkBy)
 
 }
 */
+
+//function that return vector of pairs, that represent the path
 std::vector<std::pair<int, int> > Enemy::trackThePath(int startingPositionY, int startingPositionX, int finalPositionY, int finalPositionX, std::vector<std::vector<std::pair<int, int>>>& parentNodes)
 {
 	std::vector<std::pair<int, int>> path;
@@ -102,7 +106,7 @@ std::vector<std::pair<int, int> > Enemy::trackThePath(int startingPositionY, int
 	//moveAiByPath(path);
 	return path;
 }
-
+//function that explore neighbours of node
 void Enemy::exploreNeighbours(int rowIndex_, int columnIndex_,std::queue <int>& rowQueue , std::queue <int>& columnQueue , int& nodesInNextLayer, std::vector<std::vector<bool> >& visitedNodes, std::vector<std::vector<std::pair<int, int>>>& parentNodes, Map& map)
 {
 	int newRowIndex;
@@ -145,6 +149,7 @@ void Enemy::exploreNeighbours(int rowIndex_, int columnIndex_,std::queue <int>& 
 	}
 }
 
+//function that use bfs to find the shortest path to either, final destination or player
 std::vector<std::pair<int, int> > Enemy::findTheWay(int startingPositionY, int startingPositionX, int finalPositionY, int finalPositionX, Map& map)
 {
 	
